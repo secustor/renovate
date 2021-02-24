@@ -14,8 +14,8 @@ import {
   REPOSITORY_CHANGED,
   REPOSITORY_DISABLED,
   REPOSITORY_EMPTY,
-  REPOSITORY_TEMPORARY_ERROR,
   SYSTEM_INSUFFICIENT_DISK_SPACE,
+  TEMPORARY_ERROR,
 } from '../../constants/error-messages';
 import { logger } from '../../logger';
 import { ExternalHostError } from '../../types/errors/external-host-error';
@@ -70,6 +70,8 @@ function checkForPlatformFailure(err: Error): void {
     'Connection timed out',
     'malformed object name',
     'TF401027:', // You need the Git 'GenericContribute' permission to perform this action
+    'Could not resolve host',
+    ' is not a member of team',
   ];
   for (const errorStr of externalHostFailureStrings) {
     if (err.message.includes(errorStr)) {
@@ -322,7 +324,7 @@ export async function syncGit(): Promise<void> {
   } catch (err) /* istanbul ignore next */ {
     checkForPlatformFailure(err);
     logger.debug({ err }, 'Error setting git author config');
-    throw new Error(REPOSITORY_TEMPORARY_ERROR);
+    throw new Error(TEMPORARY_ERROR);
   }
   config.currentBranch = config.currentBranch || (await getDefaultBranch(git));
   if (config.branchPrefix) {
@@ -395,7 +397,7 @@ export async function checkoutBranch(branchName: string): Promise<CommitSha> {
     config.currentBranchSha = (
       await git.raw(['rev-parse', 'origin/' + branchName])
     ).trim();
-    await git.checkout([branchName, '-f']);
+    await git.checkout(['-f', branchName, '--']);
     const latestCommitDate = (await git.log({ n: 1 }))?.latest?.date;
     if (latestCommitDate) {
       logger.debug({ branchName, latestCommitDate }, 'latest commit');

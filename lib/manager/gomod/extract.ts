@@ -24,14 +24,6 @@ function getDep(
   if (!isVersion(currentValue)) {
     dep.skipReason = SkipReason.UnsupportedVersion;
   } else {
-    if (depName.startsWith('gopkg.in/')) {
-      const [pkg] = depName.replace('gopkg.in/', '').split('.');
-      dep.depNameShort = pkg;
-    } else if (depName.startsWith('github.com/')) {
-      dep.depNameShort = depName.replace('github.com/', '');
-    } else {
-      dep.depNameShort = depName;
-    }
     dep.datasource = datasourceGo.id;
   }
   const digestMatch = /v0\.0.0-\d{14}-([a-f0-9]{12})/.exec(currentValue);

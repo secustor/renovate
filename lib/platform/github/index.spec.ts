@@ -184,7 +184,8 @@ describe('platform/github', () => {
   function forkInitRepoMock(
     scope: httpMock.Scope,
     repository: string,
-    forkedRepo?: string
+    forkExisted: boolean,
+    forkDefaulBranch = 'master'
   ): void {
     scope
       // repo info
@@ -209,10 +210,18 @@ describe('platform/github', () => {
       })
       // getRepos
       .get('/user/repos?per_page=100')
-      .reply(200, forkedRepo ? [{ full_name: forkedRepo }] : [])
+      .reply(
+        200,
+        forkExisted
+          ? [{ full_name: 'forked/repo', default_branch: forkDefaulBranch }]
+          : []
+      )
       // getBranchCommit
       .post(`/repos/${repository}/forks`)
-      .reply(200, forkedRepo ? { full_name: forkedRepo } : {});
+      .reply(200, {
+        full_name: 'forked/repo',
+        default_branch: forkDefaulBranch,
+      });
   }
 
   describe('initRepo', () => {
@@ -227,7 +236,7 @@ describe('platform/github', () => {
     });
     it('should fork when forkMode', async () => {
       const scope = httpMock.scope(githubApiHost);
-      forkInitRepoMock(scope, 'some/repo');
+      forkInitRepoMock(scope, 'some/repo', false);
       const config = await github.initRepo({
         repository: 'some/repo',
         forkMode: true,
@@ -237,8 +246,21 @@ describe('platform/github', () => {
     });
     it('should update fork when forkMode', async () => {
       const scope = httpMock.scope(githubApiHost);
-      forkInitRepoMock(scope, 'some/repo', 'forked_repo');
-      scope.patch('/repos/forked_repo/git/refs/heads/master').reply(200);
+      forkInitRepoMock(scope, 'some/repo', true);
+      scope.patch('/repos/forked/repo/git/refs/heads/master').reply(200);
+      const config = await github.initRepo({
+        repository: 'some/repo',
+        forkMode: true,
+      } as any);
+      expect(config).toMatchSnapshot();
+      expect(httpMock.getTrace()).toMatchSnapshot();
+    });
+    it('detects fork default branch mismatch', async () => {
+      const scope = httpMock.scope(githubApiHost);
+      forkInitRepoMock(scope, 'some/repo', true, 'not_master');
+      scope.post('/repos/forked/repo/git/refs').reply(200);
+      scope.patch('/repos/forked/repo').reply(200);
+      scope.patch('/repos/forked/repo/git/refs/heads/master').reply(200);
       const config = await github.initRepo({
         repository: 'some/repo',
         forkMode: true,
@@ -499,7 +521,7 @@ describe('platform/github', () => {
     });
     it('should return the PR object in fork mode', async () => {
       const scope = httpMock.scope(githubApiHost);
-      forkInitRepoMock(scope, 'some/repo', 'forked/repo');
+      forkInitRepoMock(scope, 'some/repo', true);
       scope
         .post('/graphql')
         .twice() // getOpenPrs() and getClosedPrs()
@@ -573,7 +595,7 @@ describe('platform/github', () => {
         .reply(200, {
           state: 'success',
         })
-        .get('/repos/some/repo/commits/somebranch/check-runs')
+        .get('/repos/some/repo/commits/somebranch/check-runs?per_page=100')
         .reply(200, []);
 
       await github.initRepo({
@@ -591,7 +613,7 @@ describe('platform/github', () => {
         .reply(200, {
           state: 'failure',
         })
-        .get('/repos/some/repo/commits/somebranch/check-runs')
+        .get('/repos/some/repo/commits/somebranch/check-runs?per_page=100')
         .reply(200, []);
 
       await github.initRepo({
@@ -609,7 +631,7 @@ describe('platform/github', () => {
         .reply(200, {
           state: 'unknown',
         })
-        .get('/repos/some/repo/commits/somebranch/check-runs')
+        .get('/repos/some/repo/commits/somebranch/check-runs?per_page=100')
         .reply(200, []);
       await github.initRepo({
         repository: 'some/repo',
@@ -627,7 +649,7 @@ describe('platform/github', () => {
           state: 'pending',
           statuses: [],
         })
-        .get('/repos/some/repo/commits/somebranch/check-runs')
+        .get('/repos/some/repo/commits/somebranch/check-runs?per_page=100')
         .reply(200, {
           total_count: 2,
           check_runs: [
@@ -661,7 +683,7 @@ describe('platform/github', () => {
           state: 'pending',
           statuses: [],
         })
-        .get('/repos/some/repo/commits/somebranch/check-runs')
+        .get('/repos/some/repo/commits/somebranch/check-runs?per_page=100')
         .reply(200, {
           total_count: 3,
           check_runs: [
@@ -701,7 +723,7 @@ describe('platform/github', () => {
           state: 'pending',
           statuses: [],
         })
-        .get('/repos/some/repo/commits/somebranch/check-runs')
+        .get('/repos/some/repo/commits/somebranch/check-runs?per_page=100')
         .reply(200, {
           total_count: 2,
           check_runs: [
