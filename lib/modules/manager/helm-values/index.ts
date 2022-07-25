@@ -1,5 +1,6 @@
 import { DockerDatasource } from '../../datasource/docker';
 export { extractPackageFile } from './extract';
+export { bumpPackageVersion } from './update';
 
 export const defaultConfig = {
   commitMessageTopic: 'helm values {{depName}}',

@@ -214,6 +214,13 @@ export interface UpdateDependencyConfig<T = Record<string, any>> {
 
 export interface BumpPackageVersionResult {
   bumpedContent: string | null;
+  // describes files that was changed instead of or in addition to the packageFile
+  bumpedFiles?: BumpedPackageFile[];
+}
+
+export interface BumpedPackageFile {
+  fileName: string;
+  newContent: string;
 }
 
 export interface UpdateLockedConfig {
@@ -248,7 +255,8 @@ export interface ManagerApi extends ModuleApi {
   bumpPackageVersion?(
     content: string,
     currentValue: string,
-    bumpVersion: ReleaseType | string
+    bumpVersion: ReleaseType | string,
+    packageFile?: string
   ): Result<BumpPackageVersionResult>;
 
   detectGlobalConfig?(): Result<GlobalManagerConfig>;

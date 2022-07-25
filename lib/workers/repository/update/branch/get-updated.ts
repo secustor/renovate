@@ -5,6 +5,7 @@ import { logger } from '../../../../logger';
 import { get } from '../../../../modules/manager';
 import type {
   ArtifactError,
+  BumpedPackageFile,
   PackageDependency,
 } from '../../../../modules/manager/types';
 import { getFile } from '../../../../util/git';
@@ -156,19 +157,34 @@ export async function getUpdatedPackageFiles(
           reuseExistingBranch
         );
         if (res) {
+          let bumpedPackageFiles: BumpedPackageFile[] = [];
           if (bumpPackageVersion && upgrade.bumpVersion) {
-            const { bumpedContent } = await bumpPackageVersion(
+            const bumpResult = await bumpPackageVersion(
               res,
               upgrade.packageFileVersion!,
-              upgrade.bumpVersion
+              upgrade.bumpVersion,
+              packageFile
             );
-            res = bumpedContent;
+            res = bumpResult.bumpedContent;
+            bumpedPackageFiles = bumpResult.bumpedFiles ?? [];
           }
           if (res === packageFileContent) {
             logger.debug({ packageFile, depName }, 'No content changed');
           } else {
             logger.debug({ packageFile, depName }, 'Contents updated');
             updatedFileContents[packageFile] = res!;
+          }
+          // indicates that the version was bumped in one or more files in
+          // addition to or instead of the packageFile
+          if (bumpedPackageFiles.length) {
+            for (const bumpedPackageFile of bumpedPackageFiles) {
+              logger.debug(
+                { bumpedPackageFile, depName },
+                'Updating bumpedPackageFile content'
+              );
+              updatedFileContents[bumpedPackageFile.fileName] =
+                bumpedPackageFile.newContent;
+            }
           }
           continue;
         } else if (reuseExistingBranch) {
@@ -188,7 +204,8 @@ export async function getUpdatedPackageFiles(
         const { bumpedContent } = await bumpPackageVersion(
           newContent!,
           upgrade.packageFileVersion!,
-          upgrade.bumpVersion
+          upgrade.bumpVersion,
+          packageFile
         );
         newContent = bumpedContent;
       }

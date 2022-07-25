@@ -1,5 +1,25 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`workers/repository/update/branch/get-updated getUpdatedPackageFiles() bumps versions in all files if multiple files were bumped 1`] = `
+Object {
+  "artifactErrors": Array [],
+  "reuseExistingBranch": undefined,
+  "updatedArtifacts": Array [],
+  "updatedPackageFiles": Array [
+    Object {
+      "contents": "version: 0.0.2",
+      "path": "/test/Chart.yaml",
+      "type": "addition",
+    },
+    Object {
+      "contents": "# Version 0.0.2",
+      "path": "/test/README.md",
+      "type": "addition",
+    },
+  ],
+}
+`;
+
 exports[`workers/repository/update/branch/get-updated getUpdatedPackageFiles() bumps versions in autoReplace managers 1`] = `
 Object {
   "artifactErrors": Array [],
@@ -24,6 +44,21 @@ Object {
     Object {
       "contents": "new version",
       "path": "package.json",
+      "type": "addition",
+    },
+  ],
+}
+`;
+
+exports[`workers/repository/update/branch/get-updated getUpdatedPackageFiles() bumps versions with a bumpPackageFile different from the packageFile 1`] = `
+Object {
+  "artifactErrors": Array [],
+  "reuseExistingBranch": undefined,
+  "updatedArtifacts": Array [],
+  "updatedPackageFiles": Array [
+    Object {
+      "contents": "version: 0.0.2",
+      "path": "/test/Chart.yaml",
       "type": "addition",
     },
   ],
