@@ -1,6 +1,6 @@
-import type { RangeStrategy } from '../../../types/versioning';
-import { regEx } from '../../../util/regex';
-import { api as npm } from '../npm';
+import is from '@sindresorhus/is';
+import type { RangeStrategy } from '../../../types';
+import { api as ruby } from '../ruby';
 import type { NewValueConfig, VersioningApi } from '../types';
 
 export const id = 'hashicorp';
@@ -16,94 +16,34 @@ export const supportedRangeStrategies: RangeStrategy[] = [
   'replace',
 ];
 
-function hashicorp2npm(input: string): string {
-  // The only case incompatible with semver is a "short" ~>, e.g. ~> 1.2
-  return input.replace(regEx(/~>(\s*\d+\.\d+$)/), '^$1').replace(',', '');
-}
-
-function isLessThanRange(version: string, range: string): boolean {
-  return !!npm.isLessThanRange?.(hashicorp2npm(version), hashicorp2npm(range));
-}
-
-export const isValid = (input: string): boolean =>
-  !!input && npm.isValid(hashicorp2npm(input));
-
-const matches = (version: string, range: string): boolean =>
-  npm.matches(hashicorp2npm(version), hashicorp2npm(range));
-
-function getSatisfyingVersion(
-  versions: string[],
-  range: string
-): string | null {
-  return npm.getSatisfyingVersion(
-    versions.map(hashicorp2npm),
-    hashicorp2npm(range)
-  );
-}
-
-function minSatisfyingVersion(
-  versions: string[],
-  range: string
-): string | null {
-  return npm.minSatisfyingVersion(
-    versions.map(hashicorp2npm),
-    hashicorp2npm(range)
-  );
-}
-
 function getNewValue({
   currentValue,
   rangeStrategy,
   currentVersion,
   newVersion,
 }: NewValueConfig): string | null {
-  if (['replace', 'update-lockfile'].includes(rangeStrategy)) {
-    const minor = npm.getMinor(newVersion);
-    const major = npm.getMajor(newVersion);
-    if (regEx(/~>\s*0\.\d+/).test(currentValue) && major === 0 && minor) {
-      const testFullVersion = regEx(/(~>\s*0\.)(\d+)\.\d$/);
-      let replaceValue = '';
-      if (testFullVersion.test(currentValue)) {
-        replaceValue = `$<prefix>${minor}.0`;
-      } else {
-        replaceValue = `$<prefix>${minor}$<suffix>`;
-      }
-      return currentValue.replace(
-        regEx(`(?<prefix>~>\\s*0\\.)\\d+(?<suffix>.*)$`),
-        replaceValue
-      );
-    }
-    // handle special ~> 1.2 case
-    if (major && regEx(/(~>\s*)\d+\.\d+$/).test(currentValue)) {
-      return currentValue.replace(
-        regEx(`(?<prefix>~>\\s*)\\d+\\.\\d+$`),
-        `$<prefix>${major}.0`
-      );
-    }
-  }
-  let npmNewVersion = npm.getNewValue({
+  // remove additional 'v' from newVersion
+  const massagedNewVersion = newVersion.startsWith('v')
+    ? newVersion.replace('v', '')
+    : newVersion;
+  const newValue = ruby.getNewValue({
     currentValue,
     rangeStrategy,
     currentVersion,
-    newVersion,
+    newVersion: massagedNewVersion,
   });
-  if (
-    npmNewVersion &&
-    currentValue.startsWith('v') &&
-    !npmNewVersion.startsWith('v')
-  ) {
-    npmNewVersion = `v${npmNewVersion}`;
+
+  // if the current value is a partial version e.g. '0.15'
+  // shorten it to the same length
+  if (isVersion(currentValue) && !is.nullOrUndefined(newValue)) {
+    return newValue.substring(0, currentValue.length);
   }
-  return npmNewVersion;
+
+  return newValue;
 }
 
 export const api: VersioningApi = {
-  ...npm,
-  isLessThanRange,
-  isValid,
-  matches,
-  getSatisfyingVersion,
-  minSatisfyingVersion,
+  ...ruby,
   getNewValue,
 };
 
