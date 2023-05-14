@@ -80,7 +80,7 @@ export class PdmProcessor implements PyProjectProcessor {
       let packageList = '';
       if (!isLockFileMaintenance) {
         packageList = updatedDeps
-          .map((value) => value.packageName ?? value.depName ?? '')
+          .map((value) => value.packageName ?? value.depName)
           .join(' ');
       }
       const cmd = `pdm update ${packageList}`;
