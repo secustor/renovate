@@ -87,7 +87,7 @@ export interface DatasourceApi extends ModuleApi {
   getDigest?(config: DigestConfig, newValue?: string): Promise<string | null>;
   getReleases(config: GetReleasesConfig): Promise<ReleaseResult | null>;
   defaultRegistryUrls?: string[] | (() => string[]);
-  defaultVersioning?: string | undefined;
+  defaultVersioning?: string | (() => string) | undefined;
   defaultConfig?: Record<string, unknown> | undefined;
 
   /**

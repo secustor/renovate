@@ -2,6 +2,7 @@ import is from '@sindresorhus/is';
 import type { CustomDatasourceConfig } from '../../../config/types';
 import { logger } from '../../../logger';
 import * as template from '../../../util/template';
+import {defaultVersioning} from "../../versioning";
 import type { GetReleasesConfig } from '../types';
 
 export function massageCustomDatasourceConfig(
@@ -38,9 +39,15 @@ export function massageCustomDatasourceConfig(
     transform.push(templated);
   }
 
+  let versioning: string = defaultVersioning.id
+    if (is.nonEmptyString(customDatasource.defaultVersioningTemplate)) {
+      versioning = template.compile(customDatasource.defaultVersioningTemplate, templateInput)
+    }
+
   return {
     format: customDatasource.format ?? 'json',
     defaultRegistryUrlTemplate: registryUrl,
+      defaultVersioningTemplate: versioning,
     transformTemplates: transform,
   };
 }

@@ -6,11 +6,16 @@ import { Datasource } from '../datasource';
 import type { GetReleasesConfig, ReleaseResult } from '../types';
 import { ReleaseResultZodSchema } from './schema';
 import { massageCustomDatasourceConfig } from './utils';
+import type {getDefaultVersioningConfig} from "../../../config/types";
 
 export class CustomDatasource extends Datasource {
   static readonly id = 'custom';
 
   override customRegistrySupport = true;
+
+  override defaultVersioning = function (config: getDefaultVersioningConfig): string {
+    
+  }
 
   constructor() {
     super(CustomDatasource.id);

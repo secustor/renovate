@@ -278,8 +278,13 @@ export interface RenovateConfig
 
 export interface CustomDatasourceConfig {
   defaultRegistryUrlTemplate?: string;
+  defaultVersioningTemplate?: string;
   format?: 'json' | 'plain';
   transformTemplates?: string[];
+}
+
+export interface getDefaultVersioningConfig {
+    customDatasources?: Record<string, CustomDatasourceConfig>;
 }
 
 export interface AllConfig

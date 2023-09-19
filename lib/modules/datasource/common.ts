@@ -37,6 +37,10 @@ export function getDefaultVersioning(
     return defaultVersioning.id;
   }
 
+  if (is.function_(datasource.defaultVersioning)) {
+    return datasource.defaultVersioning()
+  }
+
   return datasource.defaultVersioning;
 }
 
