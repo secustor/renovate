@@ -4,6 +4,7 @@ import { Fixtures } from '../../../../../test/fixtures';
 import * as httpMock from '../../../../../test/http-mock';
 import { getFixturePath, logger } from '../../../../../test/util';
 import { GlobalConfig } from '../../../../config/global';
+import {ensureCacheDir} from "../../../../util/fs";
 import { TerraformProviderDatasource } from '../../../datasource/terraform-provider';
 import { TerraformProviderHash } from './hash';
 
@@ -426,4 +427,11 @@ describe('modules/manager/terraform/lockfile/hash', () => {
       'h1:I2F2atKZqKEOYk1tTLe15Llf9rVqxz48ZL1eZB9g8zM=',
     ]);
   });
+
+  it('return hash for zip with folders', async () => {
+    const extractionFolder = await ensureCacheDir("test/hash-with-folder")
+    const result = await TerraformProviderHash.hashOfZipContent(getFixturePath('testWithFolder.zip'),extractionFolder)
+
+    expect(result).toBe('mVw1C5oVCPgFdMdDARYSpdc6qVVPVENqL7p3DZ61CQA=')
+  })
 });

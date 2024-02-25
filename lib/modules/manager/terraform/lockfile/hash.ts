@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import path from "node:path";
 import extract from 'extract-zip';
 import upath from 'upath';
 import { logger } from '../../../../logger';
@@ -12,7 +13,6 @@ import * as fs from '../../../../util/fs';
 import { ensureCacheDir } from '../../../../util/fs';
 import { Http } from '../../../../util/http';
 import * as p from '../../../../util/promises';
-import { regEx } from '../../../../util/regex';
 import { TerraformProviderDatasource } from '../../../datasource/terraform-provider';
 import type { TerraformBuild } from '../../../datasource/terraform-provider/types';
 
@@ -23,10 +23,12 @@ export class TerraformProviderHash {
 
   static hashCacheTTL = 10080; // in minutes == 1 week
 
-  private static async hashFiles(files: string[]): Promise<string> {
+  private static async hashFiles(baseDir: string, files: string[]): Promise<string> {
     const rootHash = crypto.createHash('sha256');
 
     for (const file of files) {
+      const relativePath = path.relative(baseDir,file)
+
       // build for every file a line looking like "aaaaaaaaaaaaaaa  file.txt\n"
       const hash = crypto.createHash('sha256');
 
@@ -37,25 +39,25 @@ export class TerraformProviderHash {
 
       // add double space, the filename and a new line char
       rootHash.update('  ');
-      const fileName = file.replace(regEx(/^.*[/]/), '');
-      rootHash.update(fileName);
+      rootHash.update(relativePath);
       rootHash.update('\n');
     }
 
     return rootHash.digest('base64');
   }
 
-  static async hashOfZipContent(
+  public static async hashOfZipContent(
     zipFilePath: string,
     extractPath: string,
   ): Promise<string> {
     await extract(zipFilePath, { dir: extractPath });
-    const files = await fs.listCacheDir(extractPath);
-    // the h1 hashing algorithms requires that the files are sorted by filename
-    const sortedFiles = files.sort((a, b) => a.localeCompare(b));
-    const filesWithPath = sortedFiles.map((file) => `${extractPath}/${file}`);
+    const contentList = await fs.listCacheDir(extractPath, {recursive: true});
 
-    const result = await TerraformProviderHash.hashFiles(filesWithPath);
+    // ignore directories and dot files
+    const files = contentList.filter((content => content.isFile()));
+    const filesWithPath = files.map(content => `${content.path}/${content.name}`)
+
+    const result = await TerraformProviderHash.hashFiles(extractPath,filesWithPath);
 
     // delete extracted files
     await fs.rmCache(extractPath);

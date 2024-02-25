@@ -1,3 +1,4 @@
+import type {Dirent} from "node:fs";
 import stream from 'node:stream';
 import util from 'node:util';
 import is from '@sindresorhus/is';
@@ -249,9 +250,9 @@ export async function statLocalFile(
   }
 }
 
-export function listCacheDir(path: string): Promise<string[]> {
+export function listCacheDir(path: string, options: {recursive?: boolean} = {}): Promise<Dirent[]> {
   const fullPath = ensureCachePath(path);
-  return fs.readdir(fullPath);
+  return fs.readdir(fullPath, {...options, withFileTypes: true});
 }
 
 export async function rmCache(path: string): Promise<void> {
