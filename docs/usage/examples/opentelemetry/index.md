@@ -9,37 +9,22 @@ Requirements:
 Create a `docker-compose.yaml` and `otel-collector-config.yml` file as seen below in a folder.
 
 ```yaml title="docker-compose.yaml"
-version: '3'
 services:
   # Jaeger
   jaeger:
     image: jaegertracing/all-in-one:1.60.0
     ports:
-      - '16686:16686'
-      - '4317'
-
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.106.1
-    command: ['--config=/etc/otel-collector-config.yml']
-    volumes:
-      - ./otel-collector-config.yml:/etc/otel-collector-config.yml
-    ports:
-      - '1888:1888' # pprof extension
-      - '13133:13133' # health_check extension
-      - '55679:55679' # zpages extension
-      - '4318:4318' # OTLP HTTP
-      - '4317:4317' # OTLP GRPC
-      - '9123:9123' # Prometheus exporter
-    depends_on:
-      - jaeger
+      - '16686' # Jaeger UI
+      - '4318' # OTLP HTTP
+      - '8889' # PROMETHEUS
 ```
 
 ```yaml title="otel-collector-config.yml"
 receivers:
   otlp:
     protocols:
-      grpc:
       http:
+        endpoint: "0.0.0.0:4318"
 
 exporters:
   otlp/jaeger:
@@ -78,6 +63,55 @@ service:
     metrics:
       receivers: [otlp]
       exporters: [prometheus]
+
+service:
+  extensions: [jaeger_storage, jaeger_query]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [jaeger_storage_exporter, spanmetrics]
+    metrics/spanmetrics:
+      receivers: [spanmetrics]
+      exporters: [prometheus]
+  telemetry:
+    logs:
+      level: DEBUG
+
+extensions:
+  jaeger_query:
+    trace_storage: some_storage
+    metric_storage: some_metrics_storage
+  jaeger_storage:
+    backends:
+      some_storage:
+        memory:
+          max_traces: 100000
+    metric_backends:
+      some_metrics_storage:
+        prometheus:
+          endpoint: http://prometheus:9090
+          normalize_calls: true
+          normalize_duration: true
+
+connectors:
+  spanmetrics:
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+        endpoint: "0.0.0.0:4318"
+
+processors:
+  batch:
+
+exporters:
+  jaeger_storage_exporter:
+    trace_storage: some_storage
+  prometheus:
+    endpoint: "0.0.0.0:8889"
 ```
 
 Start setup using this command inside the folder containing the files created in the earlier steps:
@@ -117,15 +151,15 @@ Open now Jaeger under [http://localhost:16686](http://localhost:16686).
 
 You should now be able to pick `renovate` under in the field `service` field.
 
-![service picker](../assets/images/opentelemetry_pick_service.png)
+![service picker](../../assets/images/opentelemetry_pick_service.png)
 
 Select `Find Traces` to search for all Renovate traces and then select one of the found traces to open the trace view.
 
-![pick trace](../assets/images/opentelemetry_choose_trace.png)
+![pick trace](../../assets/images/opentelemetry_choose_trace.png)
 
 You should be able to see now the full trace view which shows each HTTP request and internal spans.
 
-![trace view](../assets/images/opentelemetry_trace_viewer.png)
+![trace view](../../assets/images/opentelemetry_trace_viewer.png)
 
 ### Metrics
 

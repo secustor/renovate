@@ -43,4 +43,4 @@ Use the environment variable `RENOVATE_TRACING_CONSOLE_EXPORTER`.
 
 ## Examples
 
-An example with a local OpenTelemetry setup can be found on the [OpenTelemetry examples](examples/opentelemetry.md) page.
+An example with a local OpenTelemetry setup can be found on the [OpenTelemetry examples](examples/opentelemetry/index.md) page.
