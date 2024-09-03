@@ -1,9 +1,12 @@
 import { logger } from '../../../logger';
 import { newlineRegex, regEx } from '../../../util/regex';
+import { parseSingleYaml } from '../../../util/yaml';
+import { GalaxyCollectionDatasource } from '../../datasource/galaxy-collection';
 import type { PackageDependency, PackageFileContent } from '../types';
-import { extractCollections } from './collections';
-import { extractCollectionsMetaDataFile } from './collections-metadata';
+import {extractCollections, parseCollection} from './collections';
 import { extractRoles } from './roles';
+import {AnsibleGalaxy, CollectionsFile} from './schema';
+import {nameMatchRegex} from "./util";
 
 export function getSliceEndNumber(
   start: number,
@@ -27,59 +30,69 @@ export function extractPackageFile(
   packageFile: string,
 ): PackageFileContent | null {
   logger.trace(`ansible-galaxy.extractPackageFile(${packageFile})`);
-  const galaxyFileNameRegEx = regEx(/galaxy\.ya?ml$/);
   const deps: PackageDependency[] = [];
   const lines = content.split(newlineRegex);
 
+  // if this is a galaxy.yml file we have to interpret the dependencies differently
   try {
-    // if this is a galaxy.yml file we have to interpret the dependencies differently
-    if (galaxyFileNameRegEx.exec(packageFile)) {
-      const galaxyDeps = extractCollectionsMetaDataFile(lines);
-      deps.push(...galaxyDeps);
-    } else {
-      // interpret requirements file
-      // check if new or old format is used and save start lines for collection and roles.
-      const positions = {
-        collections: -1,
-        roles: -1,
-      };
-      // find role and collection block
-      lines.forEach((line, index) => {
-        if (regEx(/^collections:/).exec(line)) {
-          positions.collections = index;
-        }
-        if (regEx(/^roles:/).exec(line)) {
-          positions.roles = index;
-        }
-      });
-      if (positions.collections >= 0 || positions.roles >= 0) {
-        // using new format
-        const collectionLines = lines.slice(
-          positions.collections,
-          getSliceEndNumber(
-            positions.collections,
-            lines.length,
-            positions.roles,
-          ),
-        );
-        const collectionDeps = extractCollections(collectionLines);
-        deps.push(...collectionDeps);
+    const galaxyFile = parseSingleYaml(content, {
+      customSchema: AnsibleGalaxy,
+    });
 
-        const roleLines = lines.slice(
-          positions.roles,
-          getSliceEndNumber(
-            positions.roles,
-            lines.length,
-            positions.collections,
-          ),
-        );
-        const roleDeps = extractRoles(roleLines);
-        deps.push(...roleDeps);
-      } else {
-        // use old format which only has only roles
-        const galaxyDeps = extractRoles(lines);
-        deps.push(...galaxyDeps);
+    for (const [depName, currentValue] of Object.entries(
+      galaxyFile.dependencies,
+    )) {
+      deps.push({
+        depType: 'galaxy-collection',
+        datasource: GalaxyCollectionDatasource.id,
+        depName,
+        currentValue,
+      });
+    }
+    return deps.length ? { deps } : null;
+  } catch (e) {
+    logger.debug(
+      { e, packageFile },
+      'Error parsing file as Ansible galaxy file. Trying requirements file.',
+    );
+  }
+
+  // interpret collections file
+  try {
+    const collectionsFile = parseSingleYaml(content, {
+      customSchema: CollectionsFile
+    });
+
+    for (const collection of collectionsFile.collections ?? []) {
+      deps.push(parseCollection(collection));
+    }
+    // check if new or old format is used and save start lines for collection and roles.
+    const positions = {
+      collections: -1,
+      roles: -1,
+    };
+    // find role and collection block
+    lines.forEach((line, index) => {
+      if (regEx(/^collections:/).exec(line)) {
+        positions.collections = index;
       }
+      if (regEx(/^roles:/).exec(line)) {
+        positions.roles = index;
+      }
+    });
+    if (positions.collections >= 0 || positions.roles >= 0) {
+      // using new format
+
+      const roleLines = lines.slice(
+        positions.roles,
+        getSliceEndNumber(positions.roles, lines.length, positions.collections),
+      );
+      const roleDeps = extractRoles(roleLines);
+      deps.push(...roleDeps);
+    } else {
+      // use old format which only has only roles
+      const galaxyDeps = extractRoles(lines);
+      deps.push(...galaxyDeps);
     }
 
     if (!deps.length) {

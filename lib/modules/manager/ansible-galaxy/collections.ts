@@ -1,9 +1,10 @@
-import { regEx } from '../../../util/regex';
-import { GalaxyCollectionDatasource } from '../../datasource/galaxy-collection';
-import { GitTagsDatasource } from '../../datasource/git-tags';
-import { GithubTagsDatasource } from '../../datasource/github-tags';
-import type { PackageDependency } from '../types';
-import type { AnsibleGalaxyPackageDependency } from './types';
+import {regEx} from '../../../util/regex';
+import {GalaxyCollectionDatasource} from '../../datasource/galaxy-collection';
+import {GitTagsDatasource} from '../../datasource/git-tags';
+import {GithubTagsDatasource} from '../../datasource/github-tags';
+import type {PackageDependency} from '../types';
+import type {Collection} from "./schema";
+import type {AnsibleGalaxyPackageDependency} from './types';
 import {
   blockLineRegEx,
   galaxyDepRegex,
@@ -167,4 +168,67 @@ export function extractCollections(lines: string[]): PackageDependency[] {
     }
   }
   return deps;
+}
+
+export function parseCollection(collection: Collection): PackageDependency {
+  switch (collection.type) {
+    case 'galaxy':
+      return {
+        depType: 'galaxy-collection',
+        datasource: GalaxyCollectionDatasource.id,
+        depName: collection.name,
+        currentValue: collection.version,
+      };
+    case 'git':
+      return parseGitDep(collection);
+    case 'file':
+      return {
+        depType: 'galaxy-collection',
+        depName: collection.name,
+        currentValue: collection.version,
+        skipReason: 'local-dependency',
+      }
+    default:
+      // try to find out type based on source
+      const nameMatch = nameMatchRegex.exec(collection.name);
+      if (nameMatch) {
+        return parseGitDep(collection);
+      }
+
+      if (galaxyDepRegex.exec(collection.name)) {
+        return {
+          depType: 'galaxy-collection',
+          datasource: GalaxyCollectionDatasource.id,
+          depName: collection.name,
+        };
+      }
+      return {
+        depType: 'galaxy-collection',
+        depName: collection.name,
+        skipReason: 'no-source-match',
+      };
+  }
+}
+
+function parseGitDep(collection: Collection): PackageDependency {
+  const nameMatch = nameMatchRegex.exec(collection.name);
+
+  if (!nameMatch?.groups) {
+    return {
+      depName: collection.name,
+      skipReason: "unsupported"
+    }
+  }
+
+  const datasource = nameMatch.groups.hostname === 'github.com' ? GithubTagsDatasource.id : GitTagsDatasource.id;
+  const massagedDepName = nameMatch.groups.depName.replace(regEx(/\.git$/), '');
+  return {
+    depType: 'galaxy-collection',
+    datasource,
+    depName: `${nameMatch.groups.hostname}/${massagedDepName}`,
+    // remove leading `git+` from URLs like `git+https://...`
+    packageName: nameMatch.groups.source.replace(regEx(/git\+/), ''),
+    // if version is declared using version appendix `<source url>,v1.2.0`, use it
+    currentValue: nameMatch.groups.version ?? collection.version,
+  };
 }
