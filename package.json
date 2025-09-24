@@ -19,7 +19,7 @@
     "debug": "tsx --inspect-brk lib/renovate.ts",
     "doc-fix": "run-s markdown-lint-fix prettier-fix",
     "doc-fix-everything": "run-s doc-fix doc-fence-check lint-documentation",
-    "doc-fence-check": "node tools/check-fenced-code.mjs",
+    "doc-fence-check": "tsx tools/check-fenced-code.ts",
     "lint-documentation": "vitest run --coverage false test/docs/**.spec.ts",
     "lint-other": "vitest run --coverage false test/other/**.spec.ts",
     "eslint": "eslint . --cache --cache-location .cache/eslint",
@@ -142,8 +142,8 @@
     "pnpm": "^10.0.0"
   },
   "volta": {
-    "node": "22.19.0",
-    "pnpm": "10.16.1"
+    "node": "22.20.0",
+    "pnpm": "10.17.0"
   },
   "dependencies": {
     "@aws-sdk/client-codecommit": "3.879.0",
@@ -321,7 +321,7 @@
     "common-tags": "1.8.2",
     "conventional-changelog-conventionalcommits": "9.1.0",
     "emojibase-data": "16.0.3",
-    "esbuild": "0.25.9",
+    "esbuild": "0.25.10",
     "eslint": "9.35.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-formatter-gha": "1.6.0",
@@ -353,7 +353,7 @@
     "vitest": "3.2.4",
     "vitest-mock-extended": "3.1.0"
   },
-  "packageManager": "pnpm@10.16.1",
+  "packageManager": "pnpm@10.17.0",
   "files": [
     "dist",
     "renovate-schema.json"
@@ -376,7 +376,7 @@
       "re2"
     ],
     "overrides": {
-      "esbuild": "0.25.9"
+      "esbuild": "0.25.10"
     }
   }
 }
