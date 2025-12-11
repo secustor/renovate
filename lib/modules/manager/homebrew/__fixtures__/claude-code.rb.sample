@@ -1,0 +1,18 @@
+class ClaudeCode < Formula
+  desc "Terminal-based AI coding assistant (Claude Code CLI)"
+  homepage "https://www.anthropic.com/claude-code"
+  url "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-1.0.0.tgz"
+  sha256 "0f2b7cecc70c1a27d35c06c98804fcdb9f326630de5d035afc447122186010b7"
+  license "MIT"
+
+  depends_on "node"
+
+  def install
+    system "npm", "install", *std_npm_args
+    bin.install_symlink Dir["#{libexec}/bin/*"]
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/claude --version")
+  end
+end

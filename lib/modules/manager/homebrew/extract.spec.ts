@@ -1,9 +1,10 @@
 import { codeBlock } from 'common-tags';
-import { extractPackageFile } from '.';
+import { extractPackageFile, parseNpmUrlPath } from '.';
 import { Fixtures } from '~test/fixtures';
 
 const aide = Fixtures.get('aide.rb');
 const ibazel = Fixtures.get('ibazel.rb');
+const claudeCode = Fixtures.get('claude-code.rb.sample');
 
 describe('modules/manager/homebrew/extract', () => {
   describe('extractPackageFile()', () => {
@@ -86,8 +87,8 @@ describe('modules/manager/homebrew/extract', () => {
         deps: [
           {
             currentValue: null,
-            datasource: 'github-tags',
-            depName: 'null/null',
+            datasource: undefined,
+            depName: 'Acmetool',
             managerData: {
               ownerName: null,
               repoName: null,
@@ -383,6 +384,101 @@ describe('modules/manager/homebrew/extract', () => {
           },
         ],
       });
+    });
+
+    it('extracts scoped NPM package dependency', () => {
+      const res = extractPackageFile(claudeCode);
+
+      expect(res).toStrictEqual({
+        deps: [
+          {
+            currentValue: '1.0.0',
+            datasource: 'npm',
+            depName: '@anthropic-ai/claude-code',
+            managerData: {
+              packageName: '@anthropic-ai/claude-code',
+              sha256:
+                '0f2b7cecc70c1a27d35c06c98804fcdb9f326630de5d035afc447122186010b7',
+              url: 'https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-1.0.0.tgz',
+            },
+          },
+        ],
+      });
+    });
+
+    it('extracts unscoped NPM package dependency', () => {
+      const content = codeBlock`
+        class Lodash < Formula
+        desc "Lodash library"
+        homepage "https://lodash.com"
+        url "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
+        sha256 "a2e8b4d7e3f8c6b9a5d4c8e7f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0"
+        end
+      `;
+
+      const res = extractPackageFile(content);
+
+      expect(res).toStrictEqual({
+        deps: [
+          {
+            currentValue: '4.17.21',
+            datasource: 'npm',
+            depName: 'lodash',
+            managerData: {
+              packageName: 'lodash',
+              sha256:
+                'a2e8b4d7e3f8c6b9a5d4c8e7f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0',
+              url: 'https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz',
+            },
+          },
+        ],
+      });
+    });
+  });
+
+  describe('parseNpmUrlPath()', () => {
+    it('parses scoped NPM package URL', () => {
+      const result = parseNpmUrlPath(
+        'https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-1.0.0.tgz',
+      );
+      expect(result).toStrictEqual({
+        type: 'npm',
+        packageName: '@anthropic-ai/claude-code',
+        currentValue: '1.0.0',
+      });
+    });
+
+    it('parses unscoped NPM package URL', () => {
+      const result = parseNpmUrlPath(
+        'https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz',
+      );
+      expect(result).toStrictEqual({
+        type: 'npm',
+        packageName: 'lodash',
+        currentValue: '4.17.21',
+      });
+    });
+
+    it('returns null for GitHub URLs', () => {
+      const result = parseNpmUrlPath(
+        'https://github.com/owner/repo/archive/v1.0.0.tar.gz',
+      );
+      expect(result).toBeNull();
+    });
+
+    it('returns null for invalid NPM URLs', () => {
+      const result = parseNpmUrlPath('https://registry.npmjs.org/invalid');
+      expect(result).toBeNull();
+    });
+
+    it('returns null for non-npmjs.org URLs', () => {
+      const result = parseNpmUrlPath('https://example.com/package.tgz');
+      expect(result).toBeNull();
+    });
+
+    it('returns null for null input', () => {
+      const result = parseNpmUrlPath(null);
+      expect(result).toBeNull();
     });
   });
 });

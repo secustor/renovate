@@ -4,7 +4,7 @@ import { logger } from '../../../logger';
 import { hashStream } from '../../../util/hash';
 import { Http } from '../../../util/http';
 import type { UpdateDependencyConfig } from '../types';
-import { parseUrlPath } from './extract';
+import { parseNpmUrlPath, parseUrlPath } from './extract';
 import { isSpace, removeComments, skip } from './util';
 
 const http = new Http('homebrew');
@@ -136,6 +136,16 @@ function updateSha256(
   return newContent;
 }
 
+function buildNpmUrl(packageName: string, version: string): string {
+  // Handle scoped packages: @scope/name -> @scope/name/-/name-version.tgz
+  if (packageName.startsWith('@')) {
+    const [scope, name] = packageName.slice(1).split('/');
+    return `https://registry.npmjs.org/@${scope}/${name}/-/${name}-${version}.tgz`;
+  }
+  // Unscoped packages: name -> /name/-/name-version.tgz
+  return `https://registry.npmjs.org/${packageName}/-/${packageName}-${version}.tgz`;
+}
+
 // TODO: Refactor (#9591)
 export async function updateDependency({
   fileContent,
@@ -145,11 +155,73 @@ export async function updateDependency({
   /*
     1. Update url field 2. Update sha256 field
    */
+
+  if (!upgrade.managerData?.url) {
+    logger.debug(`Failed to update - missing url for ${upgrade.depName}`);
+    return fileContent;
+  }
+
+  // Determine if this is an NPM or GitHub dependency
+  const npmParsedResult = parseNpmUrlPath(upgrade.managerData.url);
+
+  if (npmParsedResult) {
+    // NPM package update
+    const packageName = upgrade.managerData.packageName;
+    if (!packageName || !upgrade.newValue) {
+      logger.debug(
+        `Failed to update - missing package info for ${upgrade.depName}`,
+      );
+      return fileContent;
+    }
+
+    const newUrl = buildNpmUrl(packageName, upgrade.newValue);
+
+    let newSha256: string;
+    try {
+      newSha256 = await hashStream(http.stream(newUrl), 'sha256');
+    } catch {
+      logger.debug(`Failed to download NPM package for ${upgrade.depName}`);
+      return fileContent;
+    }
+
+    // istanbul ignore next
+    if (!newSha256) {
+      logger.debug(`Failed to generate new sha256 for ${upgrade.depName}`);
+      return fileContent;
+    }
+
+    // Verify the new URL parses correctly
+    const newParsedResult = parseNpmUrlPath(newUrl);
+    if (!newParsedResult || newParsedResult.currentValue !== upgrade.newValue) {
+      logger.debug(`Failed to update url for dependency ${upgrade.depName}`);
+      return fileContent;
+    }
+
+    let newContent = updateUrl(fileContent, upgrade.managerData.url, newUrl);
+    if (!newContent) {
+      logger.debug(`Failed to update url for dependency ${upgrade.depName}`);
+      return fileContent;
+    }
+
+    newContent = updateSha256(
+      newContent,
+      upgrade.managerData.sha256,
+      newSha256,
+    );
+    if (!newContent) {
+      logger.debug(`Failed to update sha256 for dependency ${upgrade.depName}`);
+      return fileContent;
+    }
+
+    return newContent;
+  }
+
+  // GitHub package update (existing logic)
   let newUrl: string;
   // Example urls:
   // "https://github.com/bazelbuild/bazel-watcher/archive/refs/tags/v0.8.2.tar.gz"
   // "https://github.com/aide/aide/releases/download/v0.16.1/aide-0.16.1.tar.gz"
-  const oldParsedUrlPath = parseUrlPath(upgrade.managerData?.url);
+  const oldParsedUrlPath = parseUrlPath(upgrade.managerData.url);
   if (!oldParsedUrlPath || !upgrade.managerData) {
     logger.debug(
       `Failed to update - upgrade.managerData.url is invalid ${upgrade.depName}`,

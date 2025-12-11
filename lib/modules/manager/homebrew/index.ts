@@ -1,5 +1,6 @@
 import { GithubTagsDatasource } from '../../datasource/github-tags';
-export { extractPackageFile } from './extract';
+import { NpmDatasource } from '../../datasource/npm';
+export { extractPackageFile, parseNpmUrlPath } from './extract';
 export { updateDependency } from './update';
 
 export const url = 'https://brew.sh';
@@ -9,4 +10,4 @@ export const defaultConfig = {
   managerFilePatterns: ['/^Formula/[^/]+[.]rb$/'],
 };
 
-export const supportedDatasources = [GithubTagsDatasource.id];
+export const supportedDatasources = [GithubTagsDatasource.id, NpmDatasource.id];

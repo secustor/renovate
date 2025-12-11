@@ -6,8 +6,10 @@ import * as httpMock from '~test/http-mock';
 
 const aide = Fixtures.get('aide.rb');
 const ibazel = Fixtures.get('ibazel.rb');
+const claudeCode = Fixtures.get('claude-code.rb.sample');
 
 const baseUrl = 'https://github.com';
+const npmBaseUrl = 'https://registry.npmjs.org';
 
 describe('modules/manager/homebrew/update', () => {
   it('updates "releases" github dependency', async () => {
@@ -405,5 +407,121 @@ describe('modules/manager/homebrew/update', () => {
     });
 
     expect(newContent).toBe(aide);
+  });
+
+  it('updates scoped NPM package dependency', async () => {
+    const upgrade = {
+      currentValue: '1.0.0',
+      depName: '@anthropic-ai/claude-code',
+      managerData: {
+        packageName: '@anthropic-ai/claude-code',
+        sha256:
+          '0f2b7cecc70c1a27d35c06c98804fcdb9f326630de5d035afc447122186010b7',
+        url: 'https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-1.0.0.tgz',
+      },
+      newValue: '1.1.0',
+    };
+    httpMock
+      .scope(npmBaseUrl)
+      .get('/@anthropic-ai/claude-code/-/claude-code-1.1.0.tgz')
+      .reply(200, Readable.from(['foo']));
+
+    const newContent = await updateDependency({
+      fileContent: claudeCode,
+      upgrade,
+    });
+
+    expect(newContent).not.toBe(claudeCode);
+    expect(newContent).toContain(
+      'https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-1.1.0.tgz',
+    );
+    expect(newContent).toContain(
+      '2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae',
+    );
+  });
+
+  it('updates unscoped NPM package dependency', async () => {
+    const lodashFormula = codeBlock`
+      class Lodash < Formula
+      desc "Lodash library"
+      homepage "https://lodash.com"
+      url "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
+      sha256 "a2e8b4d7e3f8c6b9a5d4c8e7f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0"
+      end
+    `;
+
+    const upgrade = {
+      currentValue: '4.17.21',
+      depName: 'lodash',
+      managerData: {
+        packageName: 'lodash',
+        sha256:
+          'a2e8b4d7e3f8c6b9a5d4c8e7f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0',
+        url: 'https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz',
+      },
+      newValue: '4.18.0',
+    };
+    httpMock
+      .scope(npmBaseUrl)
+      .get('/lodash/-/lodash-4.18.0.tgz')
+      .reply(200, Readable.from(['bar']));
+
+    const newContent = await updateDependency({
+      fileContent: lodashFormula,
+      upgrade,
+    });
+
+    expect(newContent).not.toBe(lodashFormula);
+    expect(newContent).toContain(
+      'https://registry.npmjs.org/lodash/-/lodash-4.18.0.tgz',
+    );
+    expect(newContent).toContain(
+      'fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9',
+    );
+  });
+
+  it('returns unchanged content if NPM package download fails', async () => {
+    const upgrade = {
+      currentValue: '1.0.0',
+      depName: '@anthropic-ai/claude-code',
+      managerData: {
+        packageName: '@anthropic-ai/claude-code',
+        sha256:
+          '0f2b7cecc70c1a27d35c06c98804fcdb9f326630de5d035afc447122186010b7',
+        url: 'https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-1.0.0.tgz',
+      },
+      newValue: '1.1.0',
+    };
+    httpMock
+      .scope(npmBaseUrl)
+      .get('/@anthropic-ai/claude-code/-/claude-code-1.1.0.tgz')
+      .replyWithError('');
+
+    const newContent = await updateDependency({
+      fileContent: claudeCode,
+      upgrade,
+    });
+
+    expect(newContent).toBe(claudeCode);
+  });
+
+  it('returns unchanged content if NPM package name is missing', async () => {
+    const upgrade = {
+      currentValue: '1.0.0',
+      depName: '@anthropic-ai/claude-code',
+      managerData: {
+        sha256:
+          '0f2b7cecc70c1a27d35c06c98804fcdb9f326630de5d035afc447122186010b7',
+        url: 'https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-1.0.0.tgz',
+      },
+      newValue: '1.1.0',
+    };
+
+    const newContent = await updateDependency({
+      fileContent: claudeCode,
+      upgrade,
+    });
+
+    expect(newContent).toBe(claudeCode);
   });
 });
