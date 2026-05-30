@@ -1,5 +1,6 @@
 import { logger } from '../../../logger/index.ts';
 import { withCache } from '../../../util/cache/package/with-cache.ts';
+import { GithubRestReleaseSchema } from '../../../util/github/schema.ts';
 import type { GithubRestRelease } from '../../../util/github/types.ts';
 import { getApiBaseUrl } from '../../../util/github/url.ts';
 import { GithubHttp } from '../../../util/http/github.ts';
@@ -129,9 +130,10 @@ export class HermitDatasource extends Datasource {
 
     const apiBaseUrl = getApiBaseUrl(`https://${host}`);
 
-    const indexRelease = await this.http.getJsonUnchecked<GithubRestRelease>(
+    const indexRelease = (await this.http.getJson(
       `${apiBaseUrl}repos/${owner}/${repo}/releases/tags/index`,
-    );
+      GithubRestReleaseSchema,
+    )) as unknown as { body: GithubRestRelease };
 
     // finds asset with name index.json
     const asset = indexRelease.body.assets.find(

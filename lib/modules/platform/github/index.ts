@@ -82,9 +82,18 @@ import { GithubIssueCache, GithubIssue as Issue } from './issue.ts';
 import { massageMarkdownLinks } from './massage-markdown-links.ts';
 import { getPrCache, updatePrCache } from './pr.ts';
 import {
+  CheckRunsResponseSchema,
+  CombinedBranchStatusSchema,
+  GhBranchStatusListSchema,
+  GhIssueCommentListSchema,
+  GhRestPrListSchema,
+  GhRestPrSchema,
+  GhRestRepoListSchema,
   GithubBranchProtection,
   GithubBranchRulesets,
+  GithubFileContentSchema,
   GithubVulnerabilityAlerts,
+  InstallationRepositoriesSchema,
 } from './schema.ts';
 import type {
   AggregatedVulnerabilities,
@@ -282,17 +291,20 @@ export async function initPlatform({
 async function fetchRepositories(): Promise<GhRestRepo[]> {
   try {
     if (isGHApp()) {
-      const res = await githubApi.getJsonUnchecked<{
-        repositories: GhRestRepo[];
-      }>(`installation/repositories?per_page=100`, {
-        paginationField: 'repositories',
-        paginate: 'all',
-      });
+      const res = await githubApi.getJson(
+        `installation/repositories?per_page=100`,
+        {
+          paginationField: 'repositories',
+          paginate: 'all',
+        },
+        InstallationRepositoriesSchema,
+      );
       return res.body.repositories;
     } else {
-      const res = await githubApi.getJsonUnchecked<GhRestRepo[]>(
+      const res = await githubApi.getJson(
         `user/repos?per_page=100`,
         { paginate: 'all' },
+        GhRestRepoListSchema,
       );
       return res.body;
     }
@@ -395,9 +407,10 @@ export async function getRawFile(
   if (branchOrTag) {
     url += `?ref=${branchOrTag}`;
   }
-  const res = await githubApi.getJsonUnchecked<{ content: string }>(
+  const res = await githubApi.getJson(
     url,
     httpOptions,
+    GithubFileContentSchema,
   );
   const buf = res.body.content;
   const str = fromBase64(buf);
@@ -421,11 +434,15 @@ export async function listForks(
     // Get list of existing repos
     const url = `repos/${repository}/forks?per_page=100`;
     const repos = (
-      await githubApi.getJsonUnchecked<GhRestRepo[]>(url, {
-        token,
-        paginate: true,
-        pageLimit: 100,
-      })
+      await githubApi.getJson(
+        url,
+        {
+          token,
+          paginate: true,
+          pageLimit: 100,
+        },
+        GhRestRepoListSchema,
+      )
     ).body;
     logger.debug(`Found ${repos.length} forked repo(s)`);
     return repos;
@@ -903,9 +920,10 @@ function cachePr(pr?: GhPr | null): void {
 // Fetch fresh Pull Request and cache it when possible
 async function fetchPr(prNo: number): Promise<GhPr | null> {
   try {
-    const { body: ghRestPr } = await githubApi.getJsonUnchecked<GhRestPr>(
+    const { body: ghRestPr } = (await githubApi.getJson(
       `repos/${config.parentRepo ?? config.repository}/pulls/${prNo}`,
-    );
+      GhRestPrSchema,
+    )) as unknown as { body: GhRestPr };
     const result = coerceRestPr(ghRestPr);
     cachePr(result);
     return result;
@@ -972,10 +990,11 @@ export async function findPr({
     const repo = config.parentRepo ?? config.repository;
     const org = repo?.split('/')[0];
     // PR might have been created by anyone, so don't use the cached Renovate PR list
-    const { body: prList } = await githubApi.getJsonUnchecked<GhRestPr[]>(
+    const { body: prList } = (await githubApi.getJson(
       `repos/${repo}/pulls?head=${org}:${branchName}&state=open`,
       { cacheProvider: repoCacheProvider },
-    );
+      GhRestPrListSchema,
+    )) as unknown as { body: GhRestPr[] };
 
     if (!prList.length) {
       logger.debug(`No PR found for branch ${branchName}`);
@@ -1120,11 +1139,14 @@ async function getStatus(
   const branch = escapeHash(branchName);
   const url = `repos/${config.repository}/commits/${branch}/status`;
 
-  const { body: status } =
-    await githubApi.getJsonUnchecked<CombinedBranchStatus>(url, {
+  const { body: status } = (await githubApi.getJson(
+    url,
+    {
       memCache: useCache,
       cacheProvider: repoCacheProvider,
-    });
+    },
+    CombinedBranchStatusSchema,
+  )) as { body: CombinedBranchStatus };
 
   return status;
 }
@@ -1180,9 +1202,7 @@ export async function getBranchStatus(
       cacheProvider: memCacheProvider,
     };
     const checkRunsRaw = (
-      await githubApi.getJsonUnchecked<{
-        check_runs: { name: string; status: string; conclusion: string }[];
-      }>(checkRunsUrl, opts)
+      await githubApi.getJson(checkRunsUrl, opts, CheckRunsResponseSchema)
     ).body;
     if (checkRunsRaw.check_runs?.length) {
       checkRuns = checkRunsRaw.check_runs.map((run) => ({
@@ -1245,7 +1265,11 @@ async function getStatusCheck(
     ? { cacheProvider: memCacheProvider }
     : { memCache: false };
 
-  return (await githubApi.getJsonUnchecked<GhBranchStatus[]>(url, opts)).body;
+  return (
+    (await githubApi.getJson(url, opts, GhBranchStatusListSchema)) as {
+      body: GhBranchStatus[];
+    }
+  ).body;
 }
 
 type GithubToRenovateStatusMapping = Record<string, BranchStatus>;
@@ -1706,12 +1730,13 @@ async function getComments(issueNo: number): Promise<Comment[]> {
   const repo = config.parentRepo ?? config.repository;
   const url = `repos/${repo}/issues/${issueNo}/comments?per_page=100`;
   try {
-    const { body: comments } = await githubApi.getJsonUnchecked<Comment[]>(
+    const { body: comments } = await githubApi.getJson(
       url,
       {
         paginate: true,
         cacheProvider: repoCacheProvider,
       },
+      GhIssueCommentListSchema,
     );
     logger.debug(`Found ${comments.length} comments`);
     return comments;

@@ -1,6 +1,7 @@
 import { logger } from '../../../logger/index.ts';
 import * as githubHttp from '../../../util/http/github.ts';
 import type { EmailAddress } from '../../../util/schema-utils/index.ts';
+import { GithubUserDetailsSchema, GithubUserEmailsSchema } from './schema.ts';
 import type { UserDetails } from './types.ts';
 
 const githubApi = new githubHttp.GithubHttp();
@@ -36,22 +37,20 @@ export async function getUserDetails(
   token: string,
 ): Promise<UserDetails> {
   try {
+    // https://docs.github.com/en/rest/users/users
     const userData = (
-      await githubApi.getJsonUnchecked<{
-        // https://docs.github.com/en/rest/users/users
-        login: string;
-        name: string;
-        id: number;
-        email: EmailAddress | null;
-      }>(`${endpoint}user`, {
-        token,
-      })
+      await githubApi.getJson(
+        `${endpoint}user`,
+        { token },
+        GithubUserDetailsSchema,
+      )
     ).body;
     return {
       username: userData.login,
-      name: userData.name,
+      // When name is absent from API, preserve undefined-like value (existing behavior)
+      name: userData.name!,
       id: userData.id,
-      email: userData.email,
+      email: userData.email as EmailAddress | null,
     };
   } catch (err) {
     logger.debug({ err }, 'Error authenticating with GitHub');
@@ -65,14 +64,13 @@ export async function getUserEmail(
 ): Promise<EmailAddress | null> {
   try {
     const emails = (
-      await githubApi.getJsonUnchecked<{ email: EmailAddress }[]>(
+      await githubApi.getJson(
         `${endpoint}user/emails`,
-        {
-          token,
-        },
+        { token },
+        GithubUserEmailsSchema,
       )
     ).body;
-    return emails?.[0].email ?? null;
+    return (emails?.[0]?.email as EmailAddress | undefined) ?? null;
   } catch {
     logger.debug(
       'Cannot read user/emails endpoint on GitHub to retrieve gitAuthor',

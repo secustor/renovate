@@ -1,4 +1,5 @@
 import { isNonEmptyString } from '@sindresorhus/is';
+import { z } from 'zod/v3';
 import { logger } from '../../../logger/index.ts';
 import { ExternalHostError } from '../../../types/errors/external-host-error.ts';
 import type { Nullish } from '../../../types/index.ts';
@@ -24,11 +25,14 @@ export async function fetchJSONFile(
   }
   const url = `${endpoint}repos/${repo}/contents/${fileName}${ref}`;
   logger.trace({ url }, `Preset URL`);
-  let res: { body: { content: string } };
+  const ContentSchema = z.object({ content: z.string() });
+  let res: { body: z.infer<typeof ContentSchema> };
   try {
-    res = await http.getJsonUnchecked(url, {
-      cacheProvider: repoCacheProvider,
-    });
+    res = await http.getJson(
+      url,
+      { cacheProvider: repoCacheProvider },
+      ContentSchema,
+    );
   } catch (err) {
     if (err instanceof ExternalHostError) {
       throw err;

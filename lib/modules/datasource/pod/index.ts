@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { z } from 'zod/v3';
 import { HOST_DISABLED } from '../../../constants/error-messages.ts';
 import { logger } from '../../../logger/index.ts';
 import { ExternalHostError } from '../../../types/errors/external-host-error.ts';
@@ -6,6 +7,7 @@ import { withCache } from '../../../util/cache/package/with-cache.ts';
 import { GithubHttp } from '../../../util/http/github.ts';
 import type { HttpError } from '../../../util/http/index.ts';
 import { newlineRegex, regEx } from '../../../util/regex.ts';
+import { LooseArray } from '../../../util/schema-utils/index.ts';
 import { Datasource } from '../datasource.ts';
 import { massageGithubUrl } from '../metadata.ts';
 import type { GetReleasesConfig, ReleaseResult } from '../types.ts';
@@ -120,12 +122,13 @@ export class PodDatasource extends Datasource {
     return null;
   }
 
-  private async requestGithub<T = unknown>(
+  private async requestGithub(
     url: string,
     packageName: string,
-  ): Promise<T | null> {
+  ): Promise<{ name: string }[] | null> {
+    const DirListingSchema = LooseArray(z.object({ name: z.string() }));
     try {
-      const resp = await this.githubHttp.getJsonUnchecked<T>(url);
+      const resp = await this.githubHttp.getJson(url, DirListingSchema);
       if (resp?.body) {
         return resp.body;
       }
@@ -144,7 +147,7 @@ export class PodDatasource extends Datasource {
     urlFormatOptions: URLFormatOptions = 'withShardWithSpec',
   ): Promise<ReleaseResult | null> {
     const url = releasesGithubUrl(packageName, { ...opts, useShard, useSpecs });
-    const resp = await this.requestGithub<{ name: string }[]>(url, packageName);
+    const resp = await this.requestGithub(url, packageName);
     if (resp) {
       const releases = resp.map(({ name }) => ({ version: name }));
       return { releases };

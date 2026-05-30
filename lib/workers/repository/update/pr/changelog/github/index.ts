@@ -6,6 +6,11 @@ import type {
   GithubGitTreeNode,
 } from '../../../../../../types/platform/github/index.ts';
 import { queryReleases } from '../../../../../../util/github/graphql/index.ts';
+import {
+  GithubGitBlobSchema,
+  GithubGitTreeSchema,
+  GithubRepoDefaultBranchSchema,
+} from '../../../../../../util/github/schema.ts';
 import { memCacheProvider } from '../../../../../../util/http/cache/memory-http-cache-provider.ts';
 import { GithubHttp } from '../../../../../../util/http/github.ts';
 import { fromBase64 } from '../../../../../../util/string.ts';
@@ -32,18 +37,21 @@ export async function getReleaseNotesMd(
   logger.trace('github.getReleaseNotesMd()');
   const apiPrefix = `${ensureTrailingSlash(apiBaseUrl)}repos/${repository}`;
   const { default_branch: defaultBranch = 'HEAD' } = (
-    await http.getJsonUnchecked<{ default_branch: string }>(apiPrefix, {
-      cacheProvider: memCacheProvider,
-    })
+    await http.getJson(
+      apiPrefix,
+      { cacheProvider: memCacheProvider },
+      GithubRepoDefaultBranchSchema,
+    )
   ).body;
 
   // https://docs.github.com/en/rest/reference/git#get-a-tree
-  const res = await http.getJsonUnchecked<GithubGitTree>(
+  const res = (await http.getJson(
     `${apiPrefix}/git/trees/${defaultBranch}${
       sourceDirectory ? '?recursive=1' : ''
     }`,
     { cacheProvider: memCacheProvider },
-  );
+    GithubGitTreeSchema,
+  )) as unknown as { body: GithubGitTree };
 
   // istanbul ignore if
   if (res.body.truncated) {
@@ -80,10 +88,11 @@ export async function getReleaseNotesMd(
   }
 
   // https://docs.github.com/en/rest/reference/git#get-a-blob
-  const fileRes = await http.getJsonUnchecked<GithubGitBlob>(
+  const fileRes = (await http.getJson(
     `${apiPrefix}/git/blobs/${sha}`,
     { cacheProvider: memCacheProvider },
-  );
+    GithubGitBlobSchema,
+  )) as unknown as { body: GithubGitBlob };
 
   const changelogMd = `${fromBase64(fileRes.body.content)}\n#\n##`;
   return { changelogFile, changelogMd };

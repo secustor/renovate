@@ -13,6 +13,7 @@ import type {
 import { parseLinkHeader } from '../../../util/url.ts';
 import { ApiCache } from './api-cache.ts';
 import { coerceRestPr } from './common.ts';
+import { GhRestPrListSchema } from './schema.ts';
 import type { ApiPageCache, GhPr, GhRestPr } from './types.ts';
 
 function getPrApiCache(): ApiCache<GhPr> {
@@ -111,7 +112,14 @@ export async function getPrCache(
 
         const urlPath = `repos/${repo}/pulls?per_page=${perPage}&state=all&sort=updated&direction=desc&page=${pageIdx}`;
 
-        const res = await http.getJsonUnchecked<GhRestPr[]>(urlPath, opts);
+        const res = (await http.getJson(
+          urlPath,
+          opts,
+          GhRestPrListSchema,
+        )) as unknown as {
+          body: GhRestPr[];
+          headers: { link?: string };
+        };
         apiQuotaAffected = true;
         requestsTotal += 1;
 

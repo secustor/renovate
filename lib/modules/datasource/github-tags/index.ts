@@ -1,4 +1,5 @@
 import { isBoolean, isNullOrUndefined } from '@sindresorhus/is';
+import { z } from 'zod/v3';
 import { logger } from '../../../logger/index.ts';
 import {
   queryReleases,
@@ -9,6 +10,7 @@ import { findCommitOfTag } from '../../../util/github/tags.ts';
 import { getApiBaseUrl, getSourceUrl } from '../../../util/github/url.ts';
 import { memCacheProvider } from '../../../util/http/cache/memory-http-cache-provider.ts';
 import { GithubHttp } from '../../../util/http/github.ts';
+import { LooseArray } from '../../../util/schema-utils/index.ts';
 import { Datasource } from '../datasource.ts';
 import type {
   DigestConfig,
@@ -47,10 +49,13 @@ export class GithubTagsDatasource extends Datasource {
     let digest: string | null = null;
     try {
       const url = `${apiBaseUrl}repos/${githubRepo}/commits?per_page=1`;
-      const res = await this.http.getJsonUnchecked<{ sha: string }[]>(url, {
-        cacheProvider: memCacheProvider,
-      });
-      digest = res.body[0].sha;
+      const CommitSchema = LooseArray(z.object({ sha: z.string() }));
+      const res = await this.http.getJson(
+        url,
+        { cacheProvider: memCacheProvider },
+        CommitSchema,
+      );
+      digest = res.body[0]?.sha ?? null;
     } catch (err) {
       logger.debug(
         { githubRepo, err, registryUrl },

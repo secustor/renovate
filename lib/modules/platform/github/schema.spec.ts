@@ -1,6 +1,22 @@
 import { ZodError } from 'zod/v4';
 import { logger } from '~test/util.ts';
-import { GithubContentResponse, GithubVulnerabilityAlerts } from './schema.ts';
+import {
+  CheckRunsResponseSchema,
+  CombinedBranchStatusSchema,
+  GhBranchStatusListSchema,
+  GhBranchStatusSchema,
+  GhIssueCommentListSchema,
+  GhRestPrListSchema,
+  GhRestPrSchema,
+  GhRestRepoListSchema,
+  GhRestRepoSchema,
+  GithubContentResponse,
+  GithubFileContentSchema,
+  GithubUserDetailsSchema,
+  GithubUserEmailsSchema,
+  GithubVulnerabilityAlerts,
+  InstallationRepositoriesSchema,
+} from './schema.ts';
 
 describe('modules/platform/github/schema', () => {
   it('should be parse directory response', () => {
@@ -240,5 +256,117 @@ describe('modules/platform/github/schema', () => {
       score: 9.8,
     });
     expect(result[0].security_advisory.cvss_severities?.cvss_v4).toBeNull();
+  });
+
+  describe('new schemas added for getJson migration', () => {
+    it('GhRestRepoSchema: parses minimal repo response', () => {
+      const result = GhRestRepoSchema.parse({
+        full_name: 'a/b',
+        archived: false,
+      });
+      expect(result.full_name).toBe('a/b');
+      expect(result.archived).toBe(false);
+      expect(result.topics).toEqual([]);
+    });
+
+    it('GhRestRepoListSchema: drops invalid elements', () => {
+      const result = GhRestRepoListSchema.parse([
+        { full_name: 'a/b', archived: false },
+        null,
+        { full_name: 'c/d', archived: true },
+      ]);
+      expect(result).toHaveLength(2);
+      expect(result[0].full_name).toBe('a/b');
+    });
+
+    it('GhRestPrSchema: parses minimal PR with only number field', () => {
+      const result = GhRestPrSchema.parse({ number: 42 });
+      expect(result.number).toBe(42);
+    });
+
+    it('GhRestPrListSchema: parses PR list and drops invalid', () => {
+      const result = GhRestPrListSchema.parse([
+        { number: 1, state: 'open', title: 'PR 1', updated_at: '2024-01-01' },
+        null,
+        { number: 2 },
+      ]);
+      expect(result).toHaveLength(2);
+    });
+
+    it('CombinedBranchStatusSchema: parses with optional state', () => {
+      const result = CombinedBranchStatusSchema.parse({});
+      expect(result.state).toBeUndefined();
+      expect(result.statuses).toEqual([]);
+    });
+
+    it('GhBranchStatusSchema: parses with optional state', () => {
+      const result = GhBranchStatusSchema.parse({ context: 'ctx-1' });
+      expect(result.context).toBe('ctx-1');
+      expect(result.state).toBeUndefined();
+    });
+
+    it('GhBranchStatusListSchema: drops invalid elements and handles non-array', () => {
+      const arrayResult = GhBranchStatusListSchema.parse([
+        { context: 'ctx-1', state: 'success' },
+        { context: 'ctx-2' },
+      ]);
+      expect(arrayResult).toHaveLength(2);
+
+      const emptyResult = GhBranchStatusListSchema.parse({});
+      expect(emptyResult).toEqual([]);
+    });
+
+    it('CheckRunsResponseSchema: handles missing conclusion', () => {
+      const result = CheckRunsResponseSchema.parse({
+        check_runs: [
+          { name: 'ci', status: 'completed', conclusion: 'success' },
+          { name: 'ci2', status: 'pending' },
+        ],
+      });
+      expect(result.check_runs).toHaveLength(2);
+      expect(result.check_runs[1].conclusion).toBe('');
+    });
+
+    it('GhIssueCommentListSchema: parses comment list', () => {
+      const result = GhIssueCommentListSchema.parse([
+        { id: 1, body: 'comment 1' },
+        { id: 2, body: 'comment 2' },
+      ]);
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe(1);
+    });
+
+    it('GithubFileContentSchema: parses file content', () => {
+      const result = GithubFileContentSchema.parse({ content: 'SGVsbG8=' });
+      expect(result.content).toBe('SGVsbG8=');
+    });
+
+    it('GithubUserDetailsSchema: handles missing optional fields', () => {
+      const result = GithubUserDetailsSchema.parse({ login: 'renovate-bot' });
+      expect(result.login).toBe('renovate-bot');
+      expect(result.name).toBeUndefined();
+      expect(result.id).toBe(0);
+      expect(result.email).toBeUndefined();
+    });
+
+    it('GithubUserEmailsSchema: parses email list and drops invalid', () => {
+      const result = GithubUserEmailsSchema.parse([
+        { email: 'user@domain.com' },
+        {},
+        { email: 'other@domain.com' },
+      ]);
+      expect(result).toHaveLength(2);
+      expect(result[0].email).toBe('user@domain.com');
+    });
+
+    it('InstallationRepositoriesSchema: parses installation repos', () => {
+      const result = InstallationRepositoriesSchema.parse({
+        repositories: [
+          { full_name: 'a/b', archived: false },
+          { full_name: 'c/d', archived: true },
+        ],
+      });
+      expect(result.repositories).toHaveLength(2);
+    });
   });
 });

@@ -2,6 +2,7 @@ import { isBoolean } from '@sindresorhus/is';
 import { logger } from '../../../logger/index.ts';
 import { withCache } from '../../../util/cache/package/with-cache.ts';
 import { queryReleases } from '../../../util/github/graphql/index.ts';
+import { GithubRestReleaseSchema } from '../../../util/github/schema.ts';
 import type {
   GithubDigestFile,
   GithubRestAsset,
@@ -236,10 +237,10 @@ export class GithubReleaseAttachmentsDatasource extends Datasource {
     }
 
     const apiBaseUrl = getApiBaseUrl(registryUrl);
-    const { body: currentRelease } =
-      await this.http.getJsonUnchecked<GithubRestRelease>(
-        `${apiBaseUrl}repos/${repo}/releases/tags/${currentValue}`,
-      );
+    const { body: currentRelease } = (await this.http.getJson(
+      `${apiBaseUrl}repos/${repo}/releases/tags/${currentValue}`,
+      GithubRestReleaseSchema,
+    )) as unknown as { body: GithubRestRelease };
     const digestAsset = await this.findDigestAsset(
       currentRelease,
       currentDigest,
@@ -248,10 +249,10 @@ export class GithubReleaseAttachmentsDatasource extends Datasource {
     if (!digestAsset || newValue === currentValue) {
       newDigest = currentDigest;
     } else {
-      const { body: newRelease } =
-        await this.http.getJsonUnchecked<GithubRestRelease>(
-          `${apiBaseUrl}repos/${repo}/releases/tags/${newValue}`,
-        );
+      const { body: newRelease } = (await this.http.getJson(
+        `${apiBaseUrl}repos/${repo}/releases/tags/${newValue}`,
+        GithubRestReleaseSchema,
+      )) as unknown as { body: GithubRestRelease };
       newDigest = await this.mapDigestAssetToRelease(digestAsset, newRelease);
     }
     return newDigest;
