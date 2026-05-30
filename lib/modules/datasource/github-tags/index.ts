@@ -1,5 +1,5 @@
 import { isBoolean, isNullOrUndefined } from '@sindresorhus/is';
-import { z } from 'zod/v3';
+import { z } from 'zod/v4';
 import { logger } from '../../../logger/index.ts';
 import {
   queryReleases,
