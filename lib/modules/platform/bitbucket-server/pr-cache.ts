@@ -6,6 +6,7 @@ import * as memCache from '../../../util/cache/memory/index.ts';
 import { getCache } from '../../../util/cache/repository/index.ts';
 import type { BitbucketServerHttp } from '../../../util/http/bitbucket-server.ts';
 import { getQueryString } from '../../../util/url.ts';
+import { BbsRestPrSchema, PrPageResponse } from './schema.ts';
 import type { BbsPr, BbsPrCacheData, BbsRestPr } from './types.ts';
 import { prInfo } from './utils.ts';
 
@@ -125,7 +126,7 @@ export class BbsPrCache {
     prCache.setPr(item);
   }
 
-  private reconcile(rawItems: BbsRestPr[]): boolean {
+  private reconcile(rawItems: BbsRestPrSchema[]): boolean {
     logger.debug('reconciled');
     const { items } = this.cache;
     let { updatedDate } = this.cache;
@@ -136,7 +137,7 @@ export class BbsPrCache {
     for (const rawItem of rawItems) {
       const id = rawItem.id;
 
-      const newItem = prInfo(rawItem);
+      const newItem = prInfo(rawItem as unknown as BbsRestPr);
 
       const oldItem = items[id];
       if (dequal(oldItem, newItem)) {
@@ -146,9 +147,9 @@ export class BbsPrCache {
 
       items[id] = newItem;
 
-      const itemTime = DateTime.fromMillis(rawItem.updatedDate);
+      const itemTime = DateTime.fromMillis(rawItem.updatedDate ?? 0);
       if (!cacheTime || itemTime > cacheTime) {
-        updatedDate = rawItem.updatedDate;
+        updatedDate = rawItem.updatedDate ?? null;
       }
     }
 
@@ -169,14 +170,12 @@ export class BbsPrCache {
     let query: string | null = getQueryString(searchParams);
 
     while (query) {
-      const res = await http.getJsonUnchecked<{
-        nextPageStart: string;
-        values: BbsRestPr[];
-      }>(
+      const res = await http.getJson(
         `./rest/api/1.0/projects/${this.projectKey}/repos/${this.repo}/pull-requests?${query}`,
         {
           memCache: false,
         },
+        PrPageResponse,
       );
 
       const needNextPage = this.reconcile(res.body.values);

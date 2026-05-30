@@ -121,9 +121,9 @@ exports[`modules/platform/bitbucket-server/index > endpoint with path > getPr() 
   "createdAt": undefined,
   "number": undefined,
   "reviewers": [],
-  "sourceBranch": undefined,
+  "sourceBranch": "",
   "state": "merged",
-  "targetBranch": undefined,
+  "targetBranch": "",
   "title": undefined,
   "version": 0,
 }

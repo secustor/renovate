@@ -11,7 +11,6 @@ import {
 } from '../../../constants/error-messages.ts';
 import { logger } from '../../../logger/index.ts';
 import type { BranchStatus } from '../../../types/index.ts';
-import type { FileData } from '../../../types/platform/bitbucket-server/index.ts';
 import { parseJson } from '../../../util/common.ts';
 import { getEnv } from '../../../util/env.ts';
 import * as git from '../../../util/git/index.ts';
@@ -54,15 +53,32 @@ import { smartTruncate } from '../utils/pr-body.ts';
 import { BbsPrCache } from './pr-cache.ts';
 import type {
   Comment,
-  PullRequestActivity,
   PullRequestCommentActivity,
   PullRequestMerge,
 } from './schema.ts';
-import { ReviewerGroups, User, Users } from './schema.ts';
+import {
+  ApplicationProperties,
+  BbsRestBranchSchema,
+  BbsRestPrList,
+  BbsRestPrSchema,
+  BbsRestRepoList,
+  BbsRestRepoSchema,
+  BitbucketCommitStatusSchema,
+  BitbucketStatusList,
+  BitbucketStatusSchema,
+  CommentVersion,
+  DefaultReviewerList,
+  FileDataSchema,
+  PrMergeSettings,
+  PullRequestActivityList,
+  RepoId,
+  ReviewerGroups,
+  User,
+  Users,
+} from './schema.ts';
 import type {
   BbsConfig,
   BbsPr,
-  BbsRestBranch,
   BbsRestPr,
   BbsRestRepo,
   BbsRestUserRef,
@@ -134,9 +150,11 @@ export async function initPlatform({
   try {
     const env = getEnv();
     let bitbucketServerVersion = env.RENOVATE_X_PLATFORM_VERSION;
-    const { body, headers } = await bitbucketServerHttp.getJsonUnchecked<{
-      version: string;
-    }>(`./rest/api/1.0/application-properties`, { ...(token && { token }) });
+    const { body, headers } = await bitbucketServerHttp.getJson(
+      `./rest/api/1.0/application-properties`,
+      { ...(token && { token }) },
+      ApplicationProperties,
+    );
 
     bitbucketServerVersion ??= body.version;
     if (isNonEmptyStringAndNotWhitespace(headers['x-ausername']) && !username) {
@@ -204,9 +222,10 @@ export async function getRepos(): Promise<string[]> {
   logger.debug('Autodiscovering Bitbucket Server repositories');
   try {
     const repos = (
-      await bitbucketServerHttp.getJsonUnchecked<BbsRestRepo[]>(
+      await bitbucketServerHttp.getJson(
         `./rest/api/1.0/repos?permission=REPO_WRITE&state=AVAILABLE`,
         { paginate: true },
+        BbsRestRepoList,
       )
     ).body;
 
@@ -227,7 +246,7 @@ export async function getRawFile(
   const repo = repoName ?? config.repository;
   const [project, slug] = repo.split('/');
   const fileUrl = `./rest/api/1.0/projects/${project}/repos/${slug}/browse/${fileName}?limit=20000${branchOrTag ? `&at=${branchOrTag}` : ''}`;
-  const res = await bitbucketServerHttp.getJsonUnchecked<FileData>(fileUrl);
+  const res = await bitbucketServerHttp.getJson(fileUrl, FileDataSchema);
   const { isLastPage, lines, size } = res.body;
   if (isLastPage) {
     return lines.map(({ text }) => text).join('\n');
@@ -272,14 +291,16 @@ export async function initRepo({
 
   try {
     const info = (
-      await bitbucketServerHttp.getJsonUnchecked<BbsRestRepo>(
+      await bitbucketServerHttp.getJson(
         `./rest/api/1.0/projects/${config.projectKey}/repos/${config.repositorySlug}`,
+        BbsRestRepoSchema,
       )
     ).body;
     config.owner = info.project.key;
     logger.debug(`${repository} owner = ${config.owner}`);
-    const branchRes = await bitbucketServerHttp.getJsonUnchecked<BbsRestBranch>(
+    const branchRes = await bitbucketServerHttp.getJson(
       `./rest/api/1.0/projects/${config.projectKey}/repos/${config.repositorySlug}/branches/default`,
+      BbsRestBranchSchema,
     );
 
     // 204 means empty, 404 means repo not found or missing default branch. repo must exist here.
@@ -292,7 +313,7 @@ export async function initRepo({
       // TODO #22198
       defaults.endpoint!,
       gitUrl,
-      info,
+      info as unknown as BbsRestRepo,
       opts,
     );
 
@@ -330,10 +351,9 @@ export async function getBranchForceRebase(
   _branchName: string,
 ): Promise<boolean> {
   // https://docs.atlassian.com/bitbucket-server/rest/7.0.1/bitbucket-rest.html#idp342
-  const res = await bitbucketServerHttp.getJsonUnchecked<{
-    mergeConfig: { defaultStrategy: { id: string } };
-  }>(
+  const res = await bitbucketServerHttp.getJson(
     `./rest/api/1.0/projects/${config.projectKey}/repos/${config.repositorySlug}/settings/pull-requests`,
+    PrMergeSettings,
   );
 
   // If the default merge strategy contains `ff-only` the PR can only be merged
@@ -363,13 +383,14 @@ export async function getPr(
     opts.cacheProvider = memCacheProvider;
   }
 
-  const res = await bitbucketServerHttp.getJsonUnchecked<BbsRestPr>(
+  const res = await bitbucketServerHttp.getJson(
     `./rest/api/1.0/projects/${config.projectKey}/repos/${config.repositorySlug}/pull-requests/${prNo}`,
     opts,
+    BbsRestPrSchema,
   );
 
   const pr: BbsPr = {
-    ...utils.prInfo(res.body),
+    ...utils.prInfo(res.body as unknown as BbsRestPr),
     reviewers: res.body.reviewers.map((r) => r.user.name),
   };
   // TODO #22198
@@ -435,12 +456,13 @@ export async function findPr({
 
     const query = getQueryString(searchParams);
     const prs = (
-      await bitbucketServerHttp.getJsonUnchecked<BbsRestPr[]>(
+      await bitbucketServerHttp.getJson(
         `./rest/api/1.0/projects/${config.projectKey}/repos/${config.repositorySlug}/pull-requests?${query}`,
         {
           paginate: true,
           limit: 1, // only fetch the latest pr
         },
+        BbsRestPrList,
       )
     ).body;
 
@@ -449,7 +471,7 @@ export async function findPr({
       return null;
     }
 
-    return utils.prInfo(prs[0]);
+    return utils.prInfo(prs[0] as unknown as BbsRestPr);
   }
 
   const prList = await getPrList();
@@ -483,7 +505,7 @@ export async function refreshPr(number: number): Promise<void> {
 async function getStatus(
   branchName: string,
   memCache = true,
-): Promise<utils.BitbucketCommitStatus> {
+): Promise<BitbucketCommitStatusSchema> {
   const branchCommit = git.getBranchCommit(branchName);
 
   /* v8 ignore next: temporary code */
@@ -492,12 +514,11 @@ async function getStatus(
     : { memCache: false };
 
   return (
-    await bitbucketServerHttp.getJsonUnchecked<utils.BitbucketCommitStatus>(
-      // TODO: types (#22198)
+    await bitbucketServerHttp.getJson(
       `./rest/build-status/1.0/commits/stats/${branchCommit!}`,
       opts,
-    )
-  ).body;
+      BitbucketCommitStatusSchema,
+    )  ).body;
 }
 
 // Returns the combined status for a branch.
@@ -534,7 +555,7 @@ export async function getBranchStatus(
 async function getStatusCheck(
   branchName: string,
   memCache = true,
-): Promise<utils.BitbucketStatus[]> {
+): Promise<BitbucketStatusSchema[]> {
   const branchCommit = git.getBranchCommit(branchName);
 
   const opts: BitbucketServerHttpOptions = { paginate: true };
@@ -546,11 +567,11 @@ async function getStatusCheck(
   }
 
   return (
-    await bitbucketServerHttp.getJsonUnchecked<utils.BitbucketStatus[]>(
+    await bitbucketServerHttp.getJson(
       `./rest/build-status/1.0/commits/${branchCommit!}`,
       opts,
-    )
-  ).body;
+      BitbucketStatusList,
+    )  ).body;
 }
 
 // https://docs.atlassian.com/bitbucket-server/rest/6.0.0/bitbucket-build-rest.html#idp2
@@ -851,9 +872,10 @@ export function deleteLabel(issueNo: number, label: string): Promise<void> {
 async function getComments(prNo: number): Promise<Comment[]> {
   // GET /rest/api/1.0/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/activities
   const activities = (
-    await bitbucketServerHttp.getJsonUnchecked<PullRequestActivity[]>(
+    await bitbucketServerHttp.getJson(
       `./rest/api/1.0/projects/${config.projectKey}/repos/${config.repositorySlug}/pull-requests/${prNo}/activities`,
       { paginate: true },
+      PullRequestActivityList,
     )
   ).body;
 
@@ -886,8 +908,9 @@ async function getCommentVersion(
 ): Promise<number> {
   // GET /rest/api/1.0/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/comments/{commentId}
   const { version } = (
-    await bitbucketServerHttp.getJsonUnchecked<{ version: number }>(
+    await bitbucketServerHttp.getJson(
       `./rest/api/1.0/projects/${config.projectKey}/repos/${config.repositorySlug}/pull-requests/${prNo}/comments/${commentId}`,
+      CommentVersion,
     )
   ).body;
 
@@ -1023,18 +1046,20 @@ export async function createPr({
   if (platformPrOptions?.bbUseDefaultReviewers) {
     logger.debug(`fetching default reviewers`);
     const { id } = (
-      await bitbucketServerHttp.getJsonUnchecked<{ id: number }>(
+      await bitbucketServerHttp.getJson(
         `./rest/api/1.0/projects/${config.projectKey}/repos/${config.repositorySlug}`,
+        RepoId,
       )
     ).body;
 
     const defReviewers = (
-      await bitbucketServerHttp.getJsonUnchecked<{ name: string }[]>(
+      await bitbucketServerHttp.getJson(
         `./rest/default-reviewers/1.0/projects/${config.projectKey}/repos/${
           config.repositorySlug
         }/reviewers?sourceRefId=refs/heads/${escapeHash(
           sourceBranch,
         )}&targetRefId=refs/heads/${base}&sourceRepoId=${id}&targetRepoId=${id}`,
+        DefaultReviewerList,
       )
     ).body;
 
