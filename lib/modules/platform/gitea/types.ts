@@ -1,6 +1,17 @@
 import type { LongCommitSha } from '../../../util/git/types.ts';
 import type { EmailAddress } from '../../../util/schema-utils/index.ts';
 import type { Pr, RepoSortMethod, SortMethod } from '../types.ts';
+import type {
+  BranchSchema,
+  CommentSchema,
+  CommitStatusSchema,
+  IssueSchema,
+  LabelSchema,
+  PRSchema,
+  RepoContentsSchema,
+  RepoSchema,
+  UserSchema,
+} from './schema.ts';
 
 export interface PrReviewersParams {
   reviewers?: string[];
@@ -27,74 +38,26 @@ export interface GiteaLabel {
   id: number;
   name: string;
 }
-export interface PR {
-  number: number;
-  state: PRState;
-  title: string;
-  body: string;
-  mergeable: boolean;
-  merged?: boolean;
-  created_at: string;
-  updated_at: string;
-  closed_at: string | null;
-  diff_url: string;
-  base?: {
-    ref: string;
-  };
+
+// PR with LongCommitSha branding preserved for compatibility
+export type PR = Omit<PRSchema, 'head'> & {
   head?: {
     label: string;
     sha: LongCommitSha;
     repo?: Repo;
   };
-  assignee?: {
-    login?: string;
-  };
-  assignees?: any[];
-  user?: { username?: string };
+};
 
-  // labels returned from the Gitea API are represented as an array of objects
-  // ref: https://docs.gitea.com/api/1.20/#tag/repository/operation/repoGetPullRequest
-  labels?: GiteaLabel[];
-}
+export type Issue = IssueSchema;
 
-export interface Issue {
-  number: number;
-  state: IssueState;
-  title: string;
-  body: string;
-  assignees: User[];
-  labels: Label[];
-}
+// User with EmailAddress branding preserved for compatibility
+export type User = Omit<UserSchema, 'email'> & { email: EmailAddress };
 
-export interface User {
-  id: number;
-  email: EmailAddress;
-  full_name?: string;
-  username: string;
-}
-
-export interface Repo {
-  id: number;
-  allow_fast_forward_only_merge: boolean;
-  allow_merge_commits: boolean;
-  allow_rebase: boolean;
-  allow_rebase_explicit: boolean;
-  allow_squash_merge: boolean;
-  archived: boolean;
-  clone_url?: string;
+// Repo with proper PRMergeMethod and User owner types
+export type Repo = Omit<RepoSchema, 'default_merge_style' | 'owner'> & {
   default_merge_style: PRMergeMethod;
-  external_tracker?: unknown;
-  has_issues: boolean;
-  has_pull_requests: boolean;
-  ssh_url?: string;
-  default_branch: string;
-  empty: boolean;
-  fork: boolean;
-  full_name: string;
-  mirror: boolean;
   owner: User;
-  permissions: RepoPermission;
-}
+};
 
 export interface RepoPermission {
   admin: boolean;
@@ -102,33 +65,19 @@ export interface RepoPermission {
   push: boolean;
 }
 
+export type Label = LabelSchema;
+export type Branch = BranchSchema;
+export type CommitStatus = Omit<CommitStatusSchema, 'status'> & {
+  status: CommitStatusType;
+};
+export type Comment = CommentSchema;
+
 export interface RepoSearchResults {
   ok: boolean;
   data: Repo[];
 }
 
-export interface RepoContents {
-  path: string;
-  content?: string;
-  contentString?: string;
-}
-
-export interface Comment {
-  id: number;
-  body: string;
-}
-
-export interface Label {
-  id: number;
-  name: string;
-  description: string;
-  color: string;
-}
-
-export interface Branch {
-  name: string;
-  commit: Commit;
-}
+export type RepoContents = RepoContentsSchema;
 
 export interface Commit {
   id: string;
@@ -139,15 +88,6 @@ export interface CommitUser {
   name: string;
   email: EmailAddress;
   username: string;
-}
-
-export interface CommitStatus {
-  id: number;
-  status: CommitStatusType;
-  context: string;
-  description?: string;
-  target_url?: string;
-  created_at: string;
 }
 
 export interface CombinedCommitStatus {
