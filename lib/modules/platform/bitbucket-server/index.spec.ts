@@ -2142,8 +2142,8 @@ describe('modules/platform/bitbucket-server/index', () => {
             `${urlPath}/rest/api/1.0/projects/SOME/repos/repo/pull-requests/5`,
           )
           .reply(200, {
+            id: 5,
             version: 0,
-            number: 5,
             state: 'MERGED',
             reviewers: [],
             fromRef: {},
