@@ -23,33 +23,33 @@ export type UserSchema = z.infer<typeof UserSchema>;
 
 // ---- Repo permission ----
 export const RepoPermissionSchema = z.object({
-  admin: z.boolean().optional(),
-  pull: z.boolean().optional(),
-  push: z.boolean().optional(),
+  admin: z.boolean().default(false),
+  pull: z.boolean().default(false),
+  push: z.boolean().default(false),
 });
 
 // ---- Repo ----
 export const RepoSchema = z.object({
-  id: z.number().optional(),
-  allow_fast_forward_only_merge: z.boolean().optional(),
-  allow_merge_commits: z.boolean().optional(),
-  allow_rebase: z.boolean().optional(),
-  allow_rebase_explicit: z.boolean().optional(),
-  allow_squash_merge: z.boolean().optional(),
+  id: z.number().default(0),
+  allow_fast_forward_only_merge: z.boolean().default(false),
+  allow_merge_commits: z.boolean().default(false),
+  allow_rebase: z.boolean().default(false),
+  allow_rebase_explicit: z.boolean().default(false),
+  allow_squash_merge: z.boolean().default(false),
   archived: z.boolean().optional(),
   clone_url: z.string().optional(),
   default_merge_style: z.string().optional(),
   external_tracker: z.unknown().optional(),
-  has_issues: z.boolean().optional(),
+  has_issues: z.boolean().default(false),
   has_pull_requests: z.boolean().optional(),
   ssh_url: z.string().optional(),
-  default_branch: z.string().optional(),
+  default_branch: z.string().default(''),
   empty: z.boolean().optional(),
   fork: z.boolean().optional(),
   full_name: z.string(),
   mirror: z.boolean().optional(),
   owner: UserSchema.optional(),
-  permissions: RepoPermissionSchema.optional(),
+  permissions: RepoPermissionSchema.default({}),
 });
 export type RepoSchema = z.infer<typeof RepoSchema>;
 
@@ -172,10 +172,21 @@ export const BranchSchema = z.object({
 export type BranchSchema = z.infer<typeof BranchSchema>;
 
 // ---- CommitStatus ----
+const commitStatusTypeValues = [
+  'pending',
+  'success',
+  'error',
+  'failure',
+  'warning',
+  'unknown',
+] as const;
+
+export const CommitStatusTypeSchema = z.enum(commitStatusTypeValues);
+
 export const CommitStatusSchema = z.object({
   id: z.number(),
-  // Accept any string for status to remain lenient (unknown values are handled at runtime)
-  status: z.string(),
+  // Map unknown API status strings to 'unknown' for type safety
+  status: CommitStatusTypeSchema.catch('unknown'),
   context: z.string(),
   description: z.string().optional(),
   target_url: z.string().optional(),

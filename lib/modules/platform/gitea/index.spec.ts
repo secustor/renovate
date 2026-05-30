@@ -41,6 +41,7 @@ describe('modules/platform/gitea/index', () => {
     return partial<Repo>({
       permissions: partial<RepoPermission>({ push: true, pull: true }),
       has_pull_requests: true,
+      has_issues: true,
       ...opts,
     });
   }

@@ -285,7 +285,7 @@ describe('modules/platform/gitea/gitea-helper', () => {
         .get(`/repos/${mockRepo.full_name}/contents/${mockContents.path}`)
         .reply(200, { ...mockContents, contentString: undefined });
 
-      const res = await getRepoContents(mockRepo.full_name, mockContents.path);
+      const res = await getRepoContents(mockRepo.full_name, mockContents.path!);
       expect(res).toEqual(mockContents);
     });
 
@@ -299,14 +299,14 @@ describe('modules/platform/gitea/gitea-helper', () => {
 
       const res = await getRepoContents(
         mockRepo.full_name,
-        mockContents.path,
+        mockContents.path!,
         mockCommitHash,
       );
       expect(res).toEqual(mockContents);
     });
 
     it('should properly escape paths', async () => {
-      const escapedPath = encodeURIComponent(otherMockContents.path);
+      const escapedPath = encodeURIComponent(otherMockContents.path!);
 
       httpMock
         .scope(baseUrl)
@@ -315,7 +315,7 @@ describe('modules/platform/gitea/gitea-helper', () => {
 
       const res = await getRepoContents(
         mockRepo.full_name,
-        otherMockContents.path,
+        otherMockContents.path!,
       );
       expect(res).toEqual(otherMockContents);
     });
@@ -330,7 +330,7 @@ describe('modules/platform/gitea/gitea-helper', () => {
           contentString: undefined,
         });
 
-      const res = await getRepoContents(mockRepo.full_name, mockContents.path);
+      const res = await getRepoContents(mockRepo.full_name, mockContents.path!);
       expect(res).toEqual({
         ...mockContents,
         content: undefined,

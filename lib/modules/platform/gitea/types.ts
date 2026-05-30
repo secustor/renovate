@@ -67,9 +67,7 @@ export interface RepoPermission {
 
 export type Label = LabelSchema;
 export type Branch = BranchSchema;
-export type CommitStatus = Omit<CommitStatusSchema, 'status'> & {
-  status: CommitStatusType;
-};
+export type CommitStatus = CommitStatusSchema;
 export type Comment = CommentSchema;
 
 export interface RepoSearchResults {

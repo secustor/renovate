@@ -242,14 +242,16 @@ describe('modules/platform/gitea/schema', () => {
       });
     });
 
-    it('accepts unknown status strings', () => {
+    it('maps unknown status strings to "unknown"', () => {
       const status = {
         id: 1,
         status: 'xyz',
         context: 'ci',
         created_at: '2024-01-01T00:00:00Z',
       };
-      expect(CommitStatusSchema.parse(status)).toMatchObject({ status: 'xyz' });
+      expect(CommitStatusSchema.parse(status)).toMatchObject({
+        status: 'unknown',
+      });
     });
   });
 
