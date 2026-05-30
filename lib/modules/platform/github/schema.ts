@@ -156,12 +156,12 @@ export type GithubBranchRulesets = z.infer<typeof GithubBranchRulesets>;
 // https://docs.github.com/en/rest/repos/repos#get-a-repository
 export const GhRestRepoSchema = z.object({
   full_name: z.string(),
-  default_branch: z.string().optional(),
+  default_branch: z.string().default(''),
   owner: z
     .object({
       login: z.string(),
     })
-    .optional(),
+    .default({ login: '' }),
   archived: z.boolean().optional().default(false),
   topics: z.array(z.string()).optional().default([]),
 });
