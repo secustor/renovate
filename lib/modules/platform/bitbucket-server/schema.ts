@@ -118,7 +118,7 @@ const BbsRestBranchRefSchema = z.object({
 
 // Full PR object
 export const BbsRestPrSchema = z.object({
-  id: z.number().optional().nullable(),
+  id: z.number(),
   version: z.number().optional().nullable(),
   title: z.string().optional().nullable(),
   description: z.string().optional().nullable().catch(null),
@@ -129,7 +129,7 @@ export const BbsRestPrSchema = z.object({
     .catch(null),
   fromRef: BbsRestBranchRefSchema.catch({ displayId: "", id: "" }),
   toRef: BbsRestBranchRefSchema.catch({ displayId: "", id: "" }),
-  reviewers: z.array(BbsRestUserRefSchema).optional().nullable().catch([]),
+  reviewers: z.array(BbsRestUserRefSchema).default([]).catch([]),
   createdDate: z.union([z.string(), z.number()]).optional().nullable(),
   updatedDate: z.number().optional().nullable(),
 });
