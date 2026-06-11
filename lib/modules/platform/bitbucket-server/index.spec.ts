@@ -2209,7 +2209,7 @@ describe('modules/platform/bitbucket-server/index', () => {
           .post(
             `${urlPath}/rest/api/1.0/projects/SOME/repos/repo/pull-requests/5/decline?version=42`,
           )
-          .reply(200, { status: 'DECLINED' })
+          .reply(200, { version: 43 })
           .get(
             `${urlPath}/rest/api/1.0/projects/SOME/repos/repo/pull-requests?state=ALL&limit=100&role.1=AUTHOR&username.1=abc`,
           )
@@ -2246,7 +2246,7 @@ describe('modules/platform/bitbucket-server/index', () => {
           .post(
             `${urlPath}/rest/api/1.0/projects/SOME/repos/repo/pull-requests/5/reopen?version=42`,
           )
-          .reply(200, { status: 'OPEN' })
+          .reply(200, { version: 43 })
           .get(
             `${urlPath}/rest/api/1.0/projects/SOME/repos/repo/pull-requests?state=ALL&limit=100&role.1=AUTHOR&username.1=abc`,
           )
@@ -2407,7 +2407,7 @@ describe('modules/platform/bitbucket-server/index', () => {
           .post(
             `${urlPath}/rest/api/1.0/projects/SOME/repos/repo/pull-requests/5/merge?version=1`,
           )
-          .reply(200);
+          .reply(200, { version: 2 });
 
         expect(
           await bitbucket.mergePr({

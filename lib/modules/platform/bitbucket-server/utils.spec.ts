@@ -2,11 +2,8 @@ import type { Response } from 'got';
 import { partial } from '~test/util.ts';
 import { CONFIG_GIT_URL_UNAVAILABLE } from '../../../constants/error-messages.ts';
 import { parseUrl } from '../../../util/url.ts';
-import type {
-  BbsRestRepo,
-  BitbucketError,
-  BitbucketErrorResponse,
-} from './types.ts';
+import type { BbsRestRepo } from './schema.ts';
+import type { BitbucketError, BitbucketErrorResponse } from './types.ts';
 import {
   BITBUCKET_INVALID_REVIEWERS_EXCEPTION,
   getExtraCloneOpts,

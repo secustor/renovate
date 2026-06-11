@@ -1,5 +1,6 @@
 import { z } from 'zod/v4';
 import {
+  DeepNullish,
   EmailAddress,
   LooseArray,
 } from '../../../util/schema-utils/index.ts';
@@ -29,7 +30,7 @@ export const PullRequestMerge = z.object({
 export type PullRequestMerge = z.infer<typeof PullRequestMerge>;
 
 export const PullRequestCommentActivity = z.object({
-  action: z.literal("COMMENTED"),
+  action: z.literal('COMMENTED'),
   commentAction: z.string(),
   comment: Comment,
 });
@@ -49,7 +50,7 @@ export const ReviewerGroup = z.object({
   name: z.string(),
   users: z.array(User),
   scope: z.object({
-    type: z.union([z.literal("REPOSITORY"), z.literal("PROJECT")]),
+    type: z.union([z.literal('REPOSITORY'), z.literal('PROJECT')]),
   }),
 });
 export const ReviewerGroups = z.array(ReviewerGroup);
@@ -61,102 +62,107 @@ export const ApplicationProperties = z.object({
 export type ApplicationProperties = z.infer<typeof ApplicationProperties>;
 
 // Repository object
-export const BbsRestRepoSchema = z.object({
-  id: z.number(),
-  slug: z.string(),
-  project: z.object({ key: z.string() }),
-  origin: z
-    .object({ name: z.string(), slug: z.string() })
-    .optional()
-    .nullable(),
-  links: z.object({
-    clone: z
-      .array(z.object({ href: z.string(), name: z.string() }))
-      .optional()
-      .nullable(),
+export const BbsRestRepo = DeepNullish(
+  z.object({
+    id: z.number(),
+    slug: z.string(),
+    project: z.object({ key: z.string() }),
+    origin: z.object({ name: z.string(), slug: z.string() }).optional(),
+    links: z.object({
+      clone: z
+        .array(z.object({ href: z.string(), name: z.string() }))
+        .optional(),
+    }),
   }),
-});
-export type BbsRestRepoSchema = z.infer<typeof BbsRestRepoSchema>;
+);
+export type BbsRestRepo = z.infer<typeof BbsRestRepo>;
 
 // Paginated list of repos
-export const BbsRestRepoList = LooseArray(BbsRestRepoSchema);
+export const BbsRestRepoList = LooseArray(BbsRestRepo);
 
 // Branch object (nullable to handle empty 204 responses)
-export const BbsRestBranchSchema = z
+export const BbsRestBranch = z
   .object({
     displayId: z.string(),
   })
   .catch({ displayId: '' });
-export type BbsRestBranchSchema = z.infer<typeof BbsRestBranchSchema>;
+export type BbsRestBranch = z.infer<typeof BbsRestBranch>;
 
 // PR merge settings
-export const PrMergeSettings = z.object({
-  mergeConfig: z
-    .object({
-      defaultStrategy: z
-        .object({
-          id: z.string(),
-        })
-        .nullable()
-        .optional(),
-    })
-    .nullable()
-    .optional(),
-});
+export const PrMergeSettings = DeepNullish(
+  z.object({
+    mergeConfig: z
+      .object({
+        defaultStrategy: z.object({ id: z.string() }).optional(),
+      })
+      .optional(),
+  }),
+);
 export type PrMergeSettings = z.infer<typeof PrMergeSettings>;
 
 // PR user ref
-const BbsRestUserRefSchema = z.object({
+export const BbsRestUserRef = z.object({
   user: z.object({ name: z.string() }),
 });
+export type BbsRestUserRef = z.infer<typeof BbsRestUserRef>;
 
 // PR branch ref
-const BbsRestBranchRefSchema = z.object({
+export const BbsRestBranchRef = z.object({
   displayId: z.string(),
   id: z.string(),
 });
+export type BbsRestBranchRef = z.infer<typeof BbsRestBranchRef>;
+
+// PR state enum
+export const BbsRestPrState = z.enum(['OPEN', 'DECLINED', 'MERGED']);
+export type BbsRestPrState = z.infer<typeof BbsRestPrState>;
 
 // Full PR object
-export const BbsRestPrSchema = z.object({
-  id: z.number(),
-  version: z.number().optional().nullable(),
-  title: z.string().optional().nullable(),
-  description: z.string().optional().nullable().catch(null),
-  state: z
-    .enum(["OPEN", "DECLINED", "MERGED"])
-    .optional()
-    .nullable()
-    .catch(null),
-  fromRef: BbsRestBranchRefSchema.catch({ displayId: "", id: "" }),
-  toRef: BbsRestBranchRefSchema.catch({ displayId: "", id: "" }),
-  reviewers: z.array(BbsRestUserRefSchema).default([]).catch([]),
-  createdDate: z.union([z.string(), z.number()]).optional().nullable(),
-  updatedDate: z.number().optional().nullable(),
-});
-export type BbsRestPrSchema = z.infer<typeof BbsRestPrSchema>;
+export const BbsRestPr = DeepNullish(
+  z.object({
+    id: z.number(),
+    version: z.number().optional(),
+    title: z.string().optional(),
+    description: z.string().optional().catch(undefined),
+    state: BbsRestPrState.optional().catch(undefined),
+    fromRef: BbsRestBranchRef.catch({ displayId: '', id: '' }),
+    toRef: BbsRestBranchRef.catch({ displayId: '', id: '' }),
+    reviewers: z.array(BbsRestUserRef).default([]).catch([]),
+    createdDate: z.union([z.string(), z.number()]).optional(),
+    updatedDate: z.number().optional(),
+  }),
+);
+export type BbsRestPr = z.infer<typeof BbsRestPr>;
 
 // Paginated list of PRs
-export const BbsRestPrList = LooseArray(BbsRestPrSchema);
+export const BbsRestPrList = LooseArray(BbsRestPr);
 
 // Commit status summary (build-status stats endpoint)
-export const BitbucketCommitStatusSchema = z.object({
+export const BitbucketCommitStatus = z.object({
   failed: z.number().catch(0),
   inProgress: z.number().catch(0),
   successful: z.number().catch(0),
 });
-export type BitbucketCommitStatusSchema = z.infer<
-  typeof BitbucketCommitStatusSchema
->;
+export type BitbucketCommitStatus = z.infer<typeof BitbucketCommitStatus>;
+
+// Individual build state enum
+export const BitbucketBranchState = z.enum([
+  'SUCCESSFUL',
+  'FAILED',
+  'INPROGRESS',
+  'STOPPED',
+]);
+export type BitbucketBranchState = z.infer<typeof BitbucketBranchState>;
 
 // Individual build status
-export const BitbucketStatusSchema = z.object({
+export const BitbucketStatus = z.object({
   key: z.string(),
-  state: z.enum(["SUCCESSFUL", "FAILED", "INPROGRESS", "STOPPED"]),
+  state: BitbucketBranchState,
 });
-export type BitbucketStatusSchema = z.infer<typeof BitbucketStatusSchema>;
+export type BitbucketStatus = z.infer<typeof BitbucketStatus>;
 
 // Paginated list of build statuses
-export const BitbucketStatusList = LooseArray(BitbucketStatusSchema);
+export const BitbucketStatusList = LooseArray(BitbucketStatus);
 
 // PR activities (paginated)
 export const PullRequestActivityList = LooseArray(PullRequestActivity);
@@ -166,6 +172,10 @@ export const CommentVersion = z.object({
   version: z.number(),
 });
 export type CommentVersion = z.infer<typeof CommentVersion>;
+
+// Version-only write response (merge / reopen / decline)
+export const PrVersion = z.object({ version: z.number() });
+export type PrVersion = z.infer<typeof PrVersion>;
 
 // Repo id response (minimal)
 export const RepoId = z.object({
@@ -187,9 +197,9 @@ export const PrPageResponse = z.object({
 export type PrPageResponse = z.infer<typeof PrPageResponse>;
 
 // File data from browse API
-export const FileDataSchema = z.object({
+export const FileData = z.object({
   isLastPage: z.boolean(),
   lines: z.array(z.object({ text: z.string() })),
   size: z.number().optional().nullable(),
 });
-export type FileDataSchema = z.infer<typeof FileDataSchema>;
+export type FileData = z.infer<typeof FileData>;

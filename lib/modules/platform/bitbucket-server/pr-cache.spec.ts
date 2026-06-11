@@ -10,7 +10,7 @@ import {
 } from '../../../util/http/bitbucket-server.ts';
 import { parseUrl } from '../../../util/url.ts';
 import { BbsPrCache } from './pr-cache.ts';
-import type { BbsRestPr } from './types.ts';
+import type { BbsRestPr } from './schema.ts';
 import { prInfo } from './utils.ts';
 
 const http = new BitbucketServerHttp();

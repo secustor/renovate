@@ -52,37 +52,33 @@ import { getNewBranchName, repoFingerprint } from '../util.ts';
 import { smartTruncate } from '../utils/pr-body.ts';
 import { BbsPrCache } from './pr-cache.ts';
 import type {
+  BbsRestUserRef,
+  BitbucketStatus,
   Comment,
   PullRequestCommentActivity,
   PullRequestMerge,
 } from './schema.ts';
 import {
   ApplicationProperties,
-  BbsRestBranchSchema,
+  BbsRestBranch,
+  BbsRestPr,
   BbsRestPrList,
-  BbsRestPrSchema,
+  BbsRestRepo,
   BbsRestRepoList,
-  BbsRestRepoSchema,
-  BitbucketCommitStatusSchema,
+  BitbucketCommitStatus,
   BitbucketStatusList,
-  BitbucketStatusSchema,
   CommentVersion,
   DefaultReviewerList,
-  FileDataSchema,
+  FileData,
   PrMergeSettings,
+  PrVersion,
   PullRequestActivityList,
   RepoId,
   ReviewerGroups,
   User,
   Users,
 } from './schema.ts';
-import type {
-  BbsConfig,
-  BbsPr,
-  BbsRestPr,
-  BbsRestRepo,
-  BbsRestUserRef,
-} from './types.ts';
+import type { BbsConfig, BbsPr } from './types.ts';
 import * as utils from './utils.ts';
 import {
   getExtraCloneOpts,
@@ -246,7 +242,7 @@ export async function getRawFile(
   const repo = repoName ?? config.repository;
   const [project, slug] = repo.split('/');
   const fileUrl = `./rest/api/1.0/projects/${project}/repos/${slug}/browse/${fileName}?limit=20000${branchOrTag ? `&at=${branchOrTag}` : ''}`;
-  const res = await bitbucketServerHttp.getJson(fileUrl, FileDataSchema);
+  const res = await bitbucketServerHttp.getJson(fileUrl, FileData);
   const { isLastPage, lines, size } = res.body;
   if (isLastPage) {
     return lines.map(({ text }) => text).join('\n');
@@ -293,14 +289,14 @@ export async function initRepo({
     const info = (
       await bitbucketServerHttp.getJson(
         `./rest/api/1.0/projects/${config.projectKey}/repos/${config.repositorySlug}`,
-        BbsRestRepoSchema,
+        BbsRestRepo,
       )
     ).body;
     config.owner = info.project.key;
     logger.debug(`${repository} owner = ${config.owner}`);
     const branchRes = await bitbucketServerHttp.getJson(
       `./rest/api/1.0/projects/${config.projectKey}/repos/${config.repositorySlug}/branches/default`,
-      BbsRestBranchSchema,
+      BbsRestBranch,
     );
 
     // 204 means empty, 404 means repo not found or missing default branch. repo must exist here.
@@ -313,7 +309,7 @@ export async function initRepo({
       // TODO #22198
       defaults.endpoint!,
       gitUrl,
-      info as unknown as BbsRestRepo,
+      info,
       opts,
     );
 
@@ -386,11 +382,11 @@ export async function getPr(
   const res = await bitbucketServerHttp.getJson(
     `./rest/api/1.0/projects/${config.projectKey}/repos/${config.repositorySlug}/pull-requests/${prNo}`,
     opts,
-    BbsRestPrSchema,
+    BbsRestPr,
   );
 
   const pr: BbsPr = {
-    ...utils.prInfo(res.body as unknown as BbsRestPr),
+    ...utils.prInfo(res.body),
     reviewers: res.body.reviewers.map((r) => r.user.name),
   };
   // TODO #22198
@@ -471,7 +467,7 @@ export async function findPr({
       return null;
     }
 
-    return utils.prInfo(prs[0] as unknown as BbsRestPr);
+    return utils.prInfo(prs[0]);
   }
 
   const prList = await getPrList();
@@ -505,7 +501,7 @@ export async function refreshPr(number: number): Promise<void> {
 async function getStatus(
   branchName: string,
   memCache = true,
-): Promise<BitbucketCommitStatusSchema> {
+): Promise<BitbucketCommitStatus> {
   const branchCommit = git.getBranchCommit(branchName);
 
   /* v8 ignore next: temporary code */
@@ -517,8 +513,9 @@ async function getStatus(
     await bitbucketServerHttp.getJson(
       `./rest/build-status/1.0/commits/stats/${branchCommit!}`,
       opts,
-      BitbucketCommitStatusSchema,
-    )  ).body;
+      BitbucketCommitStatus,
+    )
+  ).body;
 }
 
 // Returns the combined status for a branch.
@@ -555,7 +552,7 @@ export async function getBranchStatus(
 async function getStatusCheck(
   branchName: string,
   memCache = true,
-): Promise<BitbucketStatusSchema[]> {
+): Promise<BitbucketStatus[]> {
   const branchCommit = git.getBranchCommit(branchName);
 
   const opts: BitbucketServerHttpOptions = { paginate: true };
@@ -571,7 +568,8 @@ async function getStatusCheck(
       `./rest/build-status/1.0/commits/${branchCommit!}`,
       opts,
       BitbucketStatusList,
-    )  ).body;
+    )
+  ).body;
 }
 
 // https://docs.atlassian.com/bitbucket-server/rest/6.0.0/bitbucket-build-rest.html#idp2
@@ -1081,9 +1079,10 @@ export async function createPr({
   };
   let prInfoRes: HttpResponse<BbsRestPr>;
   try {
-    prInfoRes = await bitbucketServerHttp.postJson<BbsRestPr>(
+    prInfoRes = await bitbucketServerHttp.postJson(
       `./rest/api/1.0/projects/${config.projectKey}/repos/${config.repositorySlug}/pull-requests`,
       { body },
+      BbsRestPr,
     );
   } catch (err) /* v8 ignore next */ {
     if (
@@ -1171,16 +1170,13 @@ export async function updatePr({
       };
     }
 
-    const { body: updatedPr } = await bitbucketServerHttp.putJson<
-      BbsRestPr & {
-        version: number;
-      }
-    >(
+    const { body: updatedPr } = await bitbucketServerHttp.putJson(
       `./rest/api/1.0/projects/${config.projectKey}/repos/${config.repositorySlug}/pull-requests/${prNo}`,
       { body },
+      BbsRestPr,
     );
 
-    updatePrVersion(prNo, updatedPr.version);
+    updatePrVersion(prNo, updatedPr.version!);
 
     const currentState = updatedPr.state;
     // TODO #22198
@@ -1193,15 +1189,15 @@ export async function updatePr({
       currentState === 'OPEN' ? 'open' : 'closed';
 
     if (
+      currentState &&
       newState &&
       ['OPEN', 'DECLINED'].includes(currentState) &&
       currentState !== newState
     ) {
       const command = state === 'open' ? 'reopen' : 'decline';
-      const { body: updatedStatePr } = await bitbucketServerHttp.postJson<{
-        version: number;
-      }>(
+      const { body: updatedStatePr } = await bitbucketServerHttp.postJson(
         `./rest/api/1.0/projects/${config.projectKey}/repos/${config.repositorySlug}/pull-requests/${pr.number}/${command}?version=${updatedPr.version}`,
+        PrVersion,
       );
 
       finalState = state!;
@@ -1254,11 +1250,12 @@ export async function mergePr({
     if (!pr) {
       throw Object.assign(new Error(REPOSITORY_NOT_FOUND), { statusCode: 404 });
     }
-    const { body } = await bitbucketServerHttp.postJson<{ version: number }>(
+    const { body } = await bitbucketServerHttp.postJson(
       // TODO: types (#22198)
       `./rest/api/1.0/projects/${config.projectKey}/repos/${
         config.repositorySlug
       }/pull-requests/${prNo}/merge?version=${pr.version!}`,
+      PrVersion,
     );
     updatePrVersion(prNo, body.version);
   } catch (err) {

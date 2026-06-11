@@ -9,7 +9,8 @@ import { regEx } from '../../../util/regex.ts';
 import { ensureTrailingSlash, parseUrl } from '../../../util/url.ts';
 import { getPrBodyStruct } from '../pr-body.ts';
 import type { GitUrlOption } from '../types.ts';
-import type { BbsPr, BbsRestPr, BbsRestRepo, BitbucketError } from './types.ts';
+import type { BbsRestPr, BbsRestRepo } from './schema.ts';
+import type { BbsPr, BitbucketError } from './types.ts';
 
 export const BITBUCKET_INVALID_REVIEWERS_EXCEPTION =
   'com.atlassian.bitbucket.pull.InvalidPullRequestReviewersException';
@@ -28,27 +29,10 @@ export function prInfo(pr: BbsRestPr): BbsPr {
     bodyStruct: getPrBodyStruct(pr.description),
     sourceBranch: pr.fromRef.displayId,
     targetBranch: pr.toRef.displayId,
-    title: pr.title,
-    state: prStateMapping[pr.state],
-    createdAt: pr.createdDate,
+    title: pr.title ?? '',
+    state: pr.state ? prStateMapping[pr.state] : '',
+    createdAt: pr.createdDate as string | undefined,
   };
-}
-
-export interface BitbucketCommitStatus {
-  failed: number;
-  inProgress: number;
-  successful: number;
-}
-
-export type BitbucketBranchState =
-  | 'SUCCESSFUL'
-  | 'FAILED'
-  | 'INPROGRESS'
-  | 'STOPPED';
-
-export interface BitbucketStatus {
-  key: string;
-  state: BitbucketBranchState;
 }
 
 export function isInvalidReviewersResponse(err: BitbucketError): boolean {

@@ -6,8 +6,9 @@ import * as memCache from '../../../util/cache/memory/index.ts';
 import { getCache } from '../../../util/cache/repository/index.ts';
 import type { BitbucketServerHttp } from '../../../util/http/bitbucket-server.ts';
 import { getQueryString } from '../../../util/url.ts';
-import { BbsRestPrSchema, PrPageResponse } from './schema.ts';
-import type { BbsPr, BbsPrCacheData, BbsRestPr } from './types.ts';
+import type { BbsRestPr } from './schema.ts';
+import { PrPageResponse } from './schema.ts';
+import type { BbsPr, BbsPrCacheData } from './types.ts';
 import { prInfo } from './utils.ts';
 
 /* v8 ignore next */
@@ -126,7 +127,7 @@ export class BbsPrCache {
     prCache.setPr(item);
   }
 
-  private reconcile(rawItems: BbsRestPrSchema[]): boolean {
+  private reconcile(rawItems: BbsRestPr[]): boolean {
     logger.debug('reconciled');
     const { items } = this.cache;
     let { updatedDate } = this.cache;
@@ -137,7 +138,7 @@ export class BbsPrCache {
     for (const rawItem of rawItems) {
       const id = rawItem.id;
 
-      const newItem = prInfo(rawItem as unknown as BbsRestPr);
+      const newItem = prInfo(rawItem);
 
       const oldItem = items[id];
       if (dequal(oldItem, newItem)) {
