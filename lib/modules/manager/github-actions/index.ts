@@ -5,12 +5,16 @@ import { GithubRunnersDatasource } from '../../datasource/github-runners/index.t
 import { GithubTagsDatasource } from '../../datasource/github-tags/index.ts';
 import { RustVersionDatasource } from '../../datasource/rust-version/index.ts';
 
+export { updateArtifacts } from './artifacts.ts';
 export { knownDepTypes } from './dep-types.ts';
 export { extractPackageFile } from './extract.ts';
 
 export const displayName = 'GitHub Actions';
 export const url = 'https://docs.github.com/en/actions';
 export const categories: Category[] = ['ci'];
+
+export const supportsLockFileMaintenance = true;
+export const lockFileNames = ['actions.lock'];
 
 export const defaultConfig = {
   managerFilePatterns: [

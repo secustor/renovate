@@ -42,6 +42,26 @@ If you want to automatically pin action digests add the `helpers:pinGitHubAction
 Actions pinned to a bare SHA without a version comment are disabled by default, because Renovate cannot determine which branch or tag the SHA belongs to.
 To enable updates, add a tag or branch name as a version comment, as shown above.
 
+### Workflow dependency locking (`actions.lock`)
+
+GitHub can lock all direct and transitive dependencies of a workflow in a lock file at `.github/workflows/actions.lock`.
+The lock file is generated and maintained by the `gh actions-lock` CLI, and the Actions runner enforces it for workflows which are onboarded to it.
+
+<!-- prettier-ignore -->
+!!! warning
+  Workflow dependency locking is a GitHub early-access feature.
+  The lock file format and the CLI behavior may still change.
+
+When Renovate updates an action in a workflow which is onboarded to the lock file (listed in its `workflows:` section), Renovate runs `gh actions-lock` to regenerate the lock file in the same branch.
+Renovate also supports [`lockFileMaintenance`](../../../configuration-options.md#lockfilemaintenance) to re-resolve all locked dependencies, for example floating refs like `@main`.
+
+Requirements for self-hosted Renovate:
+
+- The `gh` CLI and the `gh-actions-lock` extension must be pre-installed, as they can not yet be installed dynamically (`binarySource=global`)
+- A `hostRules` entry with a token for `github.com`, which Renovate passes to `gh` via the `GH_TOKEN` environment variable
+
+Because `gh actions-lock` rescans every workflow in the repository, the regenerated lock file may also include re-resolved dependencies of other workflows in the same pull request.
+
 ### Non-semver refs (branches and feature tags)
 
 Renovate supports GitHub Actions that reference non-semver refs like branch names (`main`, `master`) or feature-oriented tags (`cargo-llvm-cov`).

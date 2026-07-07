@@ -65,3 +65,12 @@ const Actions = z.object({
 export const Workflow = Yaml.pipe(
   z.union([WorkFlowJobs, Actions, z.null()]),
 ).catch(withDebugMessage(null, 'Does not match schema'));
+
+// The `actions.lock` schema is owned by the `gh actions-lock` CLI and may
+// still evolve, so only the `workflows:` section is validated: its keys are
+// the workflow files which are onboarded to the lock file.
+export const ActionsLockfile = Yaml.pipe(
+  z.object({
+    workflows: LooseRecord(z.unknown()).catch({}),
+  }),
+);
