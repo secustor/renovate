@@ -1217,10 +1217,7 @@ describe('modules/manager/github-actions/extract', () => {
             - uses: actions/checkout@v4
     `;
 
-    it('sets lockFiles when a sibling actions.lock exists', async () => {
-      fs.getSiblingFileName.mockReturnValueOnce(
-        '.github/workflows/actions.lock',
-      );
+    it('sets lockFiles when actions.lock exists', async () => {
       fs.localPathExists.mockResolvedValueOnce(true);
 
       const res = await extractPackageFile(
@@ -1232,9 +1229,6 @@ describe('modules/manager/github-actions/extract', () => {
     });
 
     it('does not set lockFiles when no actions.lock exists', async () => {
-      fs.getSiblingFileName.mockReturnValueOnce(
-        '.github/workflows/actions.lock',
-      );
       fs.localPathExists.mockResolvedValueOnce(false);
 
       const res = await extractPackageFile(
@@ -1245,14 +1239,15 @@ describe('modules/manager/github-actions/extract', () => {
       expect(res?.lockFiles).toBeUndefined();
     });
 
-    it('does not set lockFiles for non-GitHub workflow files', async () => {
+    it('sets lockFiles for local composite actions when actions.lock exists', async () => {
+      fs.localPathExists.mockResolvedValueOnce(true);
+
       const res = await extractPackageFile(
         workflowContent,
-        '.gitea/workflows/build.yml',
+        '.github/actions/setup/action.yml',
       );
 
-      expect(res?.lockFiles).toBeUndefined();
-      expect(fs.localPathExists).not.toHaveBeenCalled();
+      expect(res?.lockFiles).toEqual(['.github/workflows/actions.lock']);
     });
   });
 

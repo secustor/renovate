@@ -2,7 +2,7 @@ import is from '@sindresorhus/is';
 import { GlobalConfig } from '../../../config/global.ts';
 import { logger, withMeta } from '../../../logger/index.ts';
 import { detectPlatform } from '../../../util/common.ts';
-import { getSiblingFileName, localPathExists } from '../../../util/fs/index.ts';
+import { localPathExists } from '../../../util/fs/index.ts';
 import { newlineRegex, regEx } from '../../../util/regex.ts';
 import { parseUrl } from '../../../util/url.ts';
 import { ForgejoTagsDatasource } from '../../datasource/forgejo-tags/index.ts';
@@ -22,7 +22,7 @@ import type {
   PackageDependency,
   PackageFileContent,
 } from '../types.ts';
-import { githubWorkflowFileRe } from './common.ts';
+import { actionsLockFile } from './common.ts';
 import { CommunityActions } from './community.ts';
 import type { DockerReference, RepositoryReference } from './parse.ts';
 import { isSha, isShortSha, parseUsesLine, versionLikeRe } from './parse.ts';
@@ -375,11 +375,11 @@ export async function extractPackageFile(
 
   const res: PackageFileContent = { deps };
 
-  if (githubWorkflowFileRe.test(packageFile)) {
-    const lockFileName = getSiblingFileName(packageFile, 'actions.lock');
-    if (await localPathExists(lockFileName)) {
-      res.lockFiles = [lockFileName];
-    }
+  // Local composite actions can be transitive dependencies of workflows which
+  // are onboarded to the lock file, so it is associated with all package
+  // files of this manager.
+  if (await localPathExists(actionsLockFile)) {
+    res.lockFiles = [actionsLockFile];
   }
 
   return res;

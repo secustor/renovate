@@ -62,30 +62,6 @@ describe('modules/manager/github-actions/artifacts', () => {
     env.getChildProcessEnv.mockReturnValue(envMock.basic);
     GlobalConfig.set(adminConfig);
     hostRules.find.mockReturnValue({ token: undefined });
-    fs.getSiblingFileName.mockReturnValue(lockFileName);
-  });
-
-  it('returns null for non-GitHub workflow files', async () => {
-    const execSnapshots = mockExecAll();
-
-    for (const nonGithubFile of [
-      'action.yml',
-      '.gitea/workflows/release.yml',
-      '.forgejo/workflows/release.yml',
-      'workflow-templates/release.yml',
-    ]) {
-      const res = await updateArtifacts({
-        packageFileName: nonGithubFile,
-        updatedDeps,
-        newPackageFileContent: workflowContent,
-        config,
-      });
-
-      expect(res).toBeNull();
-    }
-
-    expect(fs.readLocalFile).not.toHaveBeenCalled();
-    expect(execSnapshots).toEqual([]);
   });
 
   it('returns null if no actions.lock found', async () => {
@@ -131,6 +107,36 @@ describe('modules/manager/github-actions/artifacts', () => {
 
     expect(res).toBeNull();
     expect(execSnapshots).toEqual([]);
+  });
+
+  it('updates the lock file for local composite actions', async () => {
+    fs.readLocalFile
+      .mockResolvedValueOnce(lockFileContent)
+      .mockResolvedValueOnce('new lock content' as never);
+    const execSnapshots = mockExecAll();
+    git.getRepoStatus.mockResolvedValueOnce(
+      partial<StatusResult>({
+        modified: ['.github/actions/setup/action.yml', lockFileName],
+      }),
+    );
+
+    const res = await updateArtifacts({
+      packageFileName: '.github/actions/setup/action.yml',
+      updatedDeps,
+      newPackageFileContent: workflowContent,
+      config,
+    });
+
+    expect(res).toEqual([
+      {
+        file: {
+          type: 'addition',
+          path: lockFileName,
+          contents: 'new lock content',
+        },
+      },
+    ]);
+    expect(execSnapshots).toMatchObject([{ cmd: 'gh actions-lock' }]);
   });
 
   it('returns null if no action dependencies were updated', async () => {

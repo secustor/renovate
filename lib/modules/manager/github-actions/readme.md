@@ -53,6 +53,7 @@ The lock file is generated and maintained by the `gh actions-lock` CLI, and the 
   The lock file format and the CLI behavior may still change.
 
 When Renovate updates an action in a workflow which is onboarded to the lock file (listed in its `workflows:` section), Renovate runs `gh actions-lock` to regenerate the lock file in the same branch.
+The same applies to action updates in local composite actions, as these can be transitive dependencies of an onboarded workflow.
 Renovate also supports [`lockFileMaintenance`](../../../configuration-options.md#lockfilemaintenance) to re-resolve all locked dependencies, for example floating refs like `@main`.
 
 Requirements for self-hosted Renovate:
