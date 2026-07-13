@@ -178,6 +178,12 @@
   },
   "overrides": [
     {
+      "files": ["lib/modules/manager/**/index.ts"],
+      "rules": {
+        "renovate/prefer-glob-file-patterns": "warn"
+      }
+    },
+    {
       "files": ["**/*.spec.ts", "test/**"],
       "rules": {
         "no-template-curly-in-string": "off",
