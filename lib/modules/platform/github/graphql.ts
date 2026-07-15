@@ -69,6 +69,33 @@ query(
 }
 `;
 
+export const mergeQueueQuery = `
+query($owner: String!, $name: String!, $branch: String!) {
+  repository(owner: $owner, name: $name) {
+    mergeQueue(branch: $branch) {
+      id
+    }
+  }
+}
+`;
+
+export const enqueuePullRequestMutation = `
+mutation EnqueuePullRequest(
+  $pullRequestId: ID!,
+) {
+  enqueuePullRequest(
+    input: {
+      pullRequestId: $pullRequestId,
+    }
+  ) {
+    mergeQueueEntry {
+      id
+      position
+    }
+  }
+}
+`;
+
 export const enableAutoMergeMutation = `
 mutation EnablePullRequestAutoMerge(
   $pullRequestId: ID!,
