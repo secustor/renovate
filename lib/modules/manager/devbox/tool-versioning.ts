@@ -5,7 +5,10 @@ import * as rubyVersioning from '../../versioning/ruby/index.ts';
 import * as semver from '../../versioning/semver/index.ts';
 import type { VersioningApi } from '../../versioning/types.ts';
 
-export type ToolVersioning = Record<string, { api: VersioningApi; id: string }>;
+export type ToolVersioning = Record<
+  string,
+  { api: VersioningApi; id: string } | undefined
+>;
 
 export const devboxToolVersioning: ToolVersioning = {
   nodejs: {

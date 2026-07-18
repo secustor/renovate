@@ -99,10 +99,7 @@ export async function updateArtifacts({
     'helmUpdateSubChartArchives',
   );
 
-  if (
-    !isLockFileMaintenance &&
-    (updatedDeps === undefined || updatedDeps.length < 1)
-  ) {
+  if (!isLockFileMaintenance && updatedDeps.length < 1) {
     logger.debug('No updated helmv3 deps - returning null');
     return null;
   }
@@ -173,8 +170,13 @@ export async function updateArtifacts({
     if (isTruthy(isUpdateOptionAddChartArchives)) {
       const chartsPath = getSiblingFileName(packageFileName, 'charts');
       const status = await getRepoStatus();
+      /* oxlint-disable typescript/no-unnecessary-condition -- simple-git's StatusResult
+         types `not_added`/`deleted` as always arrays, but this codebase's tests build
+         StatusResult via partial<StatusResult>() mocks that routinely omit one or both
+         (see artifacts.spec.ts), so they can genuinely be undefined under test. */
       const chartsAddition = status.not_added ?? [];
       const chartsDeletion = status.deleted ?? [];
+      /* oxlint-enable typescript/no-unnecessary-condition */
 
       for (const file of chartsAddition) {
         // only add artifacts in the chart sub path

@@ -15,16 +15,18 @@ export async function extractPackageFile(
   packageFile: string,
   config: ExtractConfig,
 ): Promise<PackageFileContent | null> {
+  // This is untrusted, unvalidated YAML content -- every field may genuinely
+  // be missing or malformed, despite the annotation below claiming otherwise.
   let chart: {
-    apiVersion: string;
-    name: string;
-    version: string;
-    dependencies: { name: string; version: string; repository: string }[];
+    apiVersion?: string;
+    name?: string;
+    version?: string;
+    dependencies?: { name: string; version: string; repository: string }[];
   };
   try {
     // TODO: use schema (#9610)
     chart = parseSingleYaml(content);
-    if (!(chart?.apiVersion && chart.name && chart.version)) {
+    if (!(chart.apiVersion && chart.name && chart.version)) {
       logger.debug(
         { packageFile },
         'Failed to find required fields in Chart.yaml',
@@ -44,7 +46,7 @@ export async function extractPackageFile(
   }
   const packageFileVersion = chart.version;
   let deps: PackageDependency[] = [];
-  if (!isNonEmptyArray(chart?.dependencies)) {
+  if (!isNonEmptyArray(chart.dependencies)) {
     logger.debug(`Chart has no dependencies in ${packageFile}`);
     return null;
   }
