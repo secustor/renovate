@@ -148,7 +148,13 @@ export async function updateArtifacts({
       logger.trace({ cwd, cmd }, 'pip-compile command');
       logger.trace({ env: execOptions.extraEnv }, 'pip-compile extra env vars');
       await exec(cmd, execOptions);
-      const status = await getRepoStatus();
+      // getRepoStatus()'s real return type is always a StatusResult, but a
+      // spec ("returns null if all unchanged") deliberately calls
+      // updateArtifacts without stubbing `git.getRepoStatus`, so it resolves
+      // undefined under test -- cast rather than relying on the real type.
+      const status = (await getRepoStatus()) as
+        | Awaited<ReturnType<typeof getRepoStatus>>
+        | undefined;
       if (status?.modified.includes(outputFileName)) {
         result.push({
           file: {
