@@ -39,7 +39,10 @@ export function findDependencies(
   return findDependenciesInternal(parsedContent, [], registryAliases);
 }
 export function findDependenciesInternal(
-  parsedContent: Record<string, unknown> | HelmDockerImageDependency,
+  // Recursive calls (below) pass arbitrary, unvalidated YAML values -- not
+  // just the Record/HelmDockerImageDependency shapes the top-level call
+  // gets -- so this needs to accept (and actually null-check) anything.
+  parsedContent: unknown,
   packageDependencies: PackageDependency[],
   registryAliases: Record<string, string> | undefined,
 ): PackageDependency[] {
@@ -61,11 +64,7 @@ export function findDependenciesInternal(
     } else if (matchesHelmValuesInlineImage(key, value)) {
       packageDependencies.push(getDep(value, true, registryAliases));
     } else {
-      findDependenciesInternal(
-        value as Record<string, unknown>,
-        packageDependencies,
-        registryAliases,
-      );
+      findDependenciesInternal(value, packageDependencies, registryAliases);
     }
   });
   return packageDependencies;

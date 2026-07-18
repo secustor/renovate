@@ -55,14 +55,20 @@ export function extractPackageFile(
     // since docker-compose spec version 1.27, the 'version' key has
     // become optional and can no longer be used to differentiate
     // between v1 and v2.
-    const services = config.services ?? config;
+    // `config.services` only exists on the "modern" (v2+) shape of
+    // DockerComposeFile; on the v1 shape (a flat map of service name ->
+    // service), TS's index-signature access still resolves a `services` key
+    // to a non-optional value, which doesn't reflect that v1 configs
+    // essentially never have a service literally named "services".
+    const services =
+      (config.services as
+        | Extract<DockerComposeFile, { services: unknown }>['services']
+        | undefined) ?? config;
     const extensions = config.extensions ?? {};
 
     // Image name/tags for services are only eligible for update if they don't
     // use variables and if the image is not built locally
-    const deps = Object.values(
-      services || /* istanbul ignore next: can never happen */ {},
-    )
+    const deps = Object.values(services)
       .concat(Object.values(extensions))
       .filter((service) => isString(service?.image) && !service?.build)
       .map((service) => {
