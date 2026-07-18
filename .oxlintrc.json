@@ -189,7 +189,10 @@
   },
   "overrides": [
     {
-      "files": ["lib/modules/manager/deps-edn/parser.ts"],
+      "files": [
+        "lib/modules/manager/deps-edn/parser.ts",
+        "lib/modules/manager/glasskube/extract.ts"
+      ],
       "rules": {
         "typescript/no-unnecessary-condition": "off"
       }

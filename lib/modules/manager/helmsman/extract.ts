@@ -10,22 +10,21 @@ import type {
   PackageDependency,
   PackageFileContent,
 } from '../types.ts';
-import type { HelmsmanDocument } from './types.ts';
+import type { HelmsmanApp, HelmsmanDocument } from './types.ts';
 
 const chartRegex = regEx('^(?<registryRef>[^/]*)/(?<packageName>[^/]*)$');
 
 function createDep(
   key: string,
+  apps: Record<string, HelmsmanApp>,
   doc: HelmsmanDocument,
 ): PackageDependency | null {
   const dep: PackageDependency = {
     depName: key,
     datasource: HelmDatasource.id,
   };
-  const anApp = doc.apps[key];
-  if (!anApp) {
-    return null;
-  }
+  // `key` always comes from `Object.keys(apps)`, so this lookup can't miss.
+  const anApp = apps[key];
 
   if (!anApp.version) {
     dep.skipReason = 'unspecified-version';
@@ -75,8 +74,9 @@ export function extractPackageFile(
       return null;
     }
 
-    const deps = Object.keys(doc.apps)
-      .map((key) => createDep(key, doc))
+    const apps = doc.apps;
+    const deps = Object.keys(apps)
+      .map((key) => createDep(key, apps, doc))
       .filter(isTruthy); // filter null values
 
     if (deps.length === 0) {

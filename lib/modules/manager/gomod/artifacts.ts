@@ -139,7 +139,7 @@ export async function updateArtifacts({
   let massagedGoMod = newGoModContent;
   const useGoGenerate = !!config.postUpdateOptions?.includes('goGenerate');
   const allowedUnsafeExecutions = GlobalConfig.get('allowedUnsafeExecutions');
-  const goGenerateAllowed = allowedUnsafeExecutions?.includes('goGenerate');
+  const goGenerateAllowed = allowedUnsafeExecutions.includes('goGenerate');
 
   if (config.postUpdateOptions?.includes('gomodMassage')) {
     // Regex match inline replace directive, example:
@@ -439,7 +439,7 @@ export async function updateArtifacts({
         },
       };
 
-      const updatedDepNames = filterMap(updatedDeps, (dep) => dep?.depName);
+      const updatedDepNames = filterMap(updatedDeps, (dep) => dep.depName);
       const extraDepsNotice = getExtraDepsNotice(
         newGoModContent,
         finalGoModContent,
