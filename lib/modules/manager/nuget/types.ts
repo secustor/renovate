@@ -4,7 +4,7 @@ export interface DotnetToolsManifest {
   readonly version: number;
   readonly isRoot: boolean;
 
-  readonly tools: Record<string, DotnetTool>;
+  readonly tools?: Record<string, DotnetTool>;
 }
 
 export interface DotnetTool {

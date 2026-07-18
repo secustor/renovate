@@ -41,7 +41,10 @@ function extractDepsFromXml(xmlNode: XmlDocument): NugetPackageDependency[] {
   const todo: XmlElement[] = [xmlNode];
   while (todo.length) {
     const child = todo.pop()!;
-    const { name, attr } = child;
+    const { name } = child;
+    // xmldoc types `attr` as `Record<string, string>`, but an arbitrary XML
+    // attribute is of course not guaranteed to be present on every element.
+    const attr = child.attr as Record<string, string | undefined>;
 
     if (name === 'ContainerBaseImage') {
       const { depName, ...dep } = getDep(child.val, true);
@@ -50,7 +53,7 @@ function extractDepsFromXml(xmlNode: XmlDocument): NugetPackageDependency[] {
         results.push({ ...dep, depName, depType: 'docker' });
       }
     } else if (elemNames.has(name)) {
-      const depName = attr?.Include || attr?.Update;
+      const depName = attr.Include ?? attr.Update;
 
       if (!depName) {
         continue;
@@ -63,10 +66,10 @@ function extractDepsFromXml(xmlNode: XmlDocument): NugetPackageDependency[] {
       };
 
       let currentValue: string | undefined =
-        attr?.Version ??
-        attr?.version ??
+        attr.Version ??
+        attr.version ??
         child.valueWithPath('Version') ??
-        attr?.VersionOverride ??
+        attr.VersionOverride ??
         child.valueWithPath('VersionOverride');
 
       if (!isNonEmptyStringAndNotWhitespace(currentValue)) {
@@ -77,7 +80,7 @@ function extractDepsFromXml(xmlNode: XmlDocument): NugetPackageDependency[] {
 
       currentValue = currentValue
         ?.trim()
-        ?.replace(/^\$\((\w+)\)$/, (match, key) => {
+        .replace(/^\$\((\w+)\)$/, (match, key) => {
           sharedVariableName = key;
           const val = vars.get(key);
           if (val) {
@@ -98,8 +101,8 @@ function extractDepsFromXml(xmlNode: XmlDocument): NugetPackageDependency[] {
       dep.currentValue = currentValue;
       results.push(dep);
     } else if (name === 'Sdk') {
-      const depName = attr?.Name;
-      const version = attr?.Version;
+      const depName = attr.Name;
+      const version = attr.Version;
       // if sdk element is present it will always have the Name field but the Version is an optional field
       if (depName && version) {
         results.push({
@@ -110,8 +113,8 @@ function extractDepsFromXml(xmlNode: XmlDocument): NugetPackageDependency[] {
         });
       }
     } else if (name === 'Import') {
-      const depName = attr?.Sdk;
-      const version = attr?.Version;
+      const depName = attr.Sdk;
+      const version = attr.Version;
       if (depName && version) {
         results.push({
           depName,
@@ -122,8 +125,8 @@ function extractDepsFromXml(xmlNode: XmlDocument): NugetPackageDependency[] {
       }
     } else {
       if (name === 'Project') {
-        if (attr?.Sdk) {
-          const str = attr?.Sdk;
+        if (attr.Sdk) {
+          const str = attr.Sdk;
           const [name, version] = str.split('/');
           if (name && version) {
             results.push({
@@ -179,8 +182,9 @@ export async function extractPackageFile(
       return null;
     }
 
-    for (const depName of Object.keys(manifest.tools ?? {})) {
-      const tool = manifest.tools[depName];
+    const tools = manifest.tools ?? {};
+    for (const depName of Object.keys(tools)) {
+      const tool = tools[depName];
       const currentValue = tool.version;
       const dep: NugetPackageDependency = {
         depType: 'nuget',
