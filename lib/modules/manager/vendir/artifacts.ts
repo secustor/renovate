@@ -66,6 +66,11 @@ export async function updateArtifacts({
     // Files must be in the vendor path to get added
     const vendorDir = getParentDir(packageFileName);
     const status = await getRepoStatus();
+    /* oxlint-disable typescript/no-unnecessary-condition -- getRepoStatus()'s real
+       return type is always a (fully-populated) StatusResult, but this codebase's
+       tests routinely build it via `git.getRepoStatus` left unstubbed (resolving to
+       undefined) or via partial<StatusResult>() mocks that omit `modified`/`deleted`
+       (see artifacts.spec.ts), so all three can genuinely be missing under test. */
     if (status) {
       const modifiedFiles = status.modified ?? [];
       const notAddedFiles = status.not_added;
@@ -95,6 +100,7 @@ export async function updateArtifacts({
     } else {
       logger.error('Failed to get git status');
     }
+    /* oxlint-enable typescript/no-unnecessary-condition */
 
     return fileChanges.length ? fileChanges : null;
   } catch (err) {
