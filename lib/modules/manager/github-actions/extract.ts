@@ -261,12 +261,12 @@ const versionedActions: Record<string, string> = {
 function extractVersionedAction(step: UsesStep): PackageDependency | null {
   for (const [action, versioning] of Object.entries(versionedActions)) {
     const actionName = `actions/setup-${action}`;
-    if (step.uses !== actionName && !step.uses?.startsWith(`${actionName}@`)) {
+    if (step.uses !== actionName && !step.uses.startsWith(`${actionName}@`)) {
       continue;
     }
 
     const fieldName = `${action}-version`;
-    const currentValue = step.with?.[fieldName];
+    const currentValue = step.with[fieldName];
     if (!currentValue) {
       return null;
     }
@@ -328,18 +328,14 @@ function extractWithYAMLParser(
   for (const job of Object.values(obj.jobs)) {
     if (job.container) {
       const dep = getDep(job.container, true, config.registryAliases);
-      if (dep) {
-        dep.depType = 'container';
-        deps.push(dep);
-      }
+      dep.depType = 'container';
+      deps.push(dep);
     }
 
     for (const service of job.services) {
       const dep = getDep(service, true, config.registryAliases);
-      if (dep) {
-        dep.depType = 'service';
-        deps.push(dep);
-      }
+      dep.depType = 'service';
+      deps.push(dep);
     }
 
     for (const runner of job['runs-on']) {

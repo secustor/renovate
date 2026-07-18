@@ -135,7 +135,7 @@ export class PypiDatasource extends Datasource {
       { headers },
       PypiResponse,
     );
-    const dep = rep?.body;
+    const dep = rep.body;
     if (rep.authorization) {
       dependency.isPrivate = true;
     }
@@ -279,7 +279,7 @@ export class PypiDatasource extends Datasource {
     const { headers, lookupUrl: sanitizedUrl } =
       await this.getAuthHeaders(lookupUrl);
     const response = await this.http.getText(sanitizedUrl, { headers });
-    const dep = response?.body;
+    const dep = response.body;
     if (!dep) {
       logger.trace({ dependency: packageName }, 'pip package not found');
       return null;
@@ -292,7 +292,7 @@ export class PypiDatasource extends Datasource {
     const releases: Releases = {};
     for (const link of Array.from(links)) {
       const version = PypiDatasource.extractVersionFromLinkText(
-        link.text?.trim(),
+        link.text.trim(),
         packageName,
       );
       if (version) {
@@ -303,9 +303,7 @@ export class PypiDatasource extends Datasource {
         if (requiresPython) {
           release.requires_python = requiresPython;
         }
-        if (!releases[version]) {
-          releases[version] = [];
-        }
+        releases[version] ??= [];
         releases[version].push(release);
       }
     }
