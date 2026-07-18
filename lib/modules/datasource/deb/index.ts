@@ -73,16 +73,15 @@ export class DebDatasource extends Datasource {
 
     let currentPackage: PackageDescription = {};
     // A Package Index can contain multiple Versions of the package on private Artifactory (e.g. Jfrog)
-    const allPackages: Record<string, PackageDescription[]> = {};
+    const allPackages: Record<string, PackageDescription[] | undefined> = {};
 
     for await (const line of rl) {
       if (line === '') {
         // All information of the package are available, add to the list of packages
         if (requiredPackageKeys.every((key) => key in currentPackage)) {
-          if (!allPackages[currentPackage.Package!]) {
-            allPackages[currentPackage.Package!] = [];
-          }
-          allPackages[currentPackage.Package!].push(currentPackage);
+          const packageName = currentPackage.Package!;
+          allPackages[packageName] ??= [];
+          allPackages[packageName].push(currentPackage);
           currentPackage = {};
         }
       } else {
@@ -97,13 +96,12 @@ export class DebDatasource extends Datasource {
 
     // Check the last package after file reading is complete
     if (requiredPackageKeys.every((key) => key in currentPackage)) {
-      if (!allPackages[currentPackage.Package!]) {
-        allPackages[currentPackage.Package!] = [];
-      }
-      allPackages[currentPackage.Package!].push(currentPackage);
+      const packageName = currentPackage.Package!;
+      allPackages[packageName] ??= [];
+      allPackages[packageName].push(currentPackage);
     }
 
-    return allPackages;
+    return allPackages as Record<string, PackageDescription[]>;
   }
 
   parseExtractedPackageIndex(
@@ -163,7 +161,11 @@ export class DebDatasource extends Datasource {
     for (const componentUrl of componentUrls) {
       try {
         const packageIndex = await this.getPackageIndex(componentUrl);
-        const parsedPackages = packageIndex[packageName];
+        // packageIndex's own keys are whatever the repo happens to contain --
+        // an arbitrary packageName lookup can genuinely miss.
+        const parsedPackages = packageIndex[packageName] as
+          | PackageDescription[]
+          | undefined;
 
         if (parsedPackages) {
           const newRelease = formatReleaseResult(parsedPackages);

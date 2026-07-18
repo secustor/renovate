@@ -33,7 +33,7 @@ export class JavaVersionDatasource extends Datasource {
     try {
       const pgRes = await this.http.getJson(pgUrl, AdoptiumJavaResponse);
       return (
-        pgRes?.body?.versions?.map(({ semver }) => ({
+        pgRes.body.versions?.map(({ semver }) => ({
           version: semver,
         })) ?? null
       );

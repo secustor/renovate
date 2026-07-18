@@ -36,7 +36,12 @@ interface ParsedPackageName {
 }
 
 function parsePackageName(packageName: string): ParsedPackageName {
-  const [hexPackageName, organizationName] = packageName.split(':');
+  const parts = packageName.split(':');
+  const hexPackageName = parts[0];
+  // `.at()` (not `[1]`) so TS tracks that this is genuinely absent when
+  // `packageName` has no `:` separator, rather than lying that a fixed
+  // index into a variable-length split is always present.
+  const organizationName = parts.at(1);
   const organizationUrlPrefix = organizationName
     ? `repos/${organizationName}/`
     : '';

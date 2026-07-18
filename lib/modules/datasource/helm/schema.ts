@@ -80,4 +80,7 @@ export const HelmRepository = z
   })
   .transform(({ entries }) => entries);
 
-export type HelmRepository = z.infer<typeof HelmRepository>;
+export type HelmRepository = Record<
+  string,
+  z.infer<typeof HelmRepository>[string] | undefined
+>;
