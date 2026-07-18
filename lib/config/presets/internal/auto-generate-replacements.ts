@@ -46,7 +46,8 @@ export function addPresets(
   presets: Record<string, Preset>,
   ...templates: PresetTemplate[]
 ): void {
-  const ext = coerceArray(presets.all?.extends);
+  // the index signature hides that the `all` preset may be missing
+  const ext = coerceArray((presets.all as Preset | undefined)?.extends);
   for (const template of templates) {
     const { title, description, packageRules } = template;
     presets[title] = {

@@ -17,5 +17,6 @@ export type GitlabTreeNode = {
  * https://docs.gitlab.com/ee/api/projects.html#get-single-project
  */
 export interface GitlabProject {
-  default_branch: string;
+  // HTTP responses are unvalidated, so this may be missing at runtime
+  default_branch?: string;
 }

@@ -1,8 +1,12 @@
-export function sampleSize(array: string[], n: number): string[] {
-  const length = array ? array.length : 0;
-  if (!length || n < 1) {
+// despite typings, callers may pass a nullish array (covered by spec)
+export function sampleSize(
+  array: string[] | null | undefined,
+  n: number,
+): string[] {
+  if (!array?.length || n < 1) {
     return [];
   }
+  const length = array.length;
 
   const sampleNumber = n > length ? length : n;
   let index = 0;

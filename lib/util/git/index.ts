@@ -297,11 +297,10 @@ export async function fetchRevSpec(...revSpec: string[]): Promise<void> {
 }
 
 export async function initRepo(args: StorageConfig): Promise<void> {
-  config = { ...args } as any;
+  config = { virtualBranches: {}, ...args } as any;
   config.ignoredAuthors = [];
   config.additionalBranches = [];
   config.branchIsModified = {};
-  config.virtualBranches ??= {};
   git = instrumentGit(
     createSimpleGit({ config: { baseDir: GlobalConfig.get('localDir') } }),
   );
@@ -482,7 +481,7 @@ export const syncGit = withInstrumenting(
     let clone = true;
 
     if (await fs.pathExists(gitHead)) {
-      await instrument('fetch', async () => {
+      clone = await instrument('fetch', async () => {
         logger.debug(
           `syncGit(): Found existing git repository, attempting git fetch`,
         );
@@ -496,12 +495,13 @@ export const syncGit = withInstrumenting(
           await cleanLocalBranches();
           const durationMs = Math.round(Date.now() - fetchStart);
           logger.info({ durationMs }, 'git fetch completed');
-          clone = false;
+          return false;
         } catch (err) /* v8 ignore next -- TODO: add test #40625 */ {
           if (err.message === REPOSITORY_EMPTY) {
             throw err;
           }
           logger.info({ err }, 'git fetch error, falling back to git clone');
+          return true;
         }
       });
     }
@@ -575,12 +575,12 @@ export const syncGit = withInstrumenting(
       }
       logger.warn({ err }, 'Cannot retrieve latest commit');
     }
+    // `currentBranch` may still be unset here despite the LocalConfig type
     config.currentBranch =
-      config.currentBranch ??
+      (config.currentBranch as string | undefined) ??
       config.defaultBranch ??
       (await getDefaultBranch(git));
-    /* v8 ignore next -- TODO: add test #40625 */
-    delete getCache()?.semanticCommits;
+    delete getCache().semanticCommits;
 
     // If upstreamUrl is set then the bot is running in fork mode
     // The "upstream" remote is the original repository which was forked from
@@ -645,7 +645,11 @@ export function branchExists(branchName: string): boolean {
 
 // Return the commit SHA for a branch
 export function getBranchCommit(branchName: string): LongCommitSha | null {
-  return config.branchCommits?.[branchName] || null;
+  // `branchCommits` may be unset before syncGit() despite the LocalConfig type
+  const branchCommits = config.branchCommits as
+    | Record<string, LongCommitSha>
+    | undefined;
+  return branchCommits?.[branchName] ?? null;
 }
 
 // Return the date of the latest commit for a branch
@@ -710,13 +714,10 @@ export async function checkoutBranch(
       (await git.raw(['rev-parse', 'HEAD'])).trim(),
     );
     const latestCommitDate = await getCommitDate(config.currentBranchSha);
-    // v8 ignore else -- TODO: add test #40625
-    if (latestCommitDate) {
-      logger.debug(
-        { branchName, latestCommitDate, sha: config.currentBranchSha },
-        'latest commit',
-      );
-    }
+    logger.debug(
+      { branchName, latestCommitDate, sha: config.currentBranchSha },
+      'latest commit',
+    );
     await git.reset(ResetMode.HARD);
     return config.currentBranchSha;
   } catch (err) /* v8 ignore next -- TODO: add test #40625 */ {
@@ -854,7 +855,10 @@ export async function getFileList(): Promise<string[]> {
 }
 
 export function getBranchList(): string[] {
-  return Object.keys(config.branchCommits ?? {});
+  // `branchCommits` may be unset before syncGit() despite the LocalConfig type
+  return Object.keys(
+    (config.branchCommits as Record<string, LongCommitSha> | undefined) ?? {},
+  );
 }
 
 export async function isBranchBehindBase(
@@ -908,7 +912,8 @@ export async function isBranchModified(
     return false;
   }
   // First check local config
-  if (config.branchIsModified[branchName] !== undefined) {
+  // `in` check: the index signature hides that the key may be missing
+  if (branchName in config.branchIsModified) {
     return config.branchIsModified[branchName];
   }
   // Second check repository cache
@@ -1696,7 +1701,10 @@ export async function diffCommitTree(
       const statusCode = status[0];
       // R has two tab-separated paths (old\tnew); A/M/D/T have one.
       // C also has two paths but falls through to default (only the target matters).
-      const [sourcePath, targetPath] = paths.split('\t');
+      const pathParts = paths.split('\t');
+      const sourcePath = pathParts[0];
+      // only present for two-path statuses (R/C)
+      const targetPath = pathParts.at(1);
       switch (statusCode) {
         case 'D':
           result.push({
@@ -1715,7 +1723,7 @@ export async function diffCommitTree(
             sha: null,
           });
           result.push({
-            path: targetPath,
+            path: targetPath!,
             mode: newMode,
             type: treeTypeFromMode(newMode),
             sha: toLongCommitSha(newSha),

@@ -39,7 +39,8 @@ export function getPreset({
   repo,
   presetName,
 }: PresetConfig): Preset | undefined {
-  return groups[repo] && presetName ? groups[repo][presetName] : undefined;
+  // `in` check: the index signature hides that `repo` may be missing
+  return presetName && repo in groups ? groups[repo][presetName] : undefined;
 }
 
 function computeInternalPresets(): string[] {
@@ -71,7 +72,7 @@ export function isInternal(preset: string): boolean {
   // As we can't look up on the preset's values itself (as it could be in any property), we can look at the preset name itself, and see if it includes the start of an opening parenthesis
   const withoutParameterParts = preset.split('(');
   if (
-    withoutParameterParts?.length &&
+    withoutParameterParts.length &&
     internalPresetNames.has(withoutParameterParts[0])
   ) {
     return true;

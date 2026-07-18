@@ -285,8 +285,8 @@ export class GithubGraphqlDatasourceFetcher<
       // in long-term cache.
       isPaginationDone = await this.cacheStrategy().reconcile(resultItems);
 
-      hasNextPage = !!queryResult?.pageInfo?.hasNextPage;
-      nextCursor = queryResult?.pageInfo?.endCursor;
+      hasNextPage = !!queryResult.pageInfo?.hasNextPage;
+      nextCursor = queryResult.pageInfo?.endCursor;
       if (hasNextPage && nextCursor) {
         this.cursor = nextCursor;
       }

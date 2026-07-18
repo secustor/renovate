@@ -299,10 +299,11 @@ export async function resolveConstraint(
   toolConstraint: ToolConstraint,
 ): Promise<string> {
   const { toolName } = toolConstraint;
-  const toolConfig = allToolConfig[toolName];
-  if (!toolConfig) {
+  // `in` check: the exhaustive Record type hides unknown tool names at runtime
+  if (!(toolName in allToolConfig)) {
     throw new Error(`Invalid tool to install: ${toolName}`);
   }
+  const toolConfig = allToolConfig[toolName];
 
   const { get: getVersioning } =
     await import('../../modules/versioning/index.ts');
@@ -325,7 +326,7 @@ export async function resolveConstraint(
   const pkgReleases = await getPkgReleases(toolConfig);
   const releases = pkgReleases?.releases ?? [];
 
-  if (!releases?.length) {
+  if (!releases.length) {
     logger.warn({ toolConfig }, 'No tool releases found.');
     throw new Error('No tool releases found.');
   }

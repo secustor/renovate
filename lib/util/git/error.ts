@@ -101,7 +101,7 @@ export function handleCommitError(
   }
   if (
     (err.message.includes('remote rejected') || err.message.includes('403')) &&
-    files?.some((file) => file.path?.startsWith('.github/workflows/'))
+    files?.some((file) => file.path.startsWith('.github/workflows/'))
   ) {
     logger.debug({ err }, 'commitFiles error');
     logger.info('Workflows update rejection - aborting branch.');

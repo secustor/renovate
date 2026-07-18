@@ -260,7 +260,7 @@ export async function resolveConfigPresets(
             existingPresets.concat([preset]),
             mergeInternalPresets,
           );
-        if (inputConfig?.ignoreDeps?.length === 0) {
+        if (inputConfig.ignoreDeps?.length === 0) {
           delete presetConfig.description;
         }
 

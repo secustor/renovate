@@ -117,11 +117,8 @@ export function exec(
     // if we're not in shell mode, we need to provide the command and arguments
     if (shell === false) {
       const parts = split(cmd);
-      // v8 ignore else -- TODO: add test #40625
-      if (parts) {
-        cmd = parts[0];
-        args = parts.slice(1);
-      }
+      cmd = parts[0];
+      args = parts.slice(1);
     }
 
     const cp = execa(cmd, args, {
@@ -146,8 +143,9 @@ export function exec(
       reject(new ExecError(error.message, rejectInfo(), error));
     });
 
-    void cp.on('exit', (code: number, signal: NodeJS.Signals) => {
-      if (NONTERM.includes(signal)) {
+    // `signal` is null when the process exited normally
+    void cp.on('exit', (code: number, signal: NodeJS.Signals | null) => {
+      if (signal !== null && NONTERM.includes(signal)) {
         return;
       }
       if (signal) {
@@ -164,7 +162,7 @@ export function exec(
         return;
       }
       if (code !== 0) {
-        if (ignoreFailure === undefined || ignoreFailure === false) {
+        if (!ignoreFailure) {
           reject(
             new ExecError(
               `Command failed: ${cp.spawnargs.join(' ')}\n${stringify(stderr)}`,

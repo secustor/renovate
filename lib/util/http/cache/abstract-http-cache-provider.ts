@@ -65,8 +65,8 @@ export abstract class AbstractHttpCacheProvider implements HttpCacheProvider {
     resp: HttpResponse<T>,
   ): Promise<HttpResponse<T>> {
     if (!resp.cached && resp.statusCode === 200) {
-      const etag = resp.headers?.etag;
-      const lastModified = resp.headers?.['last-modified'];
+      const etag = resp.headers.etag;
+      const lastModified = resp.headers['last-modified'];
 
       HttpCacheStats.incRemoteMisses(url);
 

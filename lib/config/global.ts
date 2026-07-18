@@ -5,7 +5,7 @@ import type { RenovateConfig, RepoGlobalConfig } from './types.ts';
  * Options without a generated default value, for which `GlobalConfig.get(key)`
  * can return `undefined` at runtime.
  */
-type UndefaultedGlobalKey = 'dryRun';
+type UndefaultedGlobalKey = 'dryRun' | 'toolSettings';
 
 export class GlobalConfig {
   // TODO: once global config work is complete, add a test to make sure this list includes all options with globalOnly=true (#9603)

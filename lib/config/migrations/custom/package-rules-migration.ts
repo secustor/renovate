@@ -23,7 +23,8 @@ function renameKeys(packageRule: PackageRule): PackageRule {
   const newPackageRule: PackageRule = {};
   for (const [key, val] of Object.entries(packageRule)) {
     // @ts-expect-error -- TODO: fix me
-    newPackageRule[renameMap[key as RenameMapKey] ?? key] = val;
+    newPackageRule[key in renameMap ? renameMap[key as RenameMapKey] : key] =
+      val;
   }
   return newPackageRule;
 }

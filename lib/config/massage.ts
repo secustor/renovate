@@ -6,17 +6,18 @@ import type { PackageRule, RenovateConfig, UpdateType } from './types.ts';
 
 const options = getOptions();
 
-let allowedStrings: string[];
+let allowedStrings: string[] | undefined;
 
 // Returns a massaged config
 export function massageConfig(config: RenovateConfig): RenovateConfig {
   if (!allowedStrings) {
-    allowedStrings = [];
-    options.forEach((option) => {
+    const strings: string[] = [];
+    for (const option of options) {
       if (option.allowString) {
-        allowedStrings.push(option.name);
+        strings.push(option.name);
       }
-    });
+    }
+    allowedStrings = strings;
   }
   const massagedConfig = clone(config);
   for (const [key, val] of Object.entries(config)) {

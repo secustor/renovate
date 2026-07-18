@@ -232,9 +232,9 @@ export function getToolSettingsOptions(
 
   const options: ToolSettingsOptions = {};
 
-  options.jvmMaxMemory = defaults?.jvmMaxMemory ?? 512;
-  options.jvmMemory = defaults?.jvmMemory ?? options.jvmMaxMemory;
-  options.nodeMaxMemory ??= defaults?.nodeMaxMemory;
+  options.jvmMaxMemory = defaults.jvmMaxMemory ?? 512;
+  options.jvmMemory = defaults.jvmMemory ?? options.jvmMaxMemory;
+  options.nodeMaxMemory ??= defaults.nodeMaxMemory;
 
   if (repoConfig !== undefined) {
     if (repoConfig.jvmMaxMemory) {

@@ -1,4 +1,4 @@
-import { isRegExp } from '@sindresorhus/is';
+import { isNullOrUndefined, isRegExp } from '@sindresorhus/is';
 import { dequal } from 'dequal';
 import type { RenovateConfig } from '../types.ts';
 import { RemovePropertyMigration } from './base/remove-property-migration.ts';
@@ -185,8 +185,11 @@ export class MigrationsService {
       keyof RenovateConfig,
       unknown,
     ][]) {
-      // @ts-expect-error -- can't be narrowed
-      migratedConfig[key] ??= value;
+      // the migrations hold a reference to `migratedConfig` and fill it key
+      // by key, which flow analysis cannot see through the object literal
+      if (isNullOrUndefined(migratedConfig[key])) {
+        migratedConfig[key] = value as never;
+      }
       const migration = MigrationsService.getMigration(migrations, key);
 
       if (migration) {

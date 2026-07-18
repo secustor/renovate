@@ -114,6 +114,11 @@ describe('util/git/url', () => {
   });
 
   describe('getRemoteUrlWithToken()', () => {
+    beforeEach(() => {
+      // the real hostRules.find() always returns an object
+      hostRules.find.mockReturnValue({});
+    });
+
     it('returns original url if no host rule is found', () => {
       expect(getRemoteUrlWithToken('https://foo.bar/')).toBe(
         'https://foo.bar/',

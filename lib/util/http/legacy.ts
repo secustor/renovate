@@ -46,7 +46,8 @@ Object.defineProperty(HttpError.prototype, 'host', {
 
 export type GotLegacyError<E = unknown, T = unknown> = HttpError & {
   statusCode?: number;
-  body: {
+  // `body` is missing for network-level errors without a response
+  body?: {
     message?: string;
     errors?: E[];
   };

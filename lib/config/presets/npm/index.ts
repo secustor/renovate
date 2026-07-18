@@ -38,7 +38,8 @@ export async function getPreset({
       )
     ).body;
     // TODO: check null #22198
-    dep = body.versions![body['dist-tags']!.latest];
+    // the index signature hides that the version may be missing
+    dep = body.versions![body['dist-tags']!.latest] as typeof dep;
   } catch {
     throw new Error(PRESET_DEP_NOT_FOUND);
   }

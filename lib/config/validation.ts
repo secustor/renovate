@@ -305,13 +305,17 @@ export async function validateConfig(
             }
           }
           const parentName = getParentName(parentPath);
+          // the index signature hides that `key` may be missing
+          const allowedParents = optionParents[key] as
+            | AllowedParents[]
+            | undefined;
           if (
             !isPreset &&
-            optionParents[key] &&
-            !optionParents[key].includes(parentName as AllowedParents)
+            allowedParents &&
+            !allowedParents.includes(parentName as AllowedParents)
           ) {
             // TODO: types (#22198)
-            const options = optionParents[key]?.toSorted().join(', ');
+            const options = allowedParents.toSorted().join(', ');
             const message = `"${key}" can't be used in "${parentName}". Allowed objects: ${options}.`;
             warnings.push({
               topic: `${parentPath ? `${parentPath}.` : ''}${key}`,
@@ -320,7 +324,7 @@ export async function validateConfig(
           }
 
           // v8 ignore else -- intentionally unhandled - if we knew what was to be covered here, we'd add validation
-          if (!optionTypes[key]) {
+          if (!(key in optionTypes)) {
             errors.push({
               topic: 'Configuration Error',
               message: `Invalid configuration option: ${currentPath}`,

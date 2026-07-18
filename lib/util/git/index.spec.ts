@@ -13,6 +13,7 @@ import {
 } from '../../constants/error-messages.ts';
 import { postUpgradeCommandsExecutor } from '../../workers/repository/update/branch/execute-post-upgrade-commands.ts';
 import type { BranchConfig, BranchUpgradeConfig } from '../../workers/types.ts';
+import * as _repositoryCache from '../cache/repository/index.ts';
 import { setCustomEnv } from '../env.ts';
 import * as _execCommon from '../exec/common.ts';
 import { newlineRegex, regEx } from '../regex.ts';
@@ -35,6 +36,7 @@ vi.mock('../cache/repository/index.ts');
 vi.mock('./auth.ts');
 vi.unmock('./index.ts');
 
+const repositoryCache = vi.mocked(_repositoryCache);
 const behindBaseCache = vi.mocked(_behindBaseCache);
 const conflictsCache = vi.mocked(_conflictsCache);
 const modifiedCache = vi.mocked(_modifiedCache);
@@ -154,6 +156,8 @@ describe('util/git/index', { timeout: 30000 }, () => {
     await repo.addConfig('commit.gpgsign', 'false');
     tmpDir = await tmp.dir({ unsafeCleanup: true });
     GlobalConfig.set({ localDir: tmpDir.path });
+    // the real getCache() always returns an object
+    repositoryCache.getCache.mockReturnValue({});
     await git.initRepo({
       url: origin.path,
     });

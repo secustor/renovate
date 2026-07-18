@@ -49,10 +49,11 @@ export interface GithubGraphqlPayload<T> {
   };
 }
 
+// GraphQL responses are unvalidated, so any field may be missing at runtime
 export interface GithubGraphqlRepoResponse<T> {
-  repository: {
+  repository?: {
     isRepoPrivate?: boolean;
-    payload: GithubGraphqlPayload<T>;
+    payload?: GithubGraphqlPayload<T>;
   };
 }
 

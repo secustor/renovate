@@ -31,12 +31,13 @@ export class ExtendsMigration extends AbstractMigration {
   private normalizePreset(preset: string): string | null {
     const migratePresets = GlobalConfig.get('migratePresets');
 
-    if (removedPresets[preset] !== undefined) {
+    // `in` checks: the index signatures hide that the keys may be missing
+    if (preset in removedPresets) {
       return removedPresets[preset];
     }
 
-    if (migratePresets?.[preset] !== undefined) {
-      return migratePresets?.[preset];
+    if (preset in migratePresets) {
+      return migratePresets[preset];
     }
 
     return preset;
