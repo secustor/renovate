@@ -135,9 +135,9 @@ export async function filterInternalChecks(
           (await getMergeConfidenceLevel(
             datasource!,
             packageName!,
-            currentVersion!,
+            currentVersion,
             candidateRelease.version,
-            updateType!,
+            updateType,
           )) ?? 'neutral';
         // TODO #22198
         if (!satisfiesConfidenceLevel(confidenceLevel, minimumConfidence!)) {
