@@ -45,12 +45,12 @@ function getDistributionUrl(content: string): string | null {
   const match = regEx(/^distributionUrl\s*=\s*(?<distributionUrl>.+)$/m).exec(
     content,
   );
-  return match?.groups?.distributionUrl?.replace(/\\:/g, ':').trim() ?? null;
+  return match?.groups?.distributionUrl.replace(/\\:/g, ':').trim() ?? null;
 }
 
 function getWrapperUrl(content: string): string | null {
   const match = regEx(/^wrapperUrl\s*=\s*(?<wrapperUrl>.+)$/m).exec(content);
-  return match?.groups?.wrapperUrl?.replace(/\\:/g, ':').trim() ?? null;
+  return match?.groups?.wrapperUrl.replace(/\\:/g, ':').trim() ?? null;
 }
 
 function constructWrapperUrl(
@@ -64,19 +64,19 @@ function getWrapperVersion(content: string): string | null {
   const match = regEx(/^wrapperVersion\s*=\s*(?<wrapperVersion>.+)$/m).exec(
     content,
   );
-  return match?.groups?.wrapperVersion?.trim() ?? null;
+  return match?.groups?.wrapperVersion.trim() ?? null;
 }
 
 function getDistributionType(content: string): string | null {
   const match = regEx(/^distributionType\s*=\s*(?<distributionType>.+)$/m).exec(
     content,
   );
-  return match?.groups?.distributionType?.trim() ?? null;
+  return match?.groups?.distributionType.trim() ?? null;
 }
 
 function getChecksumValue(content: string, key: string): string | null {
   const match = regEx(`^${key}\\s*=\\s*(?<value>.+)$`, 'm').exec(content);
-  return match?.groups?.value?.trim() ?? null;
+  return match?.groups?.value.trim() ?? null;
 }
 
 function addChecksumAfterLine(

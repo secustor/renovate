@@ -27,7 +27,7 @@ import {
 
 function getLatestSuitableVersion(releases: Release[]): string | null {
   /* v8 ignore next 3 -- TODO: add test */
-  if (!releases?.length) {
+  if (!releases.length) {
     return null;
   }
   const allVersions = releases.map(({ version }) => version);

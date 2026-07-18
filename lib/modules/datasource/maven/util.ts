@@ -132,7 +132,11 @@ export async function downloadHttpProtocol(
         result.isCacheable = true;
       }
 
-      const lastModified = asTimestamp(res?.headers?.['last-modified']);
+      // HttpResponse.headers is typed as always present, but a response
+      // reconstructed from the on-disk http cache may omit it entirely.
+      const lastModified = asTimestamp(
+        (res.headers as typeof res.headers | undefined)?.['last-modified'],
+      );
       if (lastModified) {
         result.lastModified = lastModified;
       }
@@ -180,7 +184,7 @@ export async function downloadHttpProtocol(
         logger.debug({ failedUrl, err }, 'Temporary error');
 
         if (isMavenCentral(url)) {
-          const statusCode = err?.response?.statusCode;
+          const statusCode = err.response?.statusCode;
           if (statusCode === 429) {
             if (packageCache.getCacheType() === 'redis') {
               logger.once.warn(
@@ -424,9 +428,11 @@ function extractSnapshotVersion(metadata: XmlDocument): string | null {
   //
   // Basically, we need to replace -SNAPSHOT with the artifact timestanp & build number,
   // so for example 1.0.0-SNAPSHOT will become 1.0.0-<timestamp>-<buildNumber>
-  const version = metadata
-    .descendantWithPath('version')
-    ?.val?.replace('-SNAPSHOT', '');
+  // xmldoc types `val` as always present, but it isn't for every node
+  const versionEl = metadata.descendantWithPath('version') as
+    | { val: string | undefined }
+    | undefined;
+  const version = versionEl?.val?.replace('-SNAPSHOT', '');
 
   const snapshot = metadata.descendantWithPath('versioning.snapshot');
   const timestamp = snapshot?.childNamed('timestamp')?.val;

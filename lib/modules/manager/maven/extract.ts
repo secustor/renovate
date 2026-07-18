@@ -232,10 +232,13 @@ function deepExtract(
   if (dep && !isRoot) {
     result.push(dep);
   }
-  if (node.children) {
-    for (const child of node.children) {
+  // xmldoc types `children` as always present, but leaf/text nodes really
+  // don't have it at runtime.
+  const children = node.children as XmlElement[] | undefined;
+  if (children) {
+    for (const child of children) {
       deepExtract(
-        child as XmlElement,
+        child,
         result,
         false,
         node.name === 'build' ||
@@ -250,7 +253,7 @@ function deepExtract(
 function applyProps(
   dep: PackageDependency,
   depPackageFile: string,
-  props: MavenProp,
+  props: Record<string, MavenProp | undefined>,
 ): PackageDependency {
   let result = dep;
   let anyChange = false;
@@ -283,7 +286,7 @@ function applyProps(
 function applyPropsInternal(
   dep: PackageDependency,
   depPackageFile: string,
-  props: MavenProp,
+  props: Record<string, MavenProp | undefined>,
   previouslySeenProps: Set<string>,
 ): [PackageDependency, boolean, boolean] {
   let anyChange = false;
@@ -294,8 +297,7 @@ function applyPropsInternal(
   const replaceAll = (str: string): string =>
     str.replace(regEx(/\${[^}]*?}/g), (substr) => {
       const propKey = substr.slice(2, -1).trim();
-      // TODO: wrong types here, props is already `MavenProp`
-      const propValue = (props as any)[propKey] as MavenProp;
+      const propValue = props[propKey];
       if (propValue) {
         anyChange = true;
         if (previouslySeenProps.has(propKey)) {
@@ -318,30 +320,32 @@ function applyPropsInternal(
   let fileReplacePosition = dep.fileReplacePosition;
   let propSource = dep.propSource;
   let sharedVariableName: string | null = null;
-  let currentValue: string | null = null;
+  let currentValue: string | null = dep.currentValue ?? null;
 
-  if (dep.currentValue) {
-    currentValue = dep.currentValue.replace(regEx(/^\${[^}]*?}$/), (substr) => {
-      const propKey = substr.slice(2, -1).trim();
-      // TODO: wrong types here, props is already `MavenProp`
-      const propValue = (props as any)[propKey] as MavenProp;
-      if (propValue) {
-        sharedVariableName ??= propKey;
-        fileReplacePosition = propValue.fileReplacePosition;
-        propSource =
-          propValue.packageFile ??
-          // istanbul ignore next
-          undefined;
-        anyChange = true;
-        if (previouslySeenProps.has(propKey)) {
-          fatal = true;
-        } else {
-          seenProps.add(propKey);
-        }
-        return propValue.val;
+  // The pattern is anchored (^...$), so it matches the whole string at most
+  // once; a plain match+branch (rather than .replace() with a callback) keeps
+  // the assignments below in this function's own control-flow scope.
+  const currentValuePlaceholder = dep.currentValue?.match(
+    regEx(/^\${[^}]*?}$/),
+  )?.[0];
+  if (currentValuePlaceholder) {
+    const propKey = currentValuePlaceholder.slice(2, -1).trim();
+    const propValue = props[propKey];
+    if (propValue) {
+      sharedVariableName ??= propKey;
+      fileReplacePosition = propValue.fileReplacePosition;
+      propSource =
+        propValue.packageFile ??
+        // istanbul ignore next
+        undefined;
+      anyChange = true;
+      if (previouslySeenProps.has(propKey)) {
+        fatal = true;
+      } else {
+        seenProps.add(propKey);
       }
-      return substr;
-    });
+      currentValue = propValue.val;
+    }
   }
 
   const result: PackageDependency = {
@@ -353,6 +357,7 @@ function applyPropsInternal(
     currentValue,
   };
 
+  // oxlint-disable-next-line typescript/no-unnecessary-condition -- confirmed via tsc probe: sharedVariableName is only ever reassigned inside the .replace() callback above, and TypeScript's control-flow analysis does not carry that reassignment back to the enclosing function scope, so it statically (and wrongly) treats this read as always null. Deleting the guard would drop the assignment on result.sharedVariableName whenever a shared variable placeholder is actually resolved.
   if (sharedVariableName) {
     result.sharedVariableName = sharedVariableName;
   }
@@ -416,7 +421,9 @@ export function extractPackage(
   if (propsNode?.children) {
     for (const propNode of propsNode.children as XmlElement[]) {
       const key = propNode.name;
-      const val = propNode?.val?.trim();
+      // xmldoc types `val` as always present, but not every child node
+      // (e.g. a nested element rather than plain text) actually has it.
+      const val = (propNode.val as string | undefined)?.trim();
       if (key && val && propNode.position) {
         const fileReplacePosition = propNode.position;
         props[key] = { val, fileReplacePosition, packageFile };
@@ -511,9 +518,13 @@ export function parseSettings(raw: string): XmlDocument | null {
 
 export function resolveParents(packages: PackageFile[]): PackageFile[] {
   const packageFileNames: string[] = [];
-  const extractedPackages: Record<string, MavenInterimPackageFile> = {};
+  const extractedPackages: Record<string, MavenInterimPackageFile | undefined> =
+    {};
   const extractedDeps: Record<string, PackageDependency[]> = {};
-  const extractedProps: Record<string, MavenProp> = {};
+  const extractedProps: Record<
+    string,
+    Record<string, MavenProp | undefined>
+  > = {};
   const registryUrls: Record<string, Set<string>> = {};
   packages.forEach((pkg) => {
     const name = pkg.packageFile;
@@ -529,23 +540,22 @@ export function resolveParents(packages: PackageFile[]): PackageFile[] {
     registryUrls[name] = new Set();
     const propsHierarchy: Record<string, MavenProp>[] = [];
     const visitedPackages = new Set<string>();
-    let pkg: MavenInterimPackageFile | null = extractedPackages[name];
+    // Populated for every name in packageFileNames in the forEach() above
+    let pkg: MavenInterimPackageFile | null = extractedPackages[name]!;
     while (pkg) {
       propsHierarchy.unshift(pkg.mavenProps!);
 
-      if (pkg.deps) {
-        pkg.deps.forEach((dep) => {
-          if (dep.registryUrls) {
-            dep.registryUrls.forEach((url) => {
-              registryUrls[name].add(url);
-            });
-          }
-        });
-      }
+      pkg.deps.forEach((dep) => {
+        if (dep.registryUrls) {
+          dep.registryUrls.forEach((url) => {
+            registryUrls[name].add(url);
+          });
+        }
+      });
 
       if (pkg.parent && !visitedPackages.has(pkg.parent)) {
         visitedPackages.add(pkg.parent);
-        pkg = extractedPackages[pkg.parent];
+        pkg = extractedPackages[pkg.parent] ?? null;
       } else {
         pkg = null;
       }
@@ -556,7 +566,8 @@ export function resolveParents(packages: PackageFile[]): PackageFile[] {
 
   // Resolve registryUrls
   packageFileNames.forEach((name) => {
-    const pkg = extractedPackages[name];
+    // Populated for every name in packageFileNames above
+    const pkg = extractedPackages[name]!;
     pkg.deps.forEach((rawDep) => {
       const urlsSet = new Set([
         ...(rawDep.registryUrls ?? []),
@@ -569,7 +580,8 @@ export function resolveParents(packages: PackageFile[]): PackageFile[] {
   const rootDeps = new Set<string>();
   // Resolve placeholders
   packageFileNames.forEach((name) => {
-    const pkg = extractedPackages[name];
+    // Populated for every name in packageFileNames above
+    const pkg = extractedPackages[name]!;
     pkg.deps.forEach((rawDep) => {
       const dep = applyProps(rawDep, name, extractedProps[name]);
       if (dep.depType === 'parent') {
@@ -587,7 +599,8 @@ export function resolveParents(packages: PackageFile[]): PackageFile[] {
   });
 
   const packageFiles = packageFileNames.map((packageFile) => {
-    const pkg = extractedPackages[packageFile];
+    // Populated for every name in packageFileNames above
+    const pkg = extractedPackages[packageFile]!;
     const deps = extractedDeps[packageFile];
     for (const dep of deps) {
       if (rootDeps.has(dep.depName!)) {
@@ -654,7 +667,7 @@ export async function extractAllPackageFiles(
     }
     if (packageFile.endsWith('settings.xml')) {
       const registries = extractRegistries(content);
-      if (registries) {
+      if (registries.length) {
         logger.debug(
           { registries, packageFile },
           'Found registryUrls in settings.xml',
@@ -677,12 +690,10 @@ export async function extractAllPackageFiles(
       }
     }
   }
-  if (additionalRegistryUrls) {
-    for (const pkgFile of packages) {
-      for (const dep of pkgFile.deps) {
-        if (dep.registryUrls) {
-          dep.registryUrls.unshift(...additionalRegistryUrls);
-        }
+  for (const pkgFile of packages) {
+    for (const dep of pkgFile.deps) {
+      if (dep.registryUrls) {
+        dep.registryUrls.unshift(...additionalRegistryUrls);
       }
     }
   }
