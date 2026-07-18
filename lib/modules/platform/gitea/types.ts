@@ -63,7 +63,9 @@ export interface Issue {
   title: string;
   body: string;
   assignees: User[];
-  labels: Label[];
+  // Genuinely absent for some issues in practice (unchecked HTTP response,
+  // see the "coverage" fixture in index.spec.ts), so keep optional.
+  labels?: Label[];
 }
 
 export interface User {

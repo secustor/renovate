@@ -234,7 +234,7 @@ const platform: Platform = {
       } else {
         defaults.version = await helper.getVersion({ token });
       }
-      if (defaults.version?.includes('gitea-')) {
+      if (defaults.version.includes('gitea-')) {
         defaults.isForgejo = true;
         logger.info(
           `Detected Forgejo instance, please use 'forgejo' platform instead`,
@@ -427,7 +427,7 @@ const platform: Platform = {
       // TODO: check branchCommit
 
       await helper.createCommitStatus(config.repository, branchCommit!, {
-        state: helper.renovateToGiteaStatusMapping[state] || 'pending',
+        state: helper.renovateToGiteaStatusMapping[state] ?? 'pending',
         context,
         description,
         ...(target_url && { target_url }),
@@ -465,7 +465,7 @@ const platform: Platform = {
     if (
       !internalChecksAsSuccess &&
       ccs.worstStatus === 'success' &&
-      ccs.statuses.every((status) => status.context?.startsWith('renovate/'))
+      ccs.statuses.every((status) => status.context.startsWith('renovate/'))
     ) {
       logger.debug(
         'Successful checks are all internal renovate/ checks, so returning "pending" branch status',
@@ -615,7 +615,7 @@ const platform: Platform = {
           try {
             await helper.mergePR(config.repository, gpr.number, {
               Do:
-                getMergeMethod(platformPrOptions?.automergeStrategy) ??
+                getMergeMethod(platformPrOptions.automergeStrategy) ??
                 config.mergeMethod,
               merge_when_checks_succeed: true,
               delete_branch_after_merge: true,
@@ -1023,7 +1023,7 @@ const platform: Platform = {
     // v8 ignore else -- TODO: add test #40625
     if (deleteConfig.type === 'by-topic') {
       comment = findCommentByTopic(commentList, deleteConfig.topic);
-    } else if (deleteConfig.type === 'by-content') {
+    } else {
       const body = sanitize(deleteConfig.content);
       comment = findCommentByContent(commentList, body);
     }
@@ -1052,7 +1052,7 @@ const platform: Platform = {
 
   async addAssignees(number: number, assignees: string[]): Promise<void> {
     logger.debug(
-      `Updating assignees '${assignees?.join(', ')}' on Issue #${number}`,
+      `Updating assignees '${assignees.join(', ')}' on Issue #${number}`,
     );
     await helper.updateIssue(config.repository, number, {
       assignees,
@@ -1060,7 +1060,7 @@ const platform: Platform = {
   },
 
   async addReviewers(number: number, reviewers: string[]): Promise<void> {
-    logger.debug(`Adding reviewers '${reviewers?.join(', ')}' to #${number}`);
+    logger.debug(`Adding reviewers '${reviewers.join(', ')}' to #${number}`);
     if (semver.lt(defaults.version, '1.14.0')) {
       logger.debug(
         { version: defaults.version },
