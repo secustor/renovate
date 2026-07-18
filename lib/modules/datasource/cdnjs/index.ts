@@ -102,7 +102,14 @@ export class CdnjsDatasource extends Datasource {
         return this.http.getJsonSafe(url, CdnjsAPISriResponse);
       })
       .transform(({ sri }): string => {
-        return sri?.[assetName];
+        // `sri` itself is always present (non-optional field); the `assetName`
+        // lookup within it may still genuinely miss (arbitrary key), which
+        // this function's `string` annotation doesn't reflect -- but that's
+        // pre-existing: a miss silently produces `undefined` here (same as it
+        // did through the `sri?.[...]` this replaces), which `Result.transform()`
+        // wraps as `Result.ok(undefined)` at runtime, and `unwrap()`'s
+        // `val = null` default below already handles it.
+        return sri[assetName];
       });
 
     const { val = null, err } = await result.unwrap();

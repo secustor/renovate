@@ -130,7 +130,7 @@ export class AwsMachineImageDatasource extends Datasource {
     }
 
     const res = await this.getReleases({ packageName: serializedAmiFilter });
-    return res?.releases?.[0]?.newDigest ?? /* v8 ignore next */ null; // TODO: needs test
+    return res?.releases[0]?.newDigest ?? /* v8 ignore next */ null; // TODO: needs test
   }
 
   override getDigest(

@@ -35,7 +35,7 @@ export class BitbucketServerTagsDatasource extends Datasource {
   }
 
   static getRegistryURL(registryUrl: string): string {
-    return registryUrl?.replace(regEx(/\/rest\/api\/1.0$/), '');
+    return registryUrl.replace(regEx(/\/rest\/api\/1.0$/), '');
   }
 
   static getSourceUrl(

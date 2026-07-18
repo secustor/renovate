@@ -39,7 +39,7 @@ export class DartDatasource extends Datasource {
       registryUrl,
     )}api/packages/${packageName}`;
 
-    let body: DartResult | null = null;
+    let body: DartResult;
     try {
       const raw = await this.http.getJson(pkgUrl, DartResult);
       body = raw.body;
@@ -47,41 +47,39 @@ export class DartDatasource extends Datasource {
       this.handleGenericErrors(err);
     }
 
-    if (body) {
-      const { versions, latest } = body;
-      const releases = versions
-        ?.filter(({ retracted }) => !retracted)
-        ?.map(({ version, published, pubspec }) => {
-          const release: Release = {
-            version,
-            releaseTimestamp: asTimestamp(published),
-          };
+    const { versions, latest } = body;
+    const releases = versions
+      ?.filter(({ retracted }) => !retracted)
+      .map(({ version, published, pubspec }) => {
+        const release: Release = {
+          version,
+          releaseTimestamp: asTimestamp(published),
+        };
 
-          const constraints: Partial<Record<ConstraintName, string[]>> = {};
-          if (isNonEmptyString(pubspec?.environment?.sdk)) {
-            constraints.dart = [pubspec.environment.sdk];
-          }
-          if (isNonEmptyString(pubspec?.environment?.flutter)) {
-            constraints.flutter = [pubspec.environment.flutter];
-          }
-          if (!isEmptyObject(constraints)) {
-            release.constraints = constraints;
-          }
+        const constraints: Partial<Record<ConstraintName, string[]>> = {};
+        if (isNonEmptyString(pubspec?.environment?.sdk)) {
+          constraints.dart = [pubspec.environment.sdk];
+        }
+        if (isNonEmptyString(pubspec?.environment?.flutter)) {
+          constraints.flutter = [pubspec.environment.flutter];
+        }
+        if (!isEmptyObject(constraints)) {
+          release.constraints = constraints;
+        }
 
-          return release;
-        });
-      if (releases && latest) {
-        result = { releases };
+        return release;
+      });
+    if (releases && latest) {
+      result = { releases };
 
-        const pubspec = latest.pubspec;
-        if (pubspec) {
-          if (pubspec.homepage) {
-            result.homepage = pubspec.homepage;
-          }
+      const pubspec = latest.pubspec;
+      if (pubspec) {
+        if (pubspec.homepage) {
+          result.homepage = pubspec.homepage;
+        }
 
-          if (pubspec.repository) {
-            result.sourceUrl = pubspec.repository;
-          }
+        if (pubspec.repository) {
+          result.sourceUrl = pubspec.repository;
         }
       }
     }

@@ -14,7 +14,13 @@ export const BicepResourceVersionIndex = z
       releaseMap.set(type, versions);
     }
 
-    return Object.fromEntries(releaseMap);
+    // `Object.fromEntries()` is typed as if every key seen while building the
+    // map is present, but callers look this up by an arbitrary packageName
+    // that may not be one of them.
+    return Object.fromEntries(releaseMap) as Record<
+      string,
+      string[] | undefined
+    >;
   });
 
 export type BicepResourceVersionIndex = z.infer<

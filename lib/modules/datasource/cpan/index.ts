@@ -35,7 +35,7 @@ export class CpanDatasource extends Datasource {
     let result: ReleaseResult | null = null;
     const searchUrl = joinUrlParts(registryUrl, 'v1/file/_search');
 
-    let releases: CpanRelease[] | null = null;
+    let releases: CpanRelease[];
     try {
       const body = {
         query: {
@@ -72,12 +72,10 @@ export class CpanDatasource extends Datasource {
 
     let latestDistribution: string | null = null;
     let latestVersion: string | null = null;
-    if (releases) {
-      for (const release of releases) {
-        latestDistribution ??= release.distribution;
-        if (!latestVersion && release.isLatest) {
-          latestVersion = release.version;
-        }
+    for (const release of releases) {
+      latestDistribution ??= release.distribution;
+      if (!latestVersion && release.isLatest) {
+        latestVersion = release.version;
       }
     }
     if (releases.length > 0 && latestDistribution) {

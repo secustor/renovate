@@ -20,7 +20,8 @@ export const AzurePipelinesJSON = z.object({
   value: AzurePipelinesTask.array(),
 });
 
-export const AzurePipelinesFallbackTasks = z.record(
-  z.string(),
-  z.string().array(),
-);
+export const AzurePipelinesFallbackTasks = z
+  .record(z.string(), z.string().array())
+  // zod's z.record() types every string key as present, but callers look
+  // this up by an arbitrary packageName that may not be one of them.
+  .transform((tasks) => tasks as Record<string, string[] | undefined>);
