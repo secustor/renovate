@@ -21,7 +21,7 @@ export interface ArrayFragment extends FragmentBase {
 
 export interface RecordFragment extends FragmentBase {
   type: 'record';
-  children: Record<string, Fragment>;
+  children: Record<string, Fragment | undefined>;
 }
 
 export interface StringFragment extends FragmentBase {

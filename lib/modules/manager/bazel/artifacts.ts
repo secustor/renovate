@@ -146,7 +146,7 @@ export async function updateArtifacts(
       }
 
       const urlFragments = getUrlFragments(rule);
-      if (!urlFragments?.length) {
+      if (!urlFragments.length) {
         logger.debug(`def: ${rule.value}, urls is empty`);
         continue;
       }

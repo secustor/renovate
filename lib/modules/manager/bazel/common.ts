@@ -12,18 +12,19 @@ export function findCodeFragment(
   }
 
   const [ruleIndex, ...restPath] = path;
-  let fragment: Fragment | undefined = parsed[ruleIndex];
+  let fragment: Fragment | undefined = parsed.at(ruleIndex);
   for (const key of restPath) {
     if (!fragment) {
       break;
     }
 
-    if (fragment.type === 'array' && isNumber(key)) {
-      fragment = fragment.children[key];
+    const prevFragment: Fragment = fragment;
+    if (prevFragment.type === 'array' && isNumber(key)) {
+      fragment = prevFragment.children.at(key);
     }
 
-    if (fragment.type === 'record' && isString(key)) {
-      fragment = fragment.children[key];
+    if (prevFragment.type === 'record' && isString(key)) {
+      fragment = prevFragment.children[key];
     }
   }
 

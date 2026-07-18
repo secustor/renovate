@@ -80,7 +80,7 @@ const kwParams = q
       startsWith: '[',
       endsWith: ']',
       preHandler: (ctx, tree) => {
-        const parentRecord = currentFragment(ctx) as RecordFragment;
+        const parentRecord = currentFragment(ctx);
         if (
           parentRecord.type === 'record' &&
           ctx.recordKey &&
@@ -102,7 +102,7 @@ const kwParams = q
           if (parentRecord.type === 'record' && ctx.recordKey) {
             const key = ctx.recordKey;
             const array = parentRecord.children[key];
-            if (array.type === 'array') {
+            if (array?.type === 'array') {
               array.children.push({ type: 'string', value, offset });
             }
           }
@@ -153,7 +153,7 @@ const kwParams = q
               .str((ctx, { value: subRecordValue, offset }) => {
                 const argIndex = ctx.argIndex ?? 0;
 
-                const subRecordKey = ctx.subRecordKey! ?? argIndex.toString();
+                const subRecordKey = ctx.subRecordKey ?? argIndex.toString();
                 const ruleFragment = currentFragment(ctx);
                 if (ruleFragment.type === 'record') {
                   ruleFragment.children[subRecordKey] = {
@@ -182,7 +182,7 @@ const kwParams = q
                 if (parentRecord.type === 'record' && ctx.recordKey) {
                   const key = ctx.recordKey;
                   const array = parentRecord.children[key];
-                  if (array.type === 'array') {
+                  if (array?.type === 'array') {
                     array.children.push(callFrag);
                   }
                 }
@@ -200,7 +200,7 @@ const kwParams = q
         ) {
           const key = ctx.recordKey;
           const array = parentRecord.children[key];
-          if (array.type === 'array') {
+          if (array?.type === 'array') {
             array.value = extractTreeValue(ctx.source, tree, array.offset);
           }
         }

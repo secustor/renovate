@@ -42,6 +42,7 @@ export async function updateBazelLockfile(
     const status = await getRepoStatus();
     if (
       !status.modified.includes(lockFileName) &&
+      // oxlint-disable-next-line typescript/no-unnecessary-condition -- simple-git's StatusResult types not_added as always an array, but this codebase's tests commonly build StatusResult via partial<>() mocks that omit it (see lockfile.spec.ts "returns null when lockfile is not modified"), so it can be undefined in practice.
       !status.not_added?.includes(lockFileName)
     ) {
       return null;

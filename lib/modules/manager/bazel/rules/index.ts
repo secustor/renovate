@@ -58,7 +58,8 @@ export function extract(fragment: Fragment): FragmentData {
     const { children } = fragment;
     const result: Record<string, FragmentData> = {};
     for (const [key, value] of Object.entries(children)) {
-      result[key] = extract(value);
+      // Object.entries() only yields entries that actually exist, so the value here is never undefined
+      result[key] = extract(value!);
     }
     return result;
   }
