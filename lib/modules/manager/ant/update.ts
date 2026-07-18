@@ -8,7 +8,7 @@ export function updateDependency({
 }: UpdateDependencyConfig): string | null {
   const { depName, currentValue, newValue, fileReplacePosition } = upgrade;
 
-  if (fileReplacePosition === undefined || fileReplacePosition === null) {
+  if (fileReplacePosition === undefined) {
     logger.debug({ depName }, 'No fileReplacePosition for ant dependency');
     return null;
   }

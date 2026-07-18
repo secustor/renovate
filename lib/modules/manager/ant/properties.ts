@@ -29,7 +29,9 @@ export function findAttrValuePosition(
   );
   const match = attrPattern.exec(tagContent)!;
 
-  const valueInMatch = match[1] ?? match[2];
+  // Only one of the two alternated capture groups (double- or single-quoted)
+  // is ever set per match; TS's exec() typing doesn't reflect that.
+  const valueInMatch = (match[1] as string | undefined) ?? match[2];
   const valueOffset = match[0].indexOf(valueInMatch);
   return startTag + match.index + valueOffset;
 }
@@ -41,7 +43,7 @@ export function findAttrValuePosition(
 export function parsePropertiesFile(
   content: string,
   packageFile: string,
-  props: Record<string, AntProp>,
+  props: Record<string, AntProp | undefined>,
 ): void {
   let offset = 0;
   for (const rawLine of content.split('\n')) {
@@ -80,7 +82,7 @@ export function parsePropertiesFile(
 export function applyProps(
   dep: PackageDependency,
   depPackageFile: string,
-  props: Record<string, AntProp>,
+  props: Record<string, AntProp | undefined>,
 ): PackageDependency {
   const currentValue = dep.currentValue;
 
@@ -127,7 +129,7 @@ export function applyProps(
  */
 function resolveKey(
   key: string,
-  props: Record<string, AntProp>,
+  props: Record<string, AntProp | undefined>,
   resolved: Map<string, string | null>,
   chain: Set<string>,
 ): string | null {
@@ -149,13 +151,16 @@ function resolveKey(
   }
 
   chain.add(key);
-  let isCircular = false;
+  // Track per-reference results instead of a boolean mutated from inside the
+  // replacer callback: TS can't narrow a closure-mutated flag read after the
+  // (synchronous, but still opaque to CFA) `.replace()` call returns.
+  const refResults: boolean[] = [];
   const val = prop.val.replace(
     regEx(/\$\{([^}]+)}/g),
     (match, refKey: string) => {
       const refResult = resolveKey(refKey, props, resolved, chain);
+      refResults.push(refResult === null);
       if (refResult === null) {
-        isCircular = true;
         return match;
       }
       return refResult;
@@ -163,7 +168,7 @@ function resolveKey(
   );
   chain.delete(key);
 
-  if (isCircular) {
+  if (refResults.some(Boolean)) {
     resolved.set(key, null);
     return null;
   }
@@ -178,7 +183,9 @@ function resolveKey(
  * E.g., if prop A = "${B}" and prop B = "1.0", resolve A to "1.0".
  * Marks circular properties by setting val to a placeholder that will be caught later.
  */
-export function resolveChainedProps(props: Record<string, AntProp>): void {
+export function resolveChainedProps(
+  props: Record<string, AntProp | undefined>,
+): void {
   const resolved = new Map<string, string | null>(); // null = circular
 
   for (const key of Object.keys(props)) {
