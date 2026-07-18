@@ -76,8 +76,15 @@ export function extractPackageFile(
         return dep;
       }
 
-      // validated above
-      const [, depName, , currVal] = packageMatches!;
+      // validated above. The specifier group is optional in the regex, so
+      // `currVal` genuinely may be undefined despite RegExpExecArray's
+      // element type claiming otherwise.
+      const [, depName, , currVal] = packageMatches! as unknown as [
+        string,
+        string,
+        string,
+        string?,
+      ];
       const currentValue = currVal?.trim();
       dep = {
         ...dep,

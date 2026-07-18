@@ -58,7 +58,9 @@ function extractYaml(
 
   try {
     // TODO: use schema (#9610)
-    const doc = parseSingleYaml<JenkinsPlugins>(content);
+    // This is untrusted, unvalidated YAML content, so `doc` may genuinely be
+    // nullish despite the type argument claiming otherwise.
+    const doc = parseSingleYaml<JenkinsPlugins | undefined>(content);
     if (isNonEmptyArray(doc?.plugins)) {
       for (const plugin of doc.plugins) {
         if (plugin.artifactId) {
