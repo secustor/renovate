@@ -52,7 +52,7 @@ describe('config/presets/index', () => {
       GlobalConfig.reset();
       memCache.init();
       packageCache.get.mockImplementation(
-        <T>(namespace: string, key: string): Promise<T> =>
+        <T>(namespace: string, key: string): Promise<T | undefined> =>
           Promise.resolve(memCache.get(`${namespace}-${key}`)),
       );
 

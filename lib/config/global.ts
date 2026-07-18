@@ -1,6 +1,12 @@
 import { globalConfigOptionDefaults } from '../global-config-option-defaults.generated.ts';
 import type { RenovateConfig, RepoGlobalConfig } from './types.ts';
 
+/**
+ * Options without a generated default value, for which `GlobalConfig.get(key)`
+ * can return `undefined` at runtime.
+ */
+type UndefaultedGlobalKey = 'dryRun';
+
 export class GlobalConfig {
   // TODO: once global config work is complete, add a test to make sure this list includes all options with globalOnly=true (#9603)
   static OPTIONS: readonly (keyof RepoGlobalConfig)[] = [
@@ -65,9 +71,10 @@ export class GlobalConfig {
   private static config: RepoGlobalConfig = {};
 
   static get(): RepoGlobalConfig;
-  static get<Key extends keyof RepoGlobalConfig>(
-    key: Key,
-  ): Required<RepoGlobalConfig>[Key];
+  // Keys without a generated default really can be `undefined` at runtime.
+  // Only `dryRun` is typed honestly so far - extend `UndefaultedGlobalKey`
+  // when fixing the remaining keys without defaults.
+  static get<Key extends UndefaultedGlobalKey>(key: Key): RepoGlobalConfig[Key];
   static get<Key extends keyof RepoGlobalConfig>(
     key: Key,
   ): Required<RepoGlobalConfig>[Key];

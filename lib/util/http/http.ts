@@ -183,7 +183,7 @@ export abstract class HttpBase<
 
     // Cache GET requests unless memCache=false
     if (memCacheKey) {
-      resPromise = memCache.get(memCacheKey);
+      resPromise = memCache.get(memCacheKey) ?? null;
 
       /* v8 ignore next: temporary code */
       if (resPromise && !cacheProvider) {
@@ -243,7 +243,7 @@ export abstract class HttpBase<
       const res = await resPromise;
       const deepCopyNeeded = !!memCacheKey && res.statusCode !== 304;
       const resCopy = copyResponse(res, deepCopyNeeded);
-      resCopy.authorization = !!options?.headers?.authorization;
+      resCopy.authorization = !!options.headers?.authorization;
 
       if (cacheProvider) {
         return await cacheProvider.wrapServerResponse(method, url, resCopy);

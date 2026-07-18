@@ -8,7 +8,7 @@ export function reset(): void {
   memCache = undefined;
 }
 
-export function get<T = any>(key: string): T {
+export function get<T = any>(key: string): T | undefined {
   return memCache?.[key];
 }
 

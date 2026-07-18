@@ -391,12 +391,9 @@ export class DatasourceCacheStats {
         continue;
       }
 
-      /* v8 ignore else -- TODO: add tests #40625 */
-      if (action === 'skip') {
-        result.long[datasource][registryUrl][packageName].write = 'skip';
-        result.short[datasource][registryUrl].skip += 1;
-        continue;
-      }
+      // `action` can only be `skip` at this point
+      result.long[datasource][registryUrl][packageName].write = 'skip';
+      result.short[datasource][registryUrl].skip += 1;
     }
 
     return result;
@@ -496,10 +493,11 @@ export class HttpStats {
       const { hostname, origin, pathname } = parsedUrl;
       const baseUrl = `${origin}${pathname}`;
 
+      const statusKey = status.toString();
       urls[baseUrl] ??= {};
       urls[baseUrl][method] ??= {};
-      urls[baseUrl][method][status] ??= 0;
-      urls[baseUrl][method][status] += 1;
+      urls[baseUrl][method][statusKey] ??= 0;
+      urls[baseUrl][method][statusKey] += 1;
 
       rawRequests.push(`${method} ${url} ${status} ${reqMs} ${queueMs}`);
 
@@ -571,7 +569,7 @@ export class HttpCacheStats {
 
   static read(key: string): HttpCacheHostStatsData {
     return (
-      this.getData()?.[key] ?? {
+      this.getData()[key] ?? {
         hit: 0,
         miss: 0,
       }
@@ -678,9 +676,7 @@ export class ObsoleteCacheHitLogger {
 
   static write(url: string): void {
     const data = this.getData();
-    if (!data[url]) {
-      data[url] = { count: 0 };
-    }
+    data[url] ??= { count: 0 };
     data[url].count++;
     memCache.set('obsolete-cache-stats', data);
   }
@@ -750,7 +746,7 @@ export class AbandonedPackageStats {
   }
 }
 
-type GitOperationStatsData = Record<GitOperationType, number[]>;
+type GitOperationStatsData = Partial<Record<GitOperationType, number[]>>;
 
 export class GitOperationStats {
   static write(operationType: GitOperationType, duration: number): void {
