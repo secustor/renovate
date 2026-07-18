@@ -71,6 +71,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
           modified: [],
           not_added: [],
           deleted: [],
+          renamed: [],
         }),
       );
       GlobalConfig.set({
@@ -121,6 +122,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
           modified: [],
           not_added: [],
           deleted: [],
+          renamed: [],
         }),
       );
       GlobalConfig.set({
@@ -176,6 +178,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
           modified: [],
           not_added: [],
           deleted: [],
+          renamed: [],
         }),
       );
       const localDir = upath.join(tmpDir.path, 'local');
@@ -233,6 +236,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
           modified: [],
           not_added: [],
           deleted: [],
+          renamed: [],
         }),
       );
       const localDir = upath.join(tmpDir.path, 'local');
@@ -291,6 +295,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
           modified: [],
           not_added: [],
           deleted: [],
+          renamed: [],
         }),
       );
       const localDir = upath.join(tmpDir.path, 'local');
@@ -347,6 +352,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
           modified: [],
           not_added: [],
           deleted: [],
+          renamed: [],
         }),
       );
       const cacheDir = upath.join(tmpDir.path, 'cache');
@@ -404,6 +410,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
           modified: [],
           not_added: [],
           deleted: [],
+          renamed: [],
         }),
       );
       const cacheDir = upath.join(tmpDir.path, 'cache');
@@ -456,6 +463,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
           modified: ['not-a-txt-file'],
           not_added: [],
           deleted: [],
+          renamed: [],
         }),
       );
       GlobalConfig.set({
@@ -511,6 +519,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
           modified: [],
           not_added: ['.npmrc', 'other-file.txt'],
           deleted: [],
+          renamed: [],
         }),
       );
 
@@ -570,6 +579,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
             not_added: created,
             modified,
             deleted: [],
+            renamed: [],
           }),
         );
       }
@@ -763,6 +773,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
           modified: [],
           not_added: [],
           deleted: [],
+          renamed: [],
         }),
       );
       GlobalConfig.set({
@@ -917,6 +928,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
       };
       git.getRepoStatus.mockResolvedValueOnce(
         partial<StatusResult>({
+          renamed: [],
           not_added: ['dependencies/charts/ingress-nginx-4.12.2.tgz'],
           conflicted: [],
           created: [],
@@ -1001,6 +1013,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
           modified: [],
           not_added: [],
           deleted: [],
+          renamed: [],
         }),
       );
       const localDir = upath.join(tmpDir.path, 'local');
@@ -1053,6 +1066,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
           modified: [],
           not_added: [],
           deleted: [],
+          renamed: [],
         }),
       );
       GlobalConfig.set({
@@ -1101,6 +1115,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
           modified: [],
           not_added: [],
           deleted: [],
+          renamed: [],
         }),
       );
       GlobalConfig.set({
@@ -1221,6 +1236,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
             modified: [],
             not_added: [],
             deleted: [],
+            renamed: [],
           }),
         );
         const localDir = upath.join(tmpDir.path, 'local');
@@ -1292,6 +1308,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
             modified: [],
             not_added: [],
             deleted: [],
+            renamed: [],
           }),
         );
         const localDir = upath.join(tmpDir.path, 'local');
@@ -1365,6 +1382,7 @@ describe('workers/repository/update/branch/execute-post-upgrade-commands', () =>
             modified: [],
             not_added: [],
             deleted: [],
+            renamed: [],
           }),
         );
         const localDir = upath.join(tmpDir.path, 'local');

@@ -35,9 +35,11 @@ export async function branchifyUpgrades(
   const branches: BranchConfig[] = [];
   for (const u of updates) {
     const update: BranchUpgradeConfig = { ...u } as any;
-    branchUpgrades[update.branchName] = branchUpgrades[update.branchName] || [];
+    // the index signature hides that the branch may not be present yet
     branchUpgrades[update.branchName] = [update].concat(
-      branchUpgrades[update.branchName],
+      (branchUpgrades[update.branchName] as
+        | BranchUpgradeConfig[]
+        | undefined) ?? [],
     );
   }
   logger.debug(`Returning ${Object.keys(branchUpgrades).length} branch(es)`);
@@ -95,9 +97,12 @@ export async function branchifyUpgrades(
       const { sourceUrl, branchName, depName, newVersion } = branch;
       if (sourceUrl && newVersion) {
         const key = `${sourceUrl}|${newVersion}`;
-        branchUpdates[key] = branchUpdates[key] || {};
-        if (!branchUpdates[key][branchName]) {
-          branchUpdates[key][branchName] = depName!;
+        // the index signature hides that the key may not be present yet
+        const updatesForKey =
+          (branchUpdates[key] as Record<string, string> | undefined) ?? {};
+        branchUpdates[key] = updatesForKey;
+        if (!updatesForKey[branchName]) {
+          updatesForKey[branchName] = depName!;
         }
       }
     }

@@ -88,9 +88,6 @@ describe('workers/repository/update/pr/body/updates-table', () => {
       displayTo: '6.2.3',
     });
 
-    // TODO #22198 allow or filter undefined
-    const upgrade3 = undefined as never;
-
     // duplicate of upgrade2
     const upgrade4 = partial<BranchUpgradeConfig>({
       manager: 'some-manager',
@@ -122,7 +119,7 @@ describe('workers/repository/update/pr/body/updates-table', () => {
       manager: 'some-manager',
       branchName: 'some-branch',
       baseBranch: 'base',
-      upgrades: [upgrade0, upgrade1, upgrade2, upgrade3, upgrade4],
+      upgrades: [upgrade0, upgrade1, upgrade2, upgrade4],
       prBodyColumns: ['Package', 'Type', 'Update', 'Change', 'Pending'],
       prBodyDefinitions: {
         Package: '{{{depNameLinked}}}',

@@ -351,7 +351,7 @@ export async function ensureDependencyDashboard(
   const branches = allBranches.filter(
     (branch) =>
       branch.result !== 'automerged' &&
-      !branch.upgrades?.every((upgrade) => upgrade.remediationNotPossible),
+      !branch.upgrades.every((upgrade) => upgrade.remediationNotPossible),
   );
   if (
     !(
@@ -451,9 +451,9 @@ export async function ensureDependencyDashboard(
 
   if (configMigrationRes.result === 'pr-exists') {
     issueBody += `## Config Migration Needed\n\n${getMarkdownComment(configMigrationPrInfo)} See Config Migration PR: #${configMigrationRes.prNumber}.\n\n`;
-  } else if (configMigrationRes?.result === 'pr-modified') {
+  } else if (configMigrationRes.result === 'pr-modified') {
     issueBody += `## Config Migration Needed (Blocked)\n\n${getMarkdownComment(configMigrationPrInfo)} The Config Migration branch exists but has been modified by another user. Renovate will not push to this branch unless it is first deleted. \n\n See Config Migration PR: #${configMigrationRes.prNumber}.\n\n`;
-  } else if (configMigrationRes?.result === 'add-checkbox') {
+  } else if (configMigrationRes.result === 'add-checkbox') {
     issueBody += `## Config Migration Needed\n\n${getCheckbox(createConfigMigrationPr)} Select this checkbox to let Renovate create an automated Config Migration PR.\n\n`;
   }
 
@@ -697,7 +697,17 @@ export function getAbandonedPackagesMd(
       for (const dep of coerceArray(packageFile.deps)) {
         if (dep.depName && dep.isAbandoned) {
           abandonedCount++;
-          abandonedPackages[manager] = abandonedPackages[manager] || {};
+          // the index signature hides that `manager` may be missing
+          abandonedPackages[manager] =
+            (abandonedPackages[manager] as
+              | Record<
+                  string,
+                  {
+                    mostRecentTimestamp?: string | null;
+                    sourceUrl?: string | null;
+                  }
+                >
+              | undefined) ?? {};
           abandonedPackages[manager][dep.depName] = {
             mostRecentTimestamp: dep.mostRecentTimestamp,
             sourceUrl: dep.sourceUrl,

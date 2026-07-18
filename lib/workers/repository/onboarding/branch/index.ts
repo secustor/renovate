@@ -159,7 +159,7 @@ function invalidateExtractCache(baseBranch: string): void {
   const cache = getCache();
   cache.scan ??= {};
 
-  if (cache.scan?.[baseBranch]) {
+  if (baseBranch in cache.scan) {
     delete cache.scan[baseBranch];
   }
 }
@@ -169,7 +169,7 @@ function isOnboardingCacheValid(
   onboardingBranch: string,
 ): boolean {
   const cache = getCache();
-  const onboardingBranchCache = cache?.onboardingBranchCache;
+  const onboardingBranchCache = cache.onboardingBranchCache;
   return !!(
     isNonEmptyObject(onboardingBranchCache) &&
     onboardingBranchCache.defaultBranchSha === getBranchCommit(defaultBranch) &&

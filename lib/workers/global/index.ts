@@ -116,12 +116,17 @@ function haveReachedLimits(): boolean {
 /* istanbul ignore next */
 function checkEnv(): void {
   const range = pkg.engines.node;
-  if (process.release?.name !== 'node' || !process.versions?.node) {
+  // despite the @types/node types, these may be missing in non-Node runtimes,
+  // which is exactly what this function detects
+  if (
+    (process.release as NodeJS.ProcessRelease | undefined)?.name !== 'node' ||
+    !(process.versions as NodeJS.ProcessVersions | undefined)?.node
+  ) {
     logger.warn(
       { release: process.release, versions: process.versions },
       'Unknown node environment detected.',
     );
-  } else if (!semver.satisfies(process.versions?.node, range)) {
+  } else if (!semver.satisfies(process.versions.node, range)) {
     logger.error(
       { versions: process.versions, range },
       'Unsupported node environment detected. Please update your node version.',
@@ -149,11 +154,12 @@ export async function start(): Promise<number> {
       { err: regexEngineStatus.err },
       'RE2 not usable, falling back to RegExp',
     );
-  } else if (regexEngineStatus.type === 'ignored') {
+  } else {
     logger.debug('RE2 regex engine is ignored via RENOVATE_X_IGNORE_RE2');
   }
 
-  let config: AllConfig;
+  // stays unassigned when config parsing throws
+  let config: AllConfig | undefined;
   const env = getEnv();
   try {
     if (isNonEmptyStringAndNotWhitespace(env.AWS_SECRET_ACCESS_KEY)) {
@@ -195,7 +201,8 @@ export async function start(): Promise<number> {
 
     // autodiscover repositories (needs to come after platform initialization)
     config = await instrument('discover', () =>
-      autodiscoverRepositories(config),
+      // assigned in the instrumented callback above, invisible to narrowing
+      autodiscoverRepositories(config!),
     );
 
     if (isNonEmptyString(config.writeDiscoveredRepos)) {
@@ -220,7 +227,7 @@ export async function start(): Promise<number> {
       await instrument(
         'repository',
         async () => {
-          const repoConfig = await getRepositoryConfig(config, repository);
+          const repoConfig = await getRepositoryConfig(config!, repository);
           if (repoConfig.hostRules) {
             logger.debug('Reinitializing hostRules for repo');
             hostRules.clear();
@@ -261,7 +268,7 @@ export async function start(): Promise<number> {
     } else {
       logger.fatal({ err }, 'Unknown error');
     }
-    if (!config!) {
+    if (!config) {
       // return early if we can't parse config options
       logger.debug(`Missing config`);
       return 2;

@@ -206,7 +206,7 @@ export async function mergeRenovateConfig(
       configFileParsed: await getOnboardingConfig(config),
     };
   }
-  const configFileParsed = coerceObject(repoConfig?.configFileParsed);
+  const configFileParsed = coerceObject(repoConfig.configFileParsed);
   const resolvedRepoConfig = await resolveStaticRepoConfig(
     configFileParsed,
     process.env.RENOVATE_X_STATIC_REPO_CONFIG_FILE,

@@ -12,7 +12,8 @@ export interface BaseBranchCache {
   revision?: number;
   sha: string; // branch commit sha
   configHash: string; // object hash of config
-  extractionFingerprints: Record<string, string | undefined>; // matching manager fingerprints
+  // may be missing in cache data written by older Renovate versions
+  extractionFingerprints?: Record<string, string | undefined>; // matching manager fingerprints
   packageFiles: Record<string, PackageFile[]>; // extract result
 }
 
@@ -117,8 +118,10 @@ export interface BranchCache {
   sha?: string | null;
   /**
    * Details on the dependency upgrades that have been applied in this branch
+   *
+   * May be missing in cache data written by older Renovate versions.
    */
-  upgrades: BranchUpgradeCache[];
+  upgrades?: BranchUpgradeCache[];
   /**
    * Object that has PR info
    */

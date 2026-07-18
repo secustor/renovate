@@ -408,7 +408,7 @@ export class Vulnerabilities {
   ): boolean {
     return (
       affected.package?.name === osvPackageName &&
-      affected.package?.ecosystem === ecosystem
+      affected.package.ecosystem === ecosystem
     );
   }
 

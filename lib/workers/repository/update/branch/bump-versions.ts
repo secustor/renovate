@@ -146,7 +146,7 @@ async function bumpVersion(
 
         // Handle 'sync' type - use version from branch upgrades
         if (bumpType === 'sync') {
-          if (branchConfig.upgrades?.length) {
+          if (branchConfig.upgrades.length) {
             // Use the newVersion from the first upgrade
             newVersion = branchConfig.upgrades[0].newVersion ?? null;
             if (!newVersion) {
@@ -207,7 +207,8 @@ async function bumpVersion(
         });
 
       // update the file. Add it to the buckets if exists or create a new artifact update
-      if (packageFiles[filePath]) {
+      // `in` check: the index signature hides that the key may be missing
+      if (filePath in packageFiles) {
         packageFiles[filePath].push({
           type: 'addition',
           path: filePath,

@@ -15,7 +15,8 @@ export async function confirmIfDepUpdated(
   newContent: string,
 ): Promise<boolean> {
   const { manager, packageFile, depIndex } = upgrade;
-  let newUpgrade: PackageDependency;
+  // may stay unassigned when parsing newContent fails
+  let newUpgrade: PackageDependency | undefined;
   try {
     const newExtract = await extractPackageFile(
       manager,
@@ -36,7 +37,7 @@ export async function confirmIfDepUpdated(
       return false;
     }
     // istanbul ignore if
-    if (!newExtract.deps?.length) {
+    if (!newExtract.deps.length) {
       logger.debug(
         `Extracted ${packageFile!} after autoreplace has no deps array. Did the autoreplace make the file unparseable?`,
       );
@@ -55,7 +56,7 @@ export async function confirmIfDepUpdated(
     logger.debug({ manager, packageFile, err }, 'Failed to parse newContent');
   }
 
-  if (!newUpgrade!) {
+  if (!newUpgrade) {
     logger.debug(`No newUpgrade in ${packageFile!}`);
     return false;
   }
@@ -255,7 +256,7 @@ export async function doAutoReplace(
     isString(newName) &&
     newName !== depName &&
     (isUndefined(upgrade.replaceString) ||
-      !upgrade.replaceString?.includes(depName!));
+      !upgrade.replaceString.includes(depName!));
   // fallback must contain the field being updated, else the replacement is
   // a no-op for managers where value and digest live in separate tokens
   let replaceString = upgrade.replaceString;

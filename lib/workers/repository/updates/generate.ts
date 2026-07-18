@@ -206,7 +206,9 @@ export function generateBranchConfig(
   let config: BranchConfig = {
     upgrades: [],
   } as any;
-  const hasGroupName = branchUpgrades[0].groupName !== null;
+  // user config may set `groupName: null` despite the `string | undefined` type
+  const hasGroupName =
+    (branchUpgrades[0].groupName as string | null | undefined) !== null;
   logger.trace(`hasGroupName: ${hasGroupName}`);
   // Use group settings only if multiple upgrades or lazy grouping is disabled
   const depNames: string[] = [];

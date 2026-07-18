@@ -93,12 +93,9 @@ export async function lookupUpdates(
     );
     if (config.currentValue && !isString(config.currentValue)) {
       // If currentValue is not a string, then it's invalid
-      // v8 ignore else -- TODO: add test #40625
-      if (config.currentValue) {
-        logger.debug(
-          `Invalid currentValue for ${config.packageName}: ${JSON.stringify(config.currentValue)} (${typeof config.currentValue})`,
-        );
-      }
+      logger.debug(
+        `Invalid currentValue for ${config.packageName}: ${JSON.stringify(config.currentValue)} (${typeof config.currentValue})`,
+      );
       res.skipReason = 'invalid-value';
       return Result.ok(res);
     }
@@ -302,7 +299,7 @@ export async function lookupUpdates(
       const nonDeprecatedVersions = dependency.releases
         .filter((release) => !release.isDeprecated)
         .map((release) => release.version);
-      let currentVersion: string;
+      let currentVersion: string | undefined;
       if (rangeStrategy === 'update-lockfile') {
         currentVersion = config.lockedVersion!;
       } else if (
@@ -329,7 +326,8 @@ export async function lookupUpdates(
           rangeStrategy!,
           latestVersion!,
           allVersions.map((v) => v.version),
-        )!;
+        ) ??
+        undefined;
 
       if (!currentVersion) {
         // v8 ignore else -- TODO: add test #40625
@@ -395,7 +393,7 @@ export async function lookupUpdates(
         rangeStrategy = 'replace';
       }
       // istanbul ignore if
-      if (!versioningApi.isVersion(currentVersion!)) {
+      if (!versioningApi.isVersion(currentVersion)) {
         res.skipReason = 'invalid-version';
         return Result.ok(res);
       }
@@ -403,7 +401,7 @@ export async function lookupUpdates(
       // TODO #22198
       let filteredReleases = filterVersions(
         config,
-        currentVersion!,
+        currentVersion,
         latestVersion!,
         inRangeOnlyStrategy ? allSatisfyingVersions : allVersions,
         versioningApi,
@@ -480,13 +478,14 @@ export async function lookupUpdates(
         const bucket = getBucket(
           config,
           // TODO #22198
-          currentVersion!,
+          currentVersion,
           release.version,
           versioningApi,
         );
         // v8 ignore else -- TODO: add test #40625
         if (isString(bucket)) {
-          if (buckets[bucket]) {
+          // `in` check: the index signature hides that the key may be missing
+          if (bucket in buckets) {
             buckets[bucket].push(release);
           } else {
             buckets[bucket] = [release];
@@ -517,7 +516,7 @@ export async function lookupUpdates(
           // TODO #22198
 
           rangeStrategy!,
-          config.lockedVersion ?? currentVersion!,
+          config.lockedVersion ?? currentVersion,
           bucket,
           release,
           allReleaseVersions,
@@ -745,7 +744,7 @@ export async function lookupUpdates(
           delete update.newDigest;
         }
         if (update.newVersion) {
-          const registryUrl = dependency?.releases?.find(
+          const registryUrl = dependency?.releases.find(
             (release) => release.version === update.newVersion,
           )?.registryUrl;
           if (registryUrl && registryUrl !== res.registryUrl) {
@@ -761,7 +760,10 @@ export async function lookupUpdates(
     // Strip out any non-changed ones
     res.updates = res.updates
       .filter(
-        (update) => update.newValue !== null || config.currentValue === null,
+        // despite the `string | undefined` types, null happens at runtime
+        (update) =>
+          (update.newValue as string | null | undefined) !== null ||
+          (config.currentValue as string | null | undefined) === null,
       )
       .filter((update) => update.newDigest !== null)
       .filter(

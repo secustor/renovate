@@ -195,8 +195,10 @@ export function getUpdateSummary(branches: BranchCache[]): UpdateSummary {
         entry.updates[updateType] = (entry.updates[updateType] ?? 0) + 1;
 
         const manager = upgrade.manager ?? '';
-        let managerEntry: ManagerUpdateSummary | undefined =
-          entry.managers[manager];
+        // the index signature hides that `manager` may be missing
+        let managerEntry = entry.managers[manager] as
+          | ManagerUpdateSummary
+          | undefined;
         if (!managerEntry) {
           managerEntry = { total: 0, vulnerabilityAlert: 0, updates: {} };
           entry.managers[manager] = managerEntry;

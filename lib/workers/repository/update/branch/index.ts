@@ -68,7 +68,7 @@ async function rebaseCheck(
   config: RenovateConfig,
   branchPr: Pr,
 ): Promise<boolean> {
-  const titleRebase = branchPr.title?.startsWith('rebase!');
+  const titleRebase = branchPr.title.startsWith('rebase!');
   if (titleRebase) {
     logger.debug(
       `Manual rebase requested via PR title for #${branchPr.number}`,
@@ -292,7 +292,7 @@ export async function processBranch(
 
       const prRebaseChecked = !!branchPr?.bodyStruct?.rebaseRequested;
 
-      if (branchExists && !dependencyDashboardCheck && !prRebaseChecked) {
+      if (!dependencyDashboardCheck && !prRebaseChecked) {
         if (config.stopUpdating) {
           logger.info(
             'Branch updating is skipped because stopUpdatingLabel is present in config',
@@ -354,7 +354,7 @@ export async function processBranch(
           };
         }
         const branchSha = await scm.getBranchCommit(config.branchName);
-        const oldPrSha = oldPr?.sha;
+        const oldPrSha = oldPr.sha;
         if (!oldPrSha || oldPrSha === branchSha) {
           logger.debug(
             { oldPrNumber: oldPr.number, oldPrSha, branchSha },
@@ -603,7 +603,7 @@ export async function processBranch(
     ) {
       await scm.checkoutBranch(config.baseBranch);
       const res = await getUpdatedPackageFiles(config);
-      if (res.artifactErrors && config.artifactErrors) {
+      if (config.artifactErrors) {
         res.artifactErrors = config.artifactErrors.concat(res.artifactErrors);
       }
       config = { ...config, ...res };
@@ -633,7 +633,7 @@ export async function processBranch(
       config.updatedArtifacts = (config.updatedArtifacts ?? []).concat(
         additionalFiles.updatedArtifacts,
       );
-      if (config.updatedArtifacts?.length) {
+      if (config.updatedArtifacts.length) {
         logger.debug(
           {
             updatedArtifacts: config.updatedArtifacts.map((f) =>
@@ -671,7 +671,7 @@ export async function processBranch(
 
       removeMeta(['dep']);
 
-      if (config.artifactErrors?.length) {
+      if (config.artifactErrors.length) {
         if (config.releaseTimestamp) {
           logger.debug(`Branch timestamp: ${config.releaseTimestamp}`);
           const releaseTimestamp = DateTime.fromISO(config.releaseTimestamp);
@@ -692,7 +692,7 @@ export async function processBranch(
         } else {
           logger.debug('PR has no releaseTimestamp');
         }
-      } else if (config.updatedArtifacts?.length && branchPr) {
+      } else if (config.updatedArtifacts.length && branchPr) {
         // If there are artifacts, no errors, and an existing PR then ensure any artifacts error comment is removed
         if (GlobalConfig.get('dryRun')) {
           logger.info(
@@ -707,7 +707,7 @@ export async function processBranch(
           });
 
           // v8 ignore else -- TODO: add test #40625
-          if (!config.artifactNotices?.length) {
+          if (!config.artifactNotices.length) {
             await ensureCommentRemoval({
               type: 'by-topic',
               number: branchPr.number,
@@ -1009,102 +1009,95 @@ export async function processBranch(
         commitSha,
       };
     }
-    // v8 ignore else -- TODO: add test #40625
-    if (ensurePrResult.type === 'with-pr') {
-      const { pr } = ensurePrResult;
-      branchPr = pr;
-      // Retry setting branch statuses after PR/MR creation so that
-      // platforms using MR pipelines (e.g. GitLab) have a pipeline to
-      // associate the status with. The earlier call may have been
-      // skipped if no pipeline existed yet.
-      await setBranchStatusChecks(config);
+    // `ensurePrResult.type` can only be 'with-pr' at this point
+    const { pr } = ensurePrResult;
+    branchPr = pr;
+    // Retry setting branch statuses after PR/MR creation so that
+    // platforms using MR pipelines (e.g. GitLab) have a pipeline to
+    // associate the status with. The earlier call may have been
+    // skipped if no pipeline existed yet.
+    await setBranchStatusChecks(config);
 
-      // only update artifact status if branch was updated
-      if (commitSha) {
-        await setArtifactErrorStatus(config);
-      }
-      if (config.artifactErrors?.length) {
-        logger.warn(
-          { artifactErrors: config.artifactErrors },
-          'artifactErrors',
-        );
-        let content = `Renovate failed to update `;
-        content +=
-          config.artifactErrors.length > 1 ? 'artifacts' : 'an artifact';
-        content += ' related to this branch. ';
-        content += template.compile(
-          config.userStrings!.artifactErrorWarning,
-          config,
-        );
-        content += emojify(
-          `\n\n:recycle: Renovate will retry this branch, including artifacts, only when one of the following happens:\n\n`,
-        );
-        content +=
-          ' - any of the package files in this branch needs updating, or \n';
-        content += ' - the branch becomes conflicted, or\n';
-        content +=
-          ' - you click the rebase/retry checkbox if found above, or\n';
-        content +=
-          ' - you rename this PR\'s title to start with "rebase!" to trigger it manually';
-        content += '\n\nThe artifact failure details are included below:\n\n';
-        // TODO: types (#22198)
-        config.artifactErrors.forEach((error) => {
-          content += `##### File name: ${error.fileName!}\n\n`;
-          content += `\`\`\`\n${error.stderr!}\n\`\`\`\n\n`;
-        });
-        content = platform.massageMarkdown(content, config.rebaseLabel);
-        // v8 ignore else -- TODO: add test #40625
-        if (
-          !(
-            config.suppressNotifications!.includes('artifactErrors') ||
-            config.suppressNotifications!.includes('lockFileErrors')
-          )
-        ) {
-          if (GlobalConfig.get('dryRun')) {
-            logger.info(
-              `DRY-RUN: Would ensure lock file error comment in PR #${pr.number}`,
-            );
-          } else {
-            await ensureComment({
-              number: pr.number,
-              topic: artifactErrorTopic,
-              content,
-            });
-          }
-        }
-      } else {
-        if (config.artifactNotices?.length) {
-          const contentLines: string[] = [];
-          for (const notice of config.artifactNotices) {
-            contentLines.push(`##### File name: ${notice.file}`);
-            contentLines.push(notice.message);
-          }
-          const content = contentLines.join('\n\n');
+    // only update artifact status if branch was updated
+    if (commitSha) {
+      await setArtifactErrorStatus(config);
+    }
+    if (config.artifactErrors?.length) {
+      logger.warn({ artifactErrors: config.artifactErrors }, 'artifactErrors');
+      let content = `Renovate failed to update `;
+      content += config.artifactErrors.length > 1 ? 'artifacts' : 'an artifact';
+      content += ' related to this branch. ';
+      content += template.compile(
+        config.userStrings!.artifactErrorWarning,
+        config,
+      );
+      content += emojify(
+        `\n\n:recycle: Renovate will retry this branch, including artifacts, only when one of the following happens:\n\n`,
+      );
+      content +=
+        ' - any of the package files in this branch needs updating, or \n';
+      content += ' - the branch becomes conflicted, or\n';
+      content += ' - you click the rebase/retry checkbox if found above, or\n';
+      content +=
+        ' - you rename this PR\'s title to start with "rebase!" to trigger it manually';
+      content += '\n\nThe artifact failure details are included below:\n\n';
+      // TODO: types (#22198)
+      config.artifactErrors.forEach((error) => {
+        content += `##### File name: ${error.fileName!}\n\n`;
+        content += `\`\`\`\n${error.stderr!}\n\`\`\`\n\n`;
+      });
+      content = platform.massageMarkdown(content, config.rebaseLabel);
+      // v8 ignore else -- TODO: add test #40625
+      if (
+        !(
+          config.suppressNotifications!.includes('artifactErrors') ||
+          config.suppressNotifications!.includes('lockFileErrors')
+        )
+      ) {
+        if (GlobalConfig.get('dryRun')) {
+          logger.info(
+            `DRY-RUN: Would ensure lock file error comment in PR #${pr.number}`,
+          );
+        } else {
           await ensureComment({
             number: pr.number,
-            topic: artifactNoticeTopic,
+            topic: artifactErrorTopic,
             content,
           });
         }
-
-        if (config.automerge) {
-          logger.debug('PR is configured for automerge');
-          // skip automerge if there is a new commit since status checks aren't done yet
-          // v8 ignore else -- TODO: add test #40625
-          if (config.ignoreTests === true || !commitSha) {
-            logger.debug('checking auto-merge');
-            const prAutomergeResult = await checkAutoMerge(pr, config);
-            if (prAutomergeResult?.automerged) {
-              return {
-                branchExists,
-                result: 'automerged',
-                commitSha,
-              };
-            }
-          }
-        } else {
-          logger.debug('PR is not configured for automerge');
+      }
+    } else {
+      if (config.artifactNotices?.length) {
+        const contentLines: string[] = [];
+        for (const notice of config.artifactNotices) {
+          contentLines.push(`##### File name: ${notice.file}`);
+          contentLines.push(notice.message);
         }
+        const content = contentLines.join('\n\n');
+        await ensureComment({
+          number: pr.number,
+          topic: artifactNoticeTopic,
+          content,
+        });
+      }
+
+      if (config.automerge) {
+        logger.debug('PR is configured for automerge');
+        // skip automerge if there is a new commit since status checks aren't done yet
+        // v8 ignore else -- TODO: add test #40625
+        if (config.ignoreTests === true || !commitSha) {
+          logger.debug('checking auto-merge');
+          const prAutomergeResult = await checkAutoMerge(pr, config);
+          if (prAutomergeResult.automerged) {
+            return {
+              branchExists,
+              result: 'automerged',
+              commitSha,
+            };
+          }
+        }
+      } else {
+        logger.debug('PR is not configured for automerge');
       }
     }
   } catch (err) {

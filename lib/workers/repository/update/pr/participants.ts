@@ -47,7 +47,7 @@ export async function addParticipants(
   pr: Pr,
 ): Promise<void> {
   let assignees = config.assignees ?? [];
-  logger.debug(`addParticipants(pr=${pr?.number})`);
+  logger.debug(`addParticipants(pr=${pr.number})`);
   if (config.assigneesFromCodeOwners) {
     assignees = await addCodeOwners(config, assignees, pr);
   }

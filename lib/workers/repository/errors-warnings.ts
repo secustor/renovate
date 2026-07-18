@@ -33,8 +33,10 @@ export function getErrors(config: RenovateConfig): string {
   return errorText;
 }
 
+// despite callers' non-null assertions, `packageFiles` may be nullish and
+// record values may be missing at runtime
 function getDepWarnings(
-  packageFiles: Record<string, PackageFile[]>,
+  packageFiles: Record<string, PackageFile[] | undefined> | undefined | null,
 ): DepWarnings {
   const warnings: string[] = [];
   const warningFiles: string[] = [];
@@ -63,7 +65,7 @@ function getDepWarnings(
 }
 
 export function getDepWarningsOnboardingPR(
-  packageFiles: Record<string, PackageFile[]>,
+  packageFiles: Record<string, PackageFile[] | undefined> | undefined | null,
   config: RenovateConfig,
 ): string {
   const { warnings, warningFiles } = getDepWarnings(packageFiles);
@@ -84,7 +86,7 @@ export function getDepWarningsOnboardingPR(
 }
 
 export function getDepWarningsPR(
-  packageFiles: Record<string, PackageFile[]>,
+  packageFiles: Record<string, PackageFile[] | undefined> | undefined | null,
   config: RenovateConfig,
   dependencyDashboard?: boolean,
 ): string {
@@ -110,7 +112,7 @@ export function getDepWarningsPR(
 }
 
 export function getDepWarningsDashboard(
-  packageFiles: Record<string, PackageFile[]>,
+  packageFiles: Record<string, PackageFile[] | undefined> | undefined | null,
   config: RenovateConfig,
 ): string {
   if (config.suppressNotifications?.includes('dependencyLookupWarnings')) {

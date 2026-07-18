@@ -414,7 +414,7 @@ export async function ensurePr(
       );
 
       if (
-        existingPr?.targetBranch === config.baseBranch &&
+        existingPr.targetBranch === config.baseBranch &&
         existingPrTitle === newPrTitle &&
         existingPrBodyHash === newPrBodyHash &&
         !labelsNeedUpdate &&
@@ -435,11 +435,11 @@ export async function ensurePr(
         platformPrOptions: getPlatformPrOptions(config),
       };
       // PR must need updating
-      if (existingPr?.targetBranch !== config.baseBranch) {
+      if (existingPr.targetBranch !== config.baseBranch) {
         logger.debug(
           {
             branchName,
-            oldBaseBranch: existingPr?.targetBranch,
+            oldBaseBranch: existingPr.targetBranch,
             newBaseBranch: config.baseBranch,
           },
           'PR base branch has changed',

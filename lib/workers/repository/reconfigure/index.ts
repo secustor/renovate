@@ -124,16 +124,14 @@ export async function checkReconfigureBranch(
     return;
   }
 
-  let commentEnsured = false;
-  if (extractResult) {
-    commentEnsured = await ensureReconfigurePrComment(
-      newConfig,
-      extractResult.packageFiles,
-      extractResult.branches,
-      reconfigureBranch,
-      existingPr,
-    );
-  }
+  // `extractResult` is necessarily assigned here, as the catch above returns
+  const commentEnsured = await ensureReconfigurePrComment(
+    newConfig,
+    extractResult.packageFiles,
+    extractResult.branches,
+    reconfigureBranch,
+    existingPr,
+  );
 
   // if comment is not added or updated
   // do not store extractResult in cache so that we re-process the reconfigure branch on next run and do not skip

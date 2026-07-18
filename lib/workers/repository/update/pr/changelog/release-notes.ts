@@ -269,7 +269,7 @@ export async function getReleaseNotesMdFileInner(
 ): Promise<ChangeLogFile | null> {
   const { repository, type } = project;
   const apiBaseUrl = project.apiBaseUrl;
-  const sourceDirectory = project.sourceDirectory!;
+  const sourceDirectory = project.sourceDirectory;
   try {
     switch (type) {
       case 'bitbucket':
@@ -563,7 +563,7 @@ async function linkifyBody(
   bodyStr: string,
 ): Promise<string> {
   const body = massageBody(bodyStr, baseUrl);
-  if (body?.length) {
+  if (body.length) {
     try {
       return await linkify(body, {
         repository: `${baseUrl}${repository}`,

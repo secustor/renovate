@@ -5,7 +5,7 @@ import { matchRegexOrGlob } from '../../../util/string-match.ts';
 
 export function getIncludedFiles(
   fileList: string[],
-  includePaths: string[],
+  includePaths: string[] | undefined,
 ): string[] {
   if (!includePaths?.length) {
     return [...fileList];
@@ -21,7 +21,7 @@ export function getIncludedFiles(
 
 export function filterIgnoredFiles(
   fileList: string[],
-  ignorePaths: string[],
+  ignorePaths: string[] | undefined,
 ): string[] {
   if (!ignorePaths?.length) {
     return [...fileList];
@@ -41,10 +41,9 @@ export function getFilteredFileList(
   fileList: string[],
 ): string[] {
   const { includePaths, ignorePaths } = config;
-  // TODO #22198
 
-  let filteredList = getIncludedFiles(fileList, includePaths!);
-  filteredList = filterIgnoredFiles(filteredList, ignorePaths!);
+  let filteredList = getIncludedFiles(fileList, includePaths);
+  filteredList = filterIgnoredFiles(filteredList, ignorePaths);
   return filteredList;
 }
 

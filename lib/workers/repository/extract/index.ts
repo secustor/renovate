@@ -8,6 +8,7 @@ import {
   getEnabledManagersList,
   hashMap,
 } from '../../../modules/manager/index.ts';
+import type { PackageFile } from '../../../modules/manager/types.ts';
 import { scm } from '../../../modules/platform/scm.ts';
 import type { ExtractResult, WorkerExtractConfig } from '../../types.ts';
 import { getMatchingFiles } from './file-match.ts';
@@ -90,8 +91,9 @@ export async function extractAllDependencies(
     if (packageFiles?.length) {
       fileCount += packageFiles.length;
       logger.debug(`Found ${manager} package files`);
+      // the index signature hides that `manager` may be missing
       extractResult.packageFiles[manager] = (
-        extractResult.packageFiles[manager] || []
+        (extractResult.packageFiles[manager] as PackageFile[] | undefined) ?? []
       ).concat(packageFiles);
     }
   }

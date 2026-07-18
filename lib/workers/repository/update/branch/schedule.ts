@@ -98,12 +98,6 @@ export function cronMatches(
     ...(timezone && { timezone }),
     domAndDow: true,
   });
-  // it will always parse because it is checked beforehand
-  // istanbul ignore if
-  if (!parsedCron) {
-    return false;
-  }
-
   // return the next date which matches the cron schedule
   const nextRun = parsedCron.nextRun();
   // istanbul ignore if: should not happen

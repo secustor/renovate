@@ -178,6 +178,7 @@ describe('workers/repository/update/branch/index', () => {
       scm.branchExists.mockResolvedValue(true);
       platform.getBranchPr.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           number: 5,
           state: 'open',
         }),
@@ -327,6 +328,7 @@ describe('workers/repository/update/branch/index', () => {
       scm.branchExists.mockResolvedValue(true);
       platform.getBranchPr.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           state: 'open',
         }),
       );
@@ -341,6 +343,7 @@ describe('workers/repository/update/branch/index', () => {
       config.updateType = 'major';
       checkExisting.prAlreadyExisted.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           number: 13,
           state: 'closed',
         }),
@@ -356,6 +359,7 @@ describe('workers/repository/update/branch/index', () => {
       config.updateType = 'digest';
       checkExisting.prAlreadyExisted.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           number: 13,
           state: 'closed',
         }),
@@ -372,6 +376,7 @@ describe('workers/repository/update/branch/index', () => {
       config.updateType = 'digest';
       checkExisting.prAlreadyExisted.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           number: 13,
           state: 'merged',
         }),
@@ -385,6 +390,7 @@ describe('workers/repository/update/branch/index', () => {
       scm.branchExists.mockResolvedValue(true);
       checkExisting.prAlreadyExisted.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           number: 13,
           state: 'closed',
         }),
@@ -396,6 +402,7 @@ describe('workers/repository/update/branch/index', () => {
 
     it('allows branch even if merged PR found', async () => {
       const pr = partial<Pr>({
+        title: '',
         number: 13,
         state: 'merged',
       });
@@ -415,6 +422,7 @@ describe('workers/repository/update/branch/index', () => {
       scm.branchExists.mockResolvedValue(true);
       platform.getBranchPr.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           state: 'merged',
         }),
       );
@@ -429,6 +437,7 @@ describe('workers/repository/update/branch/index', () => {
       scm.branchExists.mockResolvedValue(true);
       platform.getBranchPr.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           state: 'open',
           labels: ['rebase'],
         }),
@@ -445,6 +454,7 @@ describe('workers/repository/update/branch/index', () => {
 
     it('skips branch if edited PR found', async () => {
       const pr = partial<Pr>({
+        title: '',
         state: 'open',
       });
       const ensureCommentConfig = partial<EnsureCommentConfig>({
@@ -472,6 +482,7 @@ describe('workers/repository/update/branch/index', () => {
 
     it('skips branch if tagretBranch of update PR is changed by user', async () => {
       const pr = partial<Pr>({
+        title: '',
         state: 'open',
         targetBranch: 'new_base',
         bodyStruct: partial<PrBodyStruct>({
@@ -504,6 +515,7 @@ describe('workers/repository/update/branch/index', () => {
 
     it('skips branch if edited PR found without commenting', async () => {
       const pr = partial<Pr>({
+        title: '',
         state: 'open',
       });
       schedule.isScheduledNow.mockReturnValueOnce(false);
@@ -528,6 +540,7 @@ describe('workers/repository/update/branch/index', () => {
 
     it('skips branch if target branch changed', async () => {
       const pr = partial<Pr>({
+        title: '',
         state: 'open',
       });
       const ensureCommentConfig = partial<EnsureCommentConfig>({
@@ -538,6 +551,7 @@ describe('workers/repository/update/branch/index', () => {
       scm.branchExists.mockResolvedValueOnce(true);
       platform.getBranchPr.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           state: 'open',
           targetBranch: 'v6',
           bodyStruct: partial<PrBodyStruct>({
@@ -692,6 +706,7 @@ describe('workers/repository/update/branch/index', () => {
       limits.isLimitReached.mockReturnValueOnce(true);
       platform.getBranchPr.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           number: 5,
           state: 'open',
         }),
@@ -725,6 +740,7 @@ describe('workers/repository/update/branch/index', () => {
 
     it('does not return if commits per run limit exceeded but rebase requested via PR checkbox', async () => {
       const pr = partial<Pr>({
+        title: '',
         number: 5,
         state: 'open',
         bodyStruct: {
@@ -795,6 +811,7 @@ describe('workers/repository/update/branch/index', () => {
 
     it('does not return if commits hourly limit exceeded but rebase requested via PR checkbox', async () => {
       const pr = partial<Pr>({
+        title: '',
         number: 5,
         state: 'open',
         bodyStruct: {
@@ -867,6 +884,7 @@ describe('workers/repository/update/branch/index', () => {
       scm.branchExists.mockResolvedValue(true);
       platform.getBranchPr.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           number: 5,
           state: 'open',
         }),
@@ -1704,6 +1722,7 @@ describe('workers/repository/update/branch/index', () => {
 
     it('rebases branch onto new basebranch if baseBranch changed by user', async () => {
       const pr = partial<Pr>({
+        title: '',
         state: 'open',
         targetBranch: 'old_base',
         bodyStruct: partial<PrBodyStruct>({
@@ -1742,6 +1761,7 @@ describe('workers/repository/update/branch/index', () => {
         contents: 'pom.xml file contents',
       };
       const pr = partial<Pr>({
+        title: '',
         state: 'open',
         targetBranch: 'old_base',
         bodyStruct: partial<PrBodyStruct>({
@@ -1777,6 +1797,7 @@ describe('workers/repository/update/branch/index', () => {
     // for coverage
     it('rebases branch onto new basebranch if no fingerprint found - 2', async () => {
       const pr = partial<Pr>({
+        title: '',
         state: 'open',
         targetBranch: 'old_base',
         bodyStruct: partial<PrBodyStruct>({
@@ -1840,6 +1861,7 @@ describe('workers/repository/update/branch/index', () => {
       scm.branchExists.mockResolvedValue(true);
       checkExisting.prAlreadyExisted.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           state: 'closed',
         }),
       );
@@ -1853,6 +1875,7 @@ describe('workers/repository/update/branch/index', () => {
 
     it('branch pr no rebase (dry run)', async () => {
       const pr = partial<Pr>({
+        title: '',
         state: 'open',
         number: 1,
       });
@@ -2048,6 +2071,7 @@ describe('workers/repository/update/branch/index', () => {
       scm.getBranchCommit.mockResolvedValue('111' as LongCommitSha); //TODO:not needed?
       platform.getBranchPr.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           sourceBranch: 'old/some-branch',
           state: 'open',
         }),
@@ -2191,6 +2215,7 @@ describe('workers/repository/update/branch/index', () => {
           modified: ['modified_file'],
           not_added: [],
           deleted: ['deleted_file'],
+          renamed: [],
         }),
       );
       fs.readLocalFile.mockResolvedValueOnce('modified file content');
@@ -2289,6 +2314,7 @@ describe('workers/repository/update/branch/index', () => {
           modified: ['modified_file'],
           not_added: [],
           deleted: ['deleted_file'],
+          renamed: [],
         }),
       );
 
@@ -2374,6 +2400,7 @@ describe('workers/repository/update/branch/index', () => {
           modified: ['modified_file'],
           not_added: [],
           deleted: ['deleted_file'],
+          renamed: [],
         }),
       );
 
@@ -2470,6 +2497,7 @@ describe('workers/repository/update/branch/index', () => {
             modified: ['modified_file', 'modified_then_deleted_file'],
             not_added: [],
             deleted: ['deleted_file', 'deleted_then_created_file'],
+            renamed: [],
           }),
         )
         .mockResolvedValueOnce(
@@ -2477,6 +2505,7 @@ describe('workers/repository/update/branch/index', () => {
             modified: ['modified_file', 'deleted_then_created_file'],
             not_added: [],
             deleted: ['deleted_file', 'modified_then_deleted_file'],
+            renamed: [],
           }),
         );
 
@@ -2636,6 +2665,7 @@ describe('workers/repository/update/branch/index', () => {
           modified: ['modified_file', 'modified_then_deleted_file'],
           not_added: [],
           deleted: ['deleted_file', 'deleted_then_created_file'],
+          renamed: [],
         }),
       );
 
@@ -2765,6 +2795,7 @@ describe('workers/repository/update/branch/index', () => {
           modified: ['modified_file', 'modified_then_deleted_file'],
           not_added: [],
           deleted: ['deleted_file', 'deleted_then_created_file'],
+          renamed: [],
         }),
       );
 
@@ -2870,6 +2901,7 @@ describe('workers/repository/update/branch/index', () => {
           modified: ['modified_file', 'modified_then_deleted_file'],
           not_added: [],
           deleted: ['deleted_file', 'deleted_then_created_file'],
+          renamed: [],
         }),
       );
 
@@ -3060,6 +3092,7 @@ describe('workers/repository/update/branch/index', () => {
       scm.branchExists.mockResolvedValueOnce(true);
       platform.getBranchPr.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           number: 5,
           sourceBranch: 'old/some-branch',
           state: 'open',
@@ -3099,6 +3132,7 @@ describe('workers/repository/update/branch/index', () => {
       scm.branchExists.mockResolvedValueOnce(true);
       platform.getBranchPr.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           number: 5,
           sourceBranch: 'old/some-branch',
           state: 'open',
@@ -3276,6 +3310,7 @@ describe('workers/repository/update/branch/index', () => {
       });
       platform.getBranchPr.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           state: 'open',
         }),
       );
@@ -3332,6 +3367,7 @@ describe('workers/repository/update/branch/index', () => {
       scm.branchExists.mockResolvedValue(true);
       platform.getBranchPr.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           number: 123,
           state: 'open',
         }),
@@ -3356,6 +3392,7 @@ describe('workers/repository/update/branch/index', () => {
       scm.branchExists.mockResolvedValue(true);
       platform.getBranchPr.mockResolvedValueOnce(
         partial<Pr>({
+          title: '',
           number: 123,
           state: 'open',
         }),

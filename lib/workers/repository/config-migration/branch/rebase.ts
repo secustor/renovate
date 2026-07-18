@@ -74,8 +74,7 @@ export function jsonStripWhitespaces(json: string | null): string | null {
    *
    * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#parameters
    */
-  return (
-    quickStringify(JSON5.parse(json)) ??
-    /* istanbul ignore next: should never happen */ null
-  );
+  // JSON5.parse() cannot produce values that stringify to undefined
+  const parsed: Record<string, unknown> | null = JSON5.parse(json);
+  return quickStringify(parsed);
 }

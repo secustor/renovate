@@ -94,7 +94,7 @@ export async function flattenUpdates(
         managerConfig,
         packageFile,
       ) as never;
-      const packagePath = packageFile.packageFile?.split('/');
+      const packagePath = packageFile.packageFile.split('/');
       if (packagePath.length > 0) {
         packagePath.splice(-1, 1);
       }
@@ -209,10 +209,9 @@ export async function flattenUpdates(
       }
       if (get(manager, 'updateLockedDependency')) {
         for (const lockFile of packageFileConfig.lockFiles ?? []) {
-          const lockfileRemediations = config.remediations as Record<
-            string,
-            Record<string, any>[]
-          >;
+          const lockfileRemediations = config.remediations as
+            | Record<string, Record<string, any>[]>
+            | undefined;
           const remediations = lockfileRemediations?.[lockFile];
           if (remediations) {
             for (const remediation of remediations) {

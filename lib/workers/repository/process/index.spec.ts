@@ -16,18 +16,29 @@ import {
 vi.mock('./extract-update.ts');
 
 const extract = vi.mocked(_extractUpdate).extract;
+const lookupMock = vi.mocked(_extractUpdate).lookup;
 
 let config: RenovateConfig;
 
 beforeEach(() => {
   config = getConfig();
+  // the real lookup() always resolves to an ExtractResult
+  lookupMock.mockResolvedValue({
+    branches: [],
+    branchList: [],
+    packageFiles: {},
+  } as never);
 });
 
 describe('workers/repository/process/index', () => {
   describe('processRepo()', () => {
     it('processes single branches', async () => {
       const res = await extractDependencies(config);
-      expect(res).toBeUndefined();
+      expect(res).toEqual({
+        branchList: [],
+        branches: [],
+        packageFiles: {},
+      });
     });
 
     it('processes baseBranchPatterns', async () => {
@@ -40,9 +51,9 @@ describe('workers/repository/process/index', () => {
       const res = await extractDependencies(config);
       await updateRepo(config, res.branches);
       expect(res).toEqual({
-        branchList: [undefined],
-        branches: [undefined],
-        packageFiles: undefined,
+        branchList: [],
+        branches: [],
+        packageFiles: {},
       });
     });
 
@@ -54,9 +65,9 @@ describe('workers/repository/process/index', () => {
       getCache().configFileName = 'renovate.json';
       const res = await extractDependencies(config);
       expect(res).toEqual({
-        branchList: [undefined, undefined],
-        branches: [undefined, undefined],
-        packageFiles: undefined,
+        branchList: [],
+        branches: [],
+        packageFiles: {},
       });
       expect(platform.getJsonFile).not.toHaveBeenCalledExactlyOnceWith(
         'renovate.json',
@@ -75,9 +86,9 @@ describe('workers/repository/process/index', () => {
       getCache().configFileName = 'renovate.json';
       const res = await extractDependencies(config);
       expect(res).toEqual({
-        branchList: [undefined, undefined],
-        branches: [undefined, undefined],
-        packageFiles: undefined,
+        branchList: [],
+        branches: [],
+        packageFiles: {},
       });
 
       expect(platform.getJsonFile).toHaveBeenCalledWith(
@@ -155,9 +166,9 @@ describe('workers/repository/process/index', () => {
       scm.branchExists.mockResolvedValue(true);
       const res = await extractDependencies(config);
       expect(res).toStrictEqual({
-        branchList: [undefined, undefined, undefined, undefined, undefined],
-        branches: [undefined, undefined, undefined, undefined, undefined],
-        packageFiles: undefined,
+        branchList: [],
+        branches: [],
+        packageFiles: {},
       });
 
       expect(logger.logger.debug).toHaveBeenCalledWith(
@@ -196,9 +207,9 @@ describe('workers/repository/process/index', () => {
       scm.branchExists.mockResolvedValue(true);
       const res = await extractDependencies(config);
       expect(res).toStrictEqual({
-        branchList: [undefined],
-        branches: [undefined],
-        packageFiles: undefined,
+        branchList: [],
+        branches: [],
+        packageFiles: {},
       });
 
       // one for baseBranches and one for extract

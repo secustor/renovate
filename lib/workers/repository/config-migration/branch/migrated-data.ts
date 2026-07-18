@@ -45,7 +45,8 @@ export type PrettierParser = BuiltInParserName;
 export async function applyPrettierFormatting(
   filename: string,
   content: string,
-  parser: PrettierParser,
+  // '' happens when the filename has no extension
+  parser: PrettierParser | '',
   indent?: Indent,
 ): Promise<string> {
   try {
@@ -127,7 +128,9 @@ export class MigratedDataFactory {
     filename,
     indent,
   }: MigratedData): Promise<string> {
-    const parser = upath.extname(filename).replace('.', '') as PrettierParser;
+    const parser = upath.extname(filename).replace('.', '') as
+      | PrettierParser
+      | '';
     return applyPrettierFormatting(filename, content, parser, indent);
   }
 
@@ -149,8 +152,7 @@ export class MigratedDataFactory {
       // TODO #22198
       const raw = await platform.getRawFile(configFileName!);
       const indent = detectIndent(raw ?? '');
-      // indent defaults to 2 spaces
-      const indentSpace = indent.indent ?? '  ';
+      const indentSpace = indent.indent;
       const filename = configFileName!;
       let content: string;
 

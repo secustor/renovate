@@ -5,6 +5,7 @@ import type { BaseBranchCache } from '../../../util/cache/repository/types.ts';
 import { fingerprint } from '../../../util/fingerprint.ts';
 import type { LongCommitSha } from '../../../util/schema-utils/git.ts';
 import { generateFingerprintConfig } from '../extract/extract-fingerprint-config.ts';
+import * as _extract from '../extract/index.ts';
 import * as _branchify from '../updates/branchify.ts';
 import {
   EXTRACT_CACHE_REVISION,
@@ -35,11 +36,17 @@ vi.mock('../extract/index.ts');
 vi.mock('../../../util/cache/repository/index.ts');
 
 const branchify = vi.mocked(_branchify);
+const extractAllDependencies = vi.mocked(_extract).extractAllDependencies;
 const repositoryCache = vi.mocked(_repositoryCache);
 const fetch = vi.mocked(_fetch);
 
 describe('workers/repository/process/extract-update', () => {
   beforeEach(() => {
+    // the real extractAllDependencies() always resolves to an ExtractResult
+    extractAllDependencies.mockResolvedValue({
+      packageFiles: {},
+      extractionFingerprints: {},
+    } as never);
     branchify.branchifyUpgrades.mockResolvedValue({
       branches: [
         {
@@ -72,7 +79,7 @@ describe('workers/repository/process/extract-update', () => {
             upgrades: [],
           },
         ],
-        packageFiles: undefined,
+        packageFiles: {},
       });
       await expect(update(config, res.branches)).resolves.not.toThrow();
     });
@@ -93,7 +100,7 @@ describe('workers/repository/process/extract-update', () => {
       scm.checkoutBranch.mockResolvedValueOnce('123test' as LongCommitSha);
       repositoryCache.getCache.mockReturnValueOnce({ scan: {} });
       const packageFiles = await extract(config);
-      expect(packageFiles).toBeUndefined();
+      expect(packageFiles).toEqual({});
     });
 
     it('uses repository cache', async () => {
