@@ -219,7 +219,7 @@ export async function updateArtifacts({
     // if no updates have been found or there are failed hashes abort
     if (
       updates.length === 0 ||
-      updates.some((value) => !value.newHashes?.length)
+      updates.some((value) => !value.newHashes.length)
     ) {
       logger.debug('No updates found or hash creation failed');
       return null;
