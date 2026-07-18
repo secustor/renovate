@@ -55,8 +55,15 @@ export class NextcloudDatasource extends Datasource {
     }
 
     for (const release of application.releases) {
+      // `translations` is a LooseRecord keyed by arbitrary language codes;
+      // zod types every string key as present, but the requested language
+      // may genuinely be missing.
+      const translations = release.translations as Record<
+        string,
+        { changelog: string } | undefined
+      >;
       const translation =
-        release.translations[NextcloudDatasource.defaultTranslationLanguage];
+        translations[NextcloudDatasource.defaultTranslationLanguage];
 
       const changelogContent = translation?.changelog ?? null;
 

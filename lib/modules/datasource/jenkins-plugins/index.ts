@@ -59,13 +59,13 @@ export class JenkinsPluginsDatasource extends Datasource {
 
   private async _getJenkinsPluginInfo(
     updateSiteUrl: string,
-  ): Promise<Record<string, ReleaseResult>> {
+  ): Promise<Record<string, ReleaseResult | undefined>> {
     const { plugins } = await this.getJenkinsUpdateCenterResponse(
       `${updateSiteUrl}${JenkinsPluginsDatasource.packageInfoPath}`,
       JenkinsPluginsInfoResponse,
     );
 
-    const info: Record<string, ReleaseResult> = {};
+    const info: Record<string, ReleaseResult | undefined> = {};
     for (const name of Object.keys(plugins)) {
       info[name] = {
         releases: [], // releases
@@ -77,7 +77,7 @@ export class JenkinsPluginsDatasource extends Datasource {
 
   getJenkinsPluginInfo(
     updateSiteUrl: string,
-  ): Promise<Record<string, ReleaseResult>> {
+  ): Promise<Record<string, ReleaseResult | undefined>> {
     return withCache(
       {
         namespace: `datasource-${JenkinsPluginsDatasource.id}`,
@@ -90,13 +90,13 @@ export class JenkinsPluginsDatasource extends Datasource {
 
   private async _getJenkinsPluginVersions(
     updateSiteUrl: string,
-  ): Promise<Record<string, Release[]>> {
+  ): Promise<Record<string, Release[] | undefined>> {
     const { plugins } = await this.getJenkinsUpdateCenterResponse(
       `${updateSiteUrl}${JenkinsPluginsDatasource.packageVersionsPath}`,
       JenkinsPluginsVersionsResponse,
     );
 
-    const versions: Record<string, Release[]> = {};
+    const versions: Record<string, Release[] | undefined> = {};
     for (const name of Object.keys(plugins)) {
       versions[name] = Object.keys(plugins[name]).map((version) => {
         const downloadUrl = plugins[name][version]?.url;
@@ -118,7 +118,7 @@ export class JenkinsPluginsDatasource extends Datasource {
 
   getJenkinsPluginVersions(
     updateSiteUrl: string,
-  ): Promise<Record<string, Release[]>> {
+  ): Promise<Record<string, Release[] | undefined>> {
     return withCache(
       {
         namespace: `datasource-${JenkinsPluginsDatasource.id}`,
