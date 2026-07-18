@@ -11,7 +11,7 @@ import type { CabalDependency } from './extract.ts';
 import { extractNamesAndRanges, findDepends } from './extract.ts';
 
 export const defaultConfig = {
-  managerFilePatterns: ['/\\.cabal$/'],
+  managerFilePatterns: ['**/*.cabal'],
   pinDigests: false,
 };
 

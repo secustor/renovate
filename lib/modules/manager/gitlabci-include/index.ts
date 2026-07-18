@@ -9,7 +9,7 @@ export const url = 'https://docs.gitlab.com/ee/ci/yaml/includes.html';
 export const categories: Category[] = ['ci'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/\\.gitlab-ci\\.ya?ml$/'],
+  managerFilePatterns: ['**/*.gitlab-ci.{yaml,yml}'],
 };
 
 export const supportedDatasources = [GitlabTagsDatasource.id];

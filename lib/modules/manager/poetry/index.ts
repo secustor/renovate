@@ -19,7 +19,7 @@ export const url = 'https://python-poetry.org/docs';
 export const categories: Category[] = ['python'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)pyproject\\.toml$/'],
+  managerFilePatterns: ['**/pyproject.toml'],
 };
 
 export const supportedDatasources = [

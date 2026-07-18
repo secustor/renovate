@@ -14,10 +14,10 @@ export const categories: Category[] = ['java'];
 
 export const defaultConfig = {
   managerFilePatterns: [
-    '/\\.sbt$/',
+    '**/*.sbt',
     '/project/[^/]*\\.scala$/',
-    '/project/build\\.properties$/',
-    '/(^|/)repositories$/',
+    '**/*project/build.properties',
+    '**/repositories',
   ],
   versioning: ivyVersioning.id,
 };

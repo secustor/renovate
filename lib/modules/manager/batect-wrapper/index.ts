@@ -8,7 +8,7 @@ export { extractPackageFile } from './extract.ts';
 export const categories: Category[] = ['batect'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)batect$/'],
+  managerFilePatterns: ['**/batect'],
   versioning,
 };
 

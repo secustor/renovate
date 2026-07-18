@@ -13,7 +13,7 @@ export const url = 'https://cocoapods.org';
 export const categories: Category[] = ['swift'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)Podfile$/'],
+  managerFilePatterns: ['**/Podfile'],
   versioning: rubyVersioning.id,
 };
 

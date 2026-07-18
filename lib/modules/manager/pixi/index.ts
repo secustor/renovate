@@ -13,8 +13,8 @@ export const categories: Category[] = ['python'];
 
 export const defaultConfig = {
   managerFilePatterns: [
-    '/(^|/)pyproject\\.toml$/', // `tool.pixi` section
-    '/(^|/)pixi\\.toml$/', // root object
+    '**/pyproject.toml', // `tool.pixi` section
+    '**/pixi.toml', // root object
   ],
 };
 

@@ -21,7 +21,7 @@ export const categories: Category[] = ['rust'];
 
 export const defaultConfig = {
   commitMessageTopic: 'Rust crate {{depName}}',
-  managerFilePatterns: ['/(^|/)Cargo\\.toml$/'],
+  managerFilePatterns: ['**/Cargo.toml'],
 };
 
 export const supportedDatasources = [

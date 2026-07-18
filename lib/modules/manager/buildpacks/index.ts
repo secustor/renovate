@@ -6,7 +6,7 @@ export { extractPackageFile } from './extract.ts';
 
 export const defaultConfig = {
   commitMessageTopic: 'buildpack {{depName}}',
-  managerFilePatterns: ['/(^|/)project\\.toml$/'],
+  managerFilePatterns: ['**/project.toml'],
   pinDigests: false,
 };
 

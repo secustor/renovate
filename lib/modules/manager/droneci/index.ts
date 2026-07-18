@@ -9,7 +9,7 @@ export const url = 'https://docs.drone.io';
 export const categories: Category[] = ['ci'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)\\.drone\\.yml$/'],
+  managerFilePatterns: ['**/.drone.yml'],
 };
 
 export const supportedDatasources = [DockerDatasource.id];

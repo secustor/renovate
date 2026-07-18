@@ -11,7 +11,7 @@ export const url = 'https://docs.gitlab.com/ee/ci';
 export const categories: Category[] = ['ci'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/\\.gitlab-ci\\.ya?ml$/'],
+  managerFilePatterns: ['**/*.gitlab-ci.{yaml,yml}'],
 };
 
 export const supportedDatasources = [

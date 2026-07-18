@@ -9,7 +9,7 @@ export const url = 'https://leiningen.org';
 export const categories: Category[] = ['java'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)project\\.clj$/'],
+  managerFilePatterns: ['**/project.clj'],
   versioning: mavenVersioning.id,
 };
 

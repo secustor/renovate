@@ -14,9 +14,9 @@ export const categories: Category[] = ['bazel'];
 
 export const defaultConfig = {
   managerFilePatterns: [
-    '/(^|/)WORKSPACE(|\\.bazel|\\.bzlmod)$/',
-    '/\\.WORKSPACE\\.bazel$/',
-    '/\\.bzl$/',
+    '**/WORKSPACE{,.bazel,.bzlmod}',
+    '**/*.WORKSPACE.bazel',
+    '**/*.bzl',
   ],
 };
 

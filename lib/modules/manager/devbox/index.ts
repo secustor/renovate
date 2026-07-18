@@ -7,7 +7,7 @@ export const supportsLockFileMaintenance = true;
 export const lockFileNames = ['devbox.lock'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)devbox\\.json$/'],
+  managerFilePatterns: ['**/devbox.json'],
 };
 
 export const supportedDatasources = [DevboxDatasource.id];

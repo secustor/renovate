@@ -15,7 +15,7 @@ export const url = 'https://docs.conan.io';
 export const categories: Category[] = ['c'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)conanfile\\.(txt|py)$/'],
+  managerFilePatterns: ['**/conanfile.{txt,py}'],
   datasource: ConanDatasource.id,
   versioning: conan.id,
 };

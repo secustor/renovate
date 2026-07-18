@@ -9,7 +9,7 @@ export const url =
 export const categories: Category[] = ['python'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)setup\\.py$/'],
+  managerFilePatterns: ['**/setup.py'],
 };
 
 export const supportedDatasources = [PypiDatasource.id];

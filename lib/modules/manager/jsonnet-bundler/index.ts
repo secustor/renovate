@@ -12,7 +12,7 @@ export const url = 'https://github.com/jsonnet-bundler/jsonnet-bundler#readme';
 export const categories: Category[] = ['kubernetes'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)jsonnetfile\\.json$/'],
+  managerFilePatterns: ['**/jsonnetfile.json'],
   datasource: GitTagsDatasource.id,
 };
 

@@ -24,7 +24,7 @@ export const supportedDatasources = [
 ];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)deno\\.lock$/', '/(^|/)deno\\.(json|jsonc)$/'],
+  managerFilePatterns: ['**/deno.lock', '**/deno.{json,jsonc}'],
   digest: {
     prBodyDefinitions: {
       Change:

@@ -8,7 +8,7 @@ export const displayName = '.terragrunt-version';
 export const categories: Category[] = ['terraform'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)\\.terragrunt-version$/'],
+  managerFilePatterns: ['**/.terragrunt-version'],
   versioning: hashicorpVersioning.id,
   extractVersion: '^v(?<version>.+)$',
 };

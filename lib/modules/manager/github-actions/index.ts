@@ -15,7 +15,7 @@ export const categories: Category[] = ['ci'];
 export const defaultConfig = {
   managerFilePatterns: [
     '/(^|/)(workflow-templates|\\.(?:github|gitea|forgejo)/(?:workflows|actions))/.+\\.ya?ml$/',
-    '/(^|/)action\\.ya?ml$/',
+    '**/action.{yaml,yml}',
   ],
 };
 

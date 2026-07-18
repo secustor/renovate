@@ -127,15 +127,11 @@ describe('config/index', () => {
       expect(config).toContainEntries([
         [
           'managerFilePatterns',
-          [
-            '/(^|/)package\\.json$/',
-            '/(^|/)pnpm-workspace\\.yaml$/',
-            '/(^|/)\\.yarnrc\\.yml$/',
-          ],
+          ['**/package.json', '**/pnpm-workspace.yaml', '**/.yarnrc.yml'],
         ],
       ]);
       expect(getManagerConfig(parentConfig, 'html')).toContainEntries([
-        ['managerFilePatterns', ['/\\.html?$/']],
+        ['managerFilePatterns', ['**/*.{htm,html}']],
       ]);
     });
 

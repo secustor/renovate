@@ -11,7 +11,7 @@ export const url =
 export const categories: Category[] = ['perl'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)cpanfile$/'],
+  managerFilePatterns: ['**/cpanfile'],
 };
 
 export const supportedDatasources = [

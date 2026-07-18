@@ -26,9 +26,9 @@ export const categories: Category[] = ['js'];
 
 export const defaultConfig = {
   managerFilePatterns: [
-    '/(^|/)package\\.json$/',
-    '/(^|/)pnpm-workspace\\.yaml$/',
-    '/(^|/)\\.yarnrc\\.yml$/',
+    '**/package.json',
+    '**/pnpm-workspace.yaml',
+    '**/.yarnrc.yml',
   ],
   digest: {
     prBodyDefinitions: {

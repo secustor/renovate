@@ -11,7 +11,7 @@ export const url = 'https://kubectl.docs.kubernetes.io/references/kustomize';
 export const categories: Category[] = ['kubernetes'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)kustomization\\.ya?ml$/'],
+  managerFilePatterns: ['**/kustomization.{yaml,yml}'],
   pinDigests: false,
 };
 

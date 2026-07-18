@@ -7,7 +7,7 @@ import type { PackageDependency, PackageFileContent } from '../types.ts';
 export const categories: Category[] = ['js'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)\\.bun-version$/'],
+  managerFilePatterns: ['**/.bun-version'],
   versioning: id,
 };
 

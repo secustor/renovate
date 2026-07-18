@@ -8,7 +8,7 @@ export const url = 'https://go-vela.github.io/docs';
 export const categories: Category[] = ['ci'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)\\.vela\\.ya?ml$/'],
+  managerFilePatterns: ['**/.vela.{yaml,yml}'],
 };
 
 export const supportedDatasources = [DockerDatasource.id];

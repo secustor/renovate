@@ -14,7 +14,7 @@ export const url = 'https://dart.dev/tools/pub/packages';
 export const categories: Category[] = ['dart'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)pubspec\\.ya?ml$/'],
+  managerFilePatterns: ['**/pubspec.{yaml,yml}'],
 };
 
 export const supportedDatasources = [

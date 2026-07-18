@@ -16,11 +16,11 @@ export const categories: Category[] = ['java'];
 
 export const defaultConfig = {
   managerFilePatterns: [
-    '/\\.gradle(\\.kts)?$/',
-    '/(^|/)gradle\\.properties$/',
+    '**/*.gradle{,.kts}',
+    '**/gradle.properties',
     '/(^|/)gradle/.+\\.toml$/',
     '/(^|/)buildSrc/.+\\.kt$/',
-    '/\\.versions\\.toml$/',
+    '**/*.versions.toml',
     // The two below is for gradle-consistent-versions plugin
     `/(^|/)versions.props$/`,
     `/(^|/)versions.lock$/`,

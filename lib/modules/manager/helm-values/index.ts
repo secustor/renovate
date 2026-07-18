@@ -8,7 +8,7 @@ export const categories: Category[] = ['helm', 'kubernetes'];
 
 export const defaultConfig = {
   commitMessageTopic: 'helm values {{depName}}',
-  managerFilePatterns: ['/(^|/)values\\.ya?ml$/'],
+  managerFilePatterns: ['**/values.{yaml,yml}'],
   pinDigests: false,
 };
 

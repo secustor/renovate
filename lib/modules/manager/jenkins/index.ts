@@ -7,7 +7,7 @@ export const url = 'https://www.jenkins.io/doc';
 export const categories: Category[] = ['ci'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)plugins\\.(txt|ya?ml)$/'],
+  managerFilePatterns: ['**/plugins.{txt,yaml,yml}'],
 };
 
 export const supportedDatasources = [JenkinsPluginsDatasource.id];

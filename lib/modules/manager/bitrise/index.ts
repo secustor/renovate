@@ -12,7 +12,7 @@ export const urls = [
 ];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)bitrise\\.ya?ml$/'],
+  managerFilePatterns: ['**/bitrise.{yaml,yml}'],
 };
 
 export const supportedDatasources = [

@@ -9,7 +9,7 @@ export const url = 'https://docs.travis-ci.com';
 export const categories: Category[] = ['ci'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/^\\.travis\\.ya?ml$/'],
+  managerFilePatterns: ['.travis.{yaml,yml}'],
   major: {
     enabled: false,
   },

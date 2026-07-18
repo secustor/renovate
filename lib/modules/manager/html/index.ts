@@ -9,7 +9,7 @@ export const displayName = 'HTML';
 export const categories: Category[] = ['cd'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/\\.html?$/'],
+  managerFilePatterns: ['**/*.{htm,html}'],
   versioning: semverVersioning.id,
   digest: {
     enabled: false,

@@ -9,7 +9,7 @@ export const url =
   'https://developers.home-assistant.io/docs/creating_integration_manifest/#requirements';
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)manifest\\.json$/'],
+  managerFilePatterns: ['**/manifest.json'],
 };
 
 export const categories: Category[] = ['python'];

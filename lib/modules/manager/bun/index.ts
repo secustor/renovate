@@ -14,7 +14,7 @@ export const supportsLockFileMaintenance = true;
 export const lockFileNames = ['bun.lockb', 'bun.lock'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)bun\\.lockb?$/', '/(^|/)package\\.json$/'],
+  managerFilePatterns: ['**/bun.lock{,b}', '**/package.json'],
   digest: {
     prBodyDefinitions: {
       Change:

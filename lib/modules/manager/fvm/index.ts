@@ -11,7 +11,7 @@ export const displayName = 'FVM';
 export const url = 'https://fvm.app';
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)\\.fvm/fvm_config\\.json$/', '/(^|/)\\.fvmrc$/'],
+  managerFilePatterns: ['**/.fvm/fvm_config.json', '**/.fvmrc'],
   versioning: semverVersioning.id,
 };
 

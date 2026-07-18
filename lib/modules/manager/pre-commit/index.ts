@@ -14,7 +14,7 @@ export const url = 'https://pre-commit.com';
 export const defaultConfig = {
   commitMessageTopic: 'pre-commit hook {{depName}}',
   enabled: false,
-  managerFilePatterns: ['/(^|/)\\.pre-commit-config\\.ya?ml$/'],
+  managerFilePatterns: ['**/.pre-commit-config.{yaml,yml}'],
   prBodyNotes: getEnv().RENOVATE_X_SUPPRESS_PRE_COMMIT_WARNING
     ? /* istanbul ignore next */
       []

@@ -13,7 +13,7 @@ export const url = 'https://peps.python.org/pep-0621';
 export const categories: Category[] = ['python'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)pyproject\\.toml$/'],
+  managerFilePatterns: ['**/pyproject.toml'],
 };
 
 export const supportedDatasources = [PypiDatasource.id];

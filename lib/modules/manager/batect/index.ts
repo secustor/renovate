@@ -9,7 +9,7 @@ export const url = 'https://batect.dev/docs';
 export const categories: Category[] = ['batect'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)batect(-bundle)?\\.ya?ml$/'],
+  managerFilePatterns: ['**/batect{,-bundle}.{yaml,yml}'],
 };
 
 export const supportedDatasources = [DockerDatasource.id, GitTagsDatasource.id];

@@ -10,7 +10,7 @@ export const url =
 export const categories: Category[] = ['java'];
 
 export const defaultConfig = {
-  managerFilePatterns: ['/(^|/)gradle/wrapper/gradle-wrapper\\.properties$/'],
+  managerFilePatterns: ['**/gradle/wrapper/gradle-wrapper.properties'],
   versioning,
 };
 
