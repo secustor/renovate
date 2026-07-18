@@ -77,7 +77,7 @@ function getAuthJson(): string | null {
       continue;
     }
 
-    if (gitlabHostRule?.token) {
+    if (gitlabHostRule.token) {
       const host = coerceString(gitlabHostRule.resolvedHost, 'gitlab.com');
       authJson['gitlab-token'] = authJson['gitlab-token'] ?? {};
       authJson['gitlab-token'][host] = gitlabHostRule.token;

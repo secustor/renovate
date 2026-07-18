@@ -41,11 +41,9 @@ function getQuadletImage(
       .replace(regEx(/^docker:\/\//), '')
       .replace(regEx(/^docker-daemon:/), '');
     const dep = getDep(cleanedImage, false, config.registryAliases);
-    if (dep) {
-      dep.depType = 'image';
+    dep.depType = 'image';
 
-      deps.push(dep);
-    }
+    deps.push(dep);
   }
 }
 
@@ -68,13 +66,13 @@ export function extractPackageFile(
   const quadletFile: QuadletFile = res.data;
 
   getQuadletImage(
-    quadletFile?.Container?.Image,
+    quadletFile.Container?.Image,
     ['.image', '.build'],
     deps,
     config,
   );
-  getQuadletImage(quadletFile?.Image?.Image, [], deps, config);
-  getQuadletImage(quadletFile?.Volume?.Image, ['.image'], deps, config);
+  getQuadletImage(quadletFile.Image?.Image, [], deps, config);
+  getQuadletImage(quadletFile.Volume?.Image, ['.image'], deps, config);
 
   if (deps.length) {
     return { deps };

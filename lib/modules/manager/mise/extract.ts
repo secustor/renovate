@@ -233,7 +233,7 @@ function getRegistryToolConfig(
 }
 
 function getConfigFromTooling(
-  toolingSource: Record<string, ToolingDefinition>,
+  toolingSource: Record<string, ToolingDefinition | undefined>,
   name: string,
   version: string,
 ): StaticTooling | null {

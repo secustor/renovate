@@ -9,7 +9,9 @@ export function extractPackageFile(
   content: string,
   packageFile?: string,
 ): PackageFileContent | null {
-  let doc: TravisYaml;
+  // This is untrusted, unvalidated YAML content, so `doc` may genuinely be
+  // nullish (or not even object-shaped) despite the non-optional annotation.
+  let doc: TravisYaml | undefined;
   try {
     // TODO: use schema (#9610)
     doc = parseSingleYaml(content);
@@ -39,7 +41,7 @@ export function extractPackageFile(
   }
 
   for (const item of matrix_include) {
-    if (item?.node_js) {
+    if (item.node_js) {
       if (isArray(item.node_js)) {
         item.node_js.forEach((currentValue) => {
           deps.push({

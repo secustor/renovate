@@ -85,15 +85,18 @@ export function getLockedVersion(
   lockFileData: MiseLockFile,
   depName: string,
 ): string | undefined {
-  // Try full name first (for non-registry tools like ubi:, aqua:)
-  let lockedTools = lockFileData.tools[depName];
+  // zod's z.record() types every string key as present, but this is an
+  // arbitrary lookup by depName into a lock file that only lists the tools
+  // it actually locked, so a miss is genuinely possible.
+  type LockedTools = (typeof lockFileData.tools)[string] | undefined;
+  let lockedTools = lockFileData.tools[depName] as LockedTools;
 
   // If not found and has backend prefix, try stripped name (for registry tools)
   if (!lockedTools) {
     const delimiterIndex = depName.indexOf(':');
     if (delimiterIndex !== -1) {
       const shortName = depName.substring(delimiterIndex + 1);
-      lockedTools = lockFileData.tools[shortName];
+      lockedTools = lockFileData.tools[shortName] as LockedTools;
     }
   }
 
