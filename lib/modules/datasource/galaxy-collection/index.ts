@@ -47,7 +47,11 @@ export class GalaxyCollectionDatasource extends Datasource {
     packageName,
     registryUrl,
   }: GetReleasesConfig): Promise<ReleaseResult | null> {
-    const baseUrl = this.constructBaseUrl(registryUrl!, packageName);
+    /* v8 ignore next 3 -- should never happen */
+    if (!registryUrl) {
+      return null;
+    }
+    const baseUrl = this.constructBaseUrl(registryUrl, packageName);
 
     const { val: baseProject, err: baseErr } = await this.http
       .getJsonSafe(baseUrl, GalaxyV3)

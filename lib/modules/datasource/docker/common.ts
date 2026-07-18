@@ -170,11 +170,9 @@ export async function getAuthHeaders(
     // * www-authenticate: Bearer realm="https://ghcr.io/token",service="ghcr.io",scope="repository:user/image:pull"
     // * www-authenticate: Bearer realm="https://auth.docker.io/token",service="registry.docker.io"
     // * www-authenticate: Bearer realm="https://codeberg.org/v2/token",service="container_registry",scope="*",Basic realm="https://codeberg.org/v2",service="container_registry",scope="*"
-    if (
-      !authenticateHeader ||
-      !isString(authenticateHeader.params?.realm) ||
-      parseUrl(authenticateHeader.params.realm) === null
-    ) {
+    const realm = authenticateHeader?.params?.realm;
+    const authUrl = isString(realm) ? parseUrl(realm) : null;
+    if (!authenticateHeader || !authUrl) {
       logger.once.debug(`hostRules: testing direct auth for ${registryHost}`);
       logger.trace(
         { registryHost, dockerRepository, authenticateHeader },
@@ -183,15 +181,10 @@ export async function getAuthHeaders(
       return opts.headers ?? null;
     }
 
-    // already guarded by above clause
-    const authUrl = parseUrl(`${authenticateHeader.params.realm}`)!;
-
     // repo isn't known to server yet, so causing wrong scope `repository:user/image:pull`
-    if (
-      isString(authenticateHeader.params.scope) &&
-      !apiCheckUrl.endsWith('/v2/')
-    ) {
-      authUrl.searchParams.append('scope', authenticateHeader.params.scope);
+    const scope = authenticateHeader.params?.scope;
+    if (isString(scope) && !apiCheckUrl.endsWith('/v2/')) {
+      authUrl.searchParams.append('scope', scope);
     } else {
       authUrl.searchParams.append(
         'scope',
@@ -199,8 +192,9 @@ export async function getAuthHeaders(
       );
     }
 
-    if (isString(authenticateHeader.params.service)) {
-      authUrl.searchParams.append('service', authenticateHeader.params.service);
+    const service = authenticateHeader.params?.service;
+    if (isString(service)) {
+      authUrl.searchParams.append('service', service);
     }
 
     logger.trace(

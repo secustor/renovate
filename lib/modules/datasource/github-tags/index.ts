@@ -71,9 +71,13 @@ export class GithubTagsDatasource extends Datasource {
     { packageName: repo, registryUrl }: Partial<DigestConfig>,
     newValue?: string,
   ): Promise<string | null> {
+    /* v8 ignore next 3 -- should never happen */
+    if (!repo) {
+      return Promise.resolve(null);
+    }
     return newValue
-      ? findCommitOfTag(registryUrl, repo!, newValue, this.http)
-      : this.getCommit(registryUrl, repo!);
+      ? findCommitOfTag(registryUrl, repo, newValue, this.http)
+      : this.getCommit(registryUrl, repo);
   }
 
   override async getReleases(

@@ -170,11 +170,13 @@ export function resolveRegistryUrl(packageName: string): string {
   for (const rule of packageRules) {
     const { matchPackageNames, registryUrls } = rule;
     if (
-      !matchPackageNames ||
-      packageName.startsWith(matchPackageNames[0].replace(regEx(/\*\*$/), ''))
+      registryUrls?.length &&
+      (!matchPackageNames ||
+        packageName.startsWith(
+          matchPackageNames[0].replace(regEx(/\*\*$/), ''),
+        ))
     ) {
-      // TODO: fix types #22198
-      registryUrl = registryUrls![0];
+      registryUrl = registryUrls[0];
     }
   }
   return registryUrl;

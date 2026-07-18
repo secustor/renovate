@@ -13,6 +13,6 @@ export class TomlFetcher implements CustomDatasourceFetcher {
   async readFile(registryURL: string): Promise<unknown> {
     const fileContent = await readLocalFile(registryURL, 'utf8');
 
-    return parseToml(fileContent!);
+    return fileContent ? parseToml(fileContent) : null;
   }
 }

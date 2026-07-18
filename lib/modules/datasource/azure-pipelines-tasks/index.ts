@@ -67,8 +67,13 @@ export class AzurePipelinesTasksDatasource extends Datasource {
         })
         .sort(AzurePipelinesTasksDatasource.compareSemanticVersions('version'))
         .forEach((task) => {
+          const version = task.version;
+          /* v8 ignore if -- version is nullable in the schema but always set in API results */
+          if (!version) {
+            return;
+          }
           const release: Release = {
-            version: `${task.version!.major}.${task.version!.minor}.${task.version!.patch}`,
+            version: `${version.major}.${version.minor}.${version.patch}`,
             changelogContent: task.releaseNotes,
             isDeprecated: task.deprecated,
           };

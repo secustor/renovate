@@ -53,8 +53,7 @@ export class EndoflifeDateDatasource extends Datasource {
     return withCache(
       {
         namespace: `datasource-${datasource}`,
-        // TODO: types (#22198)
-        key: `${config.registryUrl!}:${config.packageName}`,
+        key: `${config.registryUrl ?? ''}:${config.packageName}`,
         fallback: true,
       },
       () => this._getReleases(config),

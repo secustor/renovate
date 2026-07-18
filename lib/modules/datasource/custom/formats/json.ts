@@ -11,6 +11,6 @@ export class JSONFetcher implements CustomDatasourceFetcher {
   async readFile(registryURL: string): Promise<unknown> {
     const fileContent = await readLocalFile(registryURL, 'utf8');
 
-    return JSON.parse(fileContent!);
+    return fileContent ? JSON.parse(fileContent) : null;
   }
 }

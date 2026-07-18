@@ -58,7 +58,11 @@ export class Unity3dDatasource extends Datasource {
     registryUrl: string | undefined,
     withHash: boolean,
   ): Promise<ReleaseResult | null> {
-    const translatedRegistryUrl = this.translateStream(registryUrl!);
+    /* v8 ignore next 3 -- should never happen */
+    if (!registryUrl) {
+      return null;
+    }
+    const translatedRegistryUrl = this.translateStream(registryUrl);
 
     const isStable: boolean =
       translatedRegistryUrl === Unity3dDatasource.streams.lts;

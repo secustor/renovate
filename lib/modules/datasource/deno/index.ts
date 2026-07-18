@@ -40,7 +40,11 @@ export class DenoDatasource extends Datasource {
     packageName,
     registryUrl,
   }: GetReleasesConfig): Promise<ReleaseResult | null> {
-    const massagedRegistryUrl = registryUrl!;
+    /* v8 ignore next 3 -- should never happen */
+    if (!registryUrl) {
+      return null;
+    }
+    const massagedRegistryUrl = registryUrl;
 
     const extractResult = regEx(
       /^(https:\/\/deno.land\/)(?<rawPackageName>[^@\s]+)/,

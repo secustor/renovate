@@ -108,8 +108,7 @@ export class RubygemsDatasource extends Datasource {
     return withCache(
       {
         namespace: `datasource-${RubygemsDatasource.id}`,
-        // TODO: types (#22198)
-        key: `releases:${config.registryUrl!}:${config.packageName}`,
+        key: `releases:${config.registryUrl ?? ''}:${config.packageName}`,
         fallback: true,
         cacheable: registryHostname === 'rubygems.org',
       },

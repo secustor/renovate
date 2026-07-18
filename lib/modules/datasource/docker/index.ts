@@ -881,7 +881,7 @@ export class DockerDatasource extends Datasource {
       // Resolve values independently
       ({ registryHost, dockerRepository } = getRegistryRepository(
         packageName,
-        registryUrl!,
+        registryUrl ?? DOCKER_HUB,
       ));
     }
     logger.debug(
@@ -995,12 +995,12 @@ export class DockerDatasource extends Datasource {
           }
         }
 
-        if (!digest) {
+        if (!digest && manifestResponse) {
           logger.debug(
             { registryHost, dockerRepository, newTag },
             'Extraction digest from manifest response body is deprecated',
           );
-          digest = extractDigestFromResponseBody(manifestResponse!);
+          digest = extractDigestFromResponseBody(manifestResponse);
         }
       }
 
@@ -1023,8 +1023,7 @@ export class DockerDatasource extends Datasource {
       }
 
       if (manifestResponse) {
-        // TODO: fix types (#22198)
-        logger.debug(`Got docker digest ${digest!}`);
+        logger.debug(`Got docker digest ${digest ?? 'null'}`);
       }
     } catch (err) /* istanbul ignore next */ {
       if (err instanceof ExternalHostError) {
@@ -1049,7 +1048,7 @@ export class DockerDatasource extends Datasource {
     const newTag = newValue ?? 'latest';
     const { registryHost, dockerRepository } = getRegistryRepository(
       config.packageName,
-      config.registryUrl!,
+      config.registryUrl ?? DOCKER_HUB,
     );
     const digest = config.currentDigest ? `@${config.currentDigest}` : '';
     return withCache(
@@ -1139,7 +1138,7 @@ export class DockerDatasource extends Datasource {
   }: GetReleasesConfig): Promise<ReleaseResult | null> {
     const { registryHost, dockerRepository } = getRegistryRepository(
       packageName,
-      registryUrl!,
+      registryUrl ?? DOCKER_HUB,
     );
 
     type TagsResultType = AsyncResult<
@@ -1215,7 +1214,7 @@ export class DockerDatasource extends Datasource {
   getReleases(config: GetReleasesConfig): Promise<ReleaseResult | null> {
     const { registryHost, dockerRepository } = getRegistryRepository(
       config.packageName,
-      config.registryUrl!,
+      config.registryUrl ?? DOCKER_HUB,
     );
     return withCache(
       {

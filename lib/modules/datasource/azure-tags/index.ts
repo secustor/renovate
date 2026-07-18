@@ -28,21 +28,23 @@ export class AzureTagsDatasource extends Datasource {
     registryUrl,
     packageName: repo,
   }: GetReleasesConfig): Promise<ReleaseResult | null> {
+    /* v8 ignore next 3 -- should never happen */
+    if (!registryUrl) {
+      return null;
+    }
     const azureApiGit = await azureApi.gitApi();
 
     const azureTags = await azureApiGit.getRefs(repo, undefined, 'tags');
 
-    // Filter out tags that do not have a name
-    const filteredTags = azureTags.filter((tag: GitRef) => tag.name);
-
     const dependency: ReleaseResult = {
-      sourceUrl: AzureTagsDatasource.getSourceUrl(repo, registryUrl!),
+      sourceUrl: AzureTagsDatasource.getSourceUrl(repo, registryUrl),
       registryUrl,
-      releases: filteredTags.map((tag: GitRef) => ({
-        version: tag.name!,
-        gitRef: tag.name!,
-        releaseTimestamp: null,
-      })),
+      // Filter out tags that do not have a name
+      releases: azureTags.flatMap((tag: GitRef) =>
+        tag.name
+          ? [{ version: tag.name, gitRef: tag.name, releaseTimestamp: null }]
+          : [],
+      ),
     };
 
     return dependency;
@@ -53,7 +55,7 @@ export class AzureTagsDatasource extends Datasource {
       {
         namespace: AzureTagsDatasource.cacheNamespace,
         key: AzureTagsDatasource.getCacheKey(
-          config.registryUrl!,
+          config.registryUrl ?? '',
           config.packageName,
           'tags',
         ),

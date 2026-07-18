@@ -43,12 +43,17 @@ export class HexpmBobDatasource extends Datasource {
       return null;
     }
 
+    /* v8 ignore next 3 -- should never happen */
+    if (!registryUrl) {
+      return null;
+    }
+
     logger.trace(
       { registryUrl, packageName },
       `fetching hex.pm bob ${packageName} release`,
     );
 
-    const url = `${registryUrl!}/builds/${packageName}/builds.txt`;
+    const url = `${registryUrl}/builds/${packageName}/builds.txt`;
 
     const result: ReleaseResult = {
       releases: [],

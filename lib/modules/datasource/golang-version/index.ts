@@ -82,7 +82,8 @@ export class GolangVersionDatasource extends Datasource {
     };
     let skipFutureRelease = false;
     while (lines.length !== 0) {
-      const line = lines.shift()!;
+      const line = lines[0];
+      lines.shift();
       if (line === releaseBeginningChar) {
         if (release.version !== undefined) {
           throw new ExternalHostError(

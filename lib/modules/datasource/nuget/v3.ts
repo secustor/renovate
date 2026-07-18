@@ -85,7 +85,8 @@ export class NugetV3Api {
             : /* istanbul ignore next: hard to test */ 0,
         );
 
-      if (services.length === 0) {
+      const lastService = services.pop();
+      if (!lastService) {
         await packageCache.set(
           NugetV3Api.cacheNamespace,
           resultCacheKey,
@@ -99,7 +100,7 @@ export class NugetV3Api {
         return null;
       }
 
-      const { serviceId, version } = services.pop()!;
+      const { serviceId, version } = lastService;
 
       // istanbul ignore if
       if (
@@ -207,10 +208,12 @@ export class NugetV3Api {
 
     // istanbul ignore next: only happens when no stable version exists
     if (latestStable === null && catalogPages.length) {
-      const last = catalogEntries.pop()!;
-      latestStable = removeBuildMeta(last.version);
-      homepage ??= last.projectUrl ?? null;
-      nupkgUrl ??= massageUrl(last.packageContent);
+      const last = catalogEntries.at(-1);
+      if (last) {
+        latestStable = removeBuildMeta(last.version);
+        homepage ??= last.projectUrl ?? null;
+        nupkgUrl ??= massageUrl(last.packageContent);
+      }
     }
 
     const dep: ReleaseResult = {

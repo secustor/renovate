@@ -13,6 +13,6 @@ export class YamlFetcher implements CustomDatasourceFetcher {
   async readFile(registryURL: string): Promise<unknown> {
     const fileContent = await readLocalFile(registryURL, 'utf8');
 
-    return parseSingleYaml(fileContent!);
+    return fileContent ? parseSingleYaml(fileContent) : null;
   }
 }

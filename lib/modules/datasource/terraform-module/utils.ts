@@ -28,7 +28,8 @@ export function getRegistryRepository(
   let registry: string;
   const split = packageName.split('/');
   if (split.length > 3 && split[0].includes('.')) {
-    registry = split.shift()!;
+    registry = split[0];
+    split.shift();
   } else {
     registry = coerceString(registryUrl);
   }

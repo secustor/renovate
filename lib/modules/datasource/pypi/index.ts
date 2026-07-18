@@ -47,10 +47,13 @@ export class PypiDatasource extends Datasource {
     packageName,
     registryUrl,
   }: GetReleasesConfig): Promise<ReleaseResult | null> {
+    /* v8 ignore next 3 -- should never happen */
+    if (!registryUrl) {
+      return null;
+    }
     let dependency: ReleaseResult | null = null;
-    // TODO: null check (#22198)
     const hostUrl = ensureTrailingSlash(
-      registryUrl!.replace('https://pypi.org/simple', 'https://pypi.org/pypi'),
+      registryUrl.replace('https://pypi.org/simple', 'https://pypi.org/pypi'),
     );
     const normalizedLookupName = normalizePythonDepName(packageName);
 

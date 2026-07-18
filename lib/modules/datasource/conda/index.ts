@@ -48,7 +48,7 @@ export class CondaDatasource extends Datasource {
     ) {
       // Since the registryUrl contains at least 3 `/` ,
       // the channel varitable won't be undefined in any case.
-      const channel = ensureTrailingSlash(registryUrl).split('/').at(-2)!;
+      const channel = ensureTrailingSlash(registryUrl).split('/').at(-2) ?? '';
 
       return prefixDev.getReleases(this.http, channel, packageName);
     }

@@ -78,11 +78,13 @@ export class DebDatasource extends Datasource {
     for await (const line of rl) {
       if (line === '') {
         // All information of the package are available, add to the list of packages
-        if (requiredPackageKeys.every((key) => key in currentPackage)) {
-          if (!allPackages[currentPackage.Package!]) {
-            allPackages[currentPackage.Package!] = [];
-          }
-          allPackages[currentPackage.Package!].push(currentPackage);
+        const packageName = currentPackage.Package;
+        if (
+          packageName !== undefined &&
+          requiredPackageKeys.every((key) => key in currentPackage)
+        ) {
+          allPackages[packageName] ??= [];
+          allPackages[packageName].push(currentPackage);
           currentPackage = {};
         }
       } else {
@@ -96,11 +98,13 @@ export class DebDatasource extends Datasource {
     }
 
     // Check the last package after file reading is complete
-    if (requiredPackageKeys.every((key) => key in currentPackage)) {
-      if (!allPackages[currentPackage.Package!]) {
-        allPackages[currentPackage.Package!] = [];
-      }
-      allPackages[currentPackage.Package!].push(currentPackage);
+    const lastPackageName = currentPackage.Package;
+    if (
+      lastPackageName !== undefined &&
+      requiredPackageKeys.every((key) => key in currentPackage)
+    ) {
+      allPackages[lastPackageName] ??= [];
+      allPackages[lastPackageName].push(currentPackage);
     }
 
     return allPackages;

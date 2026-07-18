@@ -27,11 +27,15 @@ export class GlasskubePackagesDatasource extends Datasource {
     packageName,
     registryUrl,
   }: GetReleasesConfig): Promise<ReleaseResult | null> {
+    /* v8 ignore next 3 -- should never happen */
+    if (!registryUrl) {
+      return null;
+    }
     const result: ReleaseResult = { releases: [] };
 
     const { val: versions, err: versionsErr } = await this.http
       .getYamlSafe(
-        joinUrlParts(registryUrl!, packageName, 'versions.yaml'),
+        joinUrlParts(registryUrl, packageName, 'versions.yaml'),
         GlasskubePackageVersions,
       )
       .unwrap();
@@ -48,7 +52,7 @@ export class GlasskubePackagesDatasource extends Datasource {
     const { val: latestManifest, err: latestManifestErr } = await this.http
       .getYamlSafe(
         joinUrlParts(
-          registryUrl!,
+          registryUrl,
           packageName,
           versions.latestVersion,
           'package.yaml',

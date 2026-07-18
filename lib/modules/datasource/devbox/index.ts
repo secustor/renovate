@@ -28,6 +28,10 @@ export class DevboxDatasource extends Datasource {
     registryUrl,
     packageName,
   }: GetReleasesConfig): Promise<ReleaseResult | null> {
+    /* v8 ignore next 3 -- should never happen */
+    if (!registryUrl) {
+      return null;
+    }
     const res: ReleaseResult = {
       releases: [],
     };
@@ -35,7 +39,7 @@ export class DevboxDatasource extends Datasource {
     logger.trace({ registryUrl, packageName }, 'fetching devbox release');
 
     const devboxPkgUrl = joinUrlParts(
-      registryUrl!,
+      registryUrl,
       `/pkg?name=${encodeURIComponent(packageName)}`,
     );
 

@@ -34,8 +34,12 @@ export class BazelDatasource extends Datasource {
     registryUrl,
     packageName,
   }: GetReleasesConfig): Promise<ReleaseResult | null> {
+    /* v8 ignore next 3 -- should never happen */
+    if (!registryUrl) {
+      return null;
+    }
     const path = BazelDatasource.packageMetadataPath(packageName);
-    const url = joinUrlParts(registryUrl!, path);
+    const url = joinUrlParts(registryUrl, path);
     const result: ReleaseResult = { releases: [] };
     try {
       let metadata: BazelModuleMetadata;
@@ -85,7 +89,7 @@ export class BazelDatasource extends Datasource {
     return withCache(
       {
         namespace: `datasource-${BazelDatasource.id}`,
-        key: `${config.registryUrl!}:${config.packageName}`,
+        key: `${config.registryUrl ?? ''}:${config.packageName}`,
         fallback: true,
       },
       () => this._getReleases(config),

@@ -37,7 +37,7 @@ export function constructComponentUrls(registryUrl: string): string[] {
 
     const suite = getReleaseParam(url, OPTIONAL_PARAMS);
     const binaryArch = url.searchParams.get('binaryArch');
-    const components = url.searchParams.get('components')!.split(',');
+    const components = url.searchParams.get('components')?.split(',') ?? [];
 
     // Clean up URL search parameters for constructing new URLs
     [...REQUIRED_PARAMS, ...OPTIONAL_PARAMS].forEach((param) =>

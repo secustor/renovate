@@ -525,11 +525,11 @@ export function getDigest(
 ): Promise<string | null> {
   const datasource = getDatasourceFor(config.datasource);
   // istanbul ignore if: need test
-  if (!datasource || !('getDigest' in datasource)) {
+  if (!datasource?.getDigest) {
     return Promise.resolve(null);
   }
   const digestConfig = getDigestConfig(datasource, config);
-  return datasource.getDigest!(digestConfig, value);
+  return datasource.getDigest(digestConfig, value);
 }
 
 export function getDefaultConfig(

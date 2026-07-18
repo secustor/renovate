@@ -93,8 +93,7 @@ export class ConanDatasource extends Datasource {
     return withCache(
       {
         namespace: `datasource-${datasource}`,
-        // TODO: types (#22198)
-        key: `getDigest:${config.registryUrl!}:${config.packageName}:${newValue!}`,
+        key: `getDigest:${config.registryUrl ?? ''}:${config.packageName}:${newValue ?? ''}`,
         fallback: true,
       },
       () => this._getDigest(config, newValue),

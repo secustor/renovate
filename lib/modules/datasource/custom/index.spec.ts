@@ -501,6 +501,26 @@ describe('modules/datasource/custom/index', () => {
       expect(result).toEqual(expected);
     });
 
+    it.each(['json', 'toml', 'yaml'] as const)(
+      'return null for local file read error - %s format',
+      async (format) => {
+        fs.readLocalFile.mockResolvedValueOnce(null);
+
+        const result = await getPkgReleases({
+          datasource: `${CustomDatasource.id}.foo`,
+          packageName: 'myPackage',
+          customDatasources: {
+            foo: {
+              defaultRegistryUrlTemplate: `file://test.${format}`,
+              format,
+            },
+          },
+        });
+
+        expect(result).toBeNull();
+      },
+    );
+
     it('return null for plain text file if the body is not what is expected', async () => {
       fs.readLocalFile.mockResolvedValueOnce(null);
 
