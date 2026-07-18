@@ -82,6 +82,10 @@
     "typescript/no-floating-promises": "error",
     "typescript/no-misused-promises": "error",
     "typescript/no-misused-spread": "error",
+    "typescript/no-unnecessary-condition": [
+      "error",
+      { "allowConstantLoopConditions": true }
+    ],
     "typescript/no-unsafe-enum-comparison": "error",
     "typescript/no-unsafe-unary-minus": "error",
     "typescript/no-duplicate-type-constituents": "error",
@@ -191,6 +195,7 @@
         "jest/valid-title": "error",
         "vitest/consistent-test-it": ["error", { "fn": "it" }],
         "typescript/unbound-method": "off",
+        "typescript/no-unnecessary-condition": "off",
         "renovate/logger-static-message": "off",
         "renovate/codeblock-in-spec-fixtures": "error",
         "renovate/no-redundant-mock-reset": "error",
@@ -243,6 +248,7 @@
       "rules": {
         "typescript/restrict-template-expressions": "off",
         "typescript/explicit-function-return-type": "off",
+        "typescript/no-unnecessary-condition": "off",
         "renovate/enforce-ts-extension": "off"
       }
     },
