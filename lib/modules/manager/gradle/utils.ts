@@ -23,7 +23,7 @@ export function versionLikeSubstring(
   }
 
   const match = versionLikeRegex.exec(input);
-  const version = match?.groups?.version?.trim();
+  const version = match?.groups?.version.trim();
   if (!version || !regEx(/\d/).test(version)) {
     return null;
   }
@@ -178,14 +178,14 @@ export function reorderFiles(packageFiles: string[]): string[] {
 export function getVars(
   registry: VariableRegistry,
   dir: string,
-  vars: PackageVariables = registry[dir] || {},
+  vars: PackageVariables = registry[dir] ?? {},
 ): PackageVariables {
   const dirAbs = toAbsolutePath(dir);
   const parentDir = upath.dirname(dirAbs);
   if (parentDir === dirAbs) {
     return vars;
   }
-  const parentVars = registry[parentDir] || {};
+  const parentVars = registry[parentDir] ?? {};
   return getVars(registry, parentDir, { ...parentVars, ...vars });
 }
 
@@ -221,7 +221,8 @@ export function updateVarsFromDefaultCatalog(
   const newVarsRemapped: PackageVariables = {};
   for (const [oldKey, variableData] of Object.entries(newVars)) {
     const key = `${defaultLibsExtName}.versions.${oldKey}`;
-    newVarsRemapped[key] = { ...variableData, key };
+    // Object.entries() only yields entries that actually exist, so the value here is never undefined
+    newVarsRemapped[key] = { ...variableData!, key };
   }
 
   registry[rootDir] = { ...oldVars, ...newVarsRemapped };

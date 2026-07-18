@@ -1,6 +1,6 @@
 import upath from 'upath';
 import { logger } from '../../../logger/index.ts';
-import { coerceArray } from '../../../util/array.ts';
+import { coerceArray, isNotNullOrUndefined } from '../../../util/array.ts';
 import { getLocalFiles } from '../../../util/fs/index.ts';
 import { regEx } from '../../../util/regex.ts';
 import { MavenDatasource } from '../../datasource/maven/index.ts';
@@ -119,7 +119,7 @@ export function matchesContentDescriptor(
       if (isMatch) {
         matchesInclude = true;
       }
-    } else if (mode === 'exclude') {
+    } else {
       hasExcludes = true;
       if (isMatch) {
         matchesExclude = true;
@@ -174,7 +174,7 @@ async function parsePackageFiles(
   config: ExtractConfig,
   packageFiles: string[],
   extractedDeps: PackageDependency<GradleManagerData>[],
-  packageFilesByName: Record<string, PackageFile>,
+  packageFilesByName: Record<string, PackageFile | undefined>,
   packageRegistries: PackageRegistry[],
 ): Promise<PackageDependency<GradleManagerData>[]> {
   const varRegistry: VariableRegistry = {};
@@ -246,7 +246,7 @@ export async function extractAllPackageFiles(
   config: ExtractConfig,
   packageFiles: string[],
 ): Promise<PackageFile[] | null> {
-  const packageFilesByName: Record<string, PackageFile> = {};
+  const packageFilesByName: Record<string, PackageFile | undefined> = {};
   const packageRegistries: PackageRegistry[] = [];
   const extractedDeps: PackageDependency<GradleManagerData>[] = [];
   const kotlinSourceFiles = packageFiles.filter(isKotlinSourceFile);
@@ -269,20 +269,18 @@ export async function extractAllPackageFiles(
   unifyCatalogSharedVariableNames(extractedDeps);
 
   for (const dep of extractedDeps) {
-    dep.fileReplacePosition = dep?.managerData?.fileReplacePosition; // #8224
+    dep.fileReplacePosition = dep.managerData?.fileReplacePosition; // #8224
 
     const key = dep.managerData?.packageFile;
     // istanbul ignore else
     if (key) {
-      let pkgFile: PackageFile = packageFilesByName[key];
-      // istanbul ignore if: won't happen if "apply from" processes only initially known files
-      if (!pkgFile) {
-        pkgFile = {
-          packageFile: key,
-          datasource: mavenDatasource,
-          deps: [],
-        };
-      }
+      let pkgFile = packageFilesByName[key];
+      // istanbul ignore next: won't happen if "apply from" processes only initially known files
+      pkgFile ??= {
+        packageFile: key,
+        datasource: mavenDatasource,
+        deps: [],
+      };
 
       dep.datasource ??= mavenDatasource;
 
@@ -311,5 +309,5 @@ export async function extractAllPackageFiles(
     }
   }
 
-  return Object.values(packageFilesByName);
+  return Object.values(packageFilesByName).filter(isNotNullOrUndefined);
 }

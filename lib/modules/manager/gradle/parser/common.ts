@@ -256,8 +256,9 @@ export const qVariableAccessIdentifier = q
   .opt(qProviderValue)
   .handler(coalesceVariable)
   .handler((ctx) => {
+    // Always set by the handler above in this same query pipeline
     ctx.varTokens = [
-      ...ctx.tmpTokenStore.backupVarAccessTokens,
+      ...ctx.tmpTokenStore.backupVarAccessTokens!,
       ...ctx.varTokens,
     ];
     delete ctx.tmpTokenStore.backupVarAccessTokens;
