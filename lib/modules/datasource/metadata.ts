@@ -70,6 +70,7 @@ function massageGitAtUrl(url: string): string {
 }
 
 function massageTimestamps(dep: ReleaseResult): void {
+  // oxlint-disable-next-line typescript/no-unnecessary-condition -- ReleaseResult.releases is typed as required, but datasource implementations are not enforced to populate it (see "should handle dep with no releases" spec); this guard is load-bearing against malformed datasource output.
   for (const release of dep.releases || []) {
     let { releaseTimestamp } = release;
     delete release.releaseTimestamp;

@@ -31,8 +31,8 @@ export async function detectAllGlobalConfig(): Promise<GlobalManagerConfig> {
   let config: GlobalManagerConfig = {};
   for (const managerName of allManagersList) {
     const manager =
-      managers.get(managerName)! ?? customManagers.get(managerName)!;
-    if (manager.detectGlobalConfig) {
+      managers.get(managerName) ?? customManagers.get(managerName);
+    if (manager?.detectGlobalConfig) {
       // This should use mergeChildConfig once more than one manager is supported, but introduces a cyclic dependency
       config = { ...config, ...(await manager.detectGlobalConfig()) };
     }
@@ -66,7 +66,7 @@ export function extractPackageFile(
   fileName: string,
   config: ExtractConfig,
 ): MaybePromise<PackageFileContent | null> {
-  const m = managers.get(manager)! ?? customManagers.get(manager)!;
+  const m = managers.get(manager) ?? customManagers.get(manager);
   if (!m) {
     return null;
   }

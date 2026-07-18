@@ -227,8 +227,8 @@ async function mergeRegistries(
         if (res.tags) {
           // Both results had tags, so we need to compare them
           for (const tag of ['release', 'latest']) {
-            const existingTag = combinedRes?.tags?.[tag];
-            const newTag = res.tags?.[tag];
+            const existingTag = combinedRes.tags?.[tag];
+            const newTag = res.tags[tag];
             if (isString(newTag) && releaseVersioning.isVersion(newTag)) {
               if (
                 isString(existingTag) &&
@@ -352,7 +352,7 @@ async function fetchReleases(
   const { datasource: datasourceName } = config;
   let { registryUrls } = config;
   // istanbul ignore if: need test
-  if (!datasourceName || getDatasourceFor(datasourceName) === undefined) {
+  if (!datasourceName || getDatasourceFor(datasourceName) === null) {
     logger.warn({ datasource: datasourceName }, 'Unknown datasource');
     return null;
   }
@@ -385,7 +385,7 @@ async function fetchReleases(
         dep = await firstRegistry(config, datasource, registryUrls);
       } else if (registryStrategy === 'hunt') {
         dep = await huntRegistries(config, datasource, registryUrls);
-      } else if (registryStrategy === 'merge') {
+      } else {
         dep = await mergeRegistries(config, datasource, registryUrls);
       }
     } else {
