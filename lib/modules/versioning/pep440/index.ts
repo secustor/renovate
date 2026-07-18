@@ -66,7 +66,7 @@ function minSatisfyingVersion(
 export function isSingleVersion(constraint: string): boolean {
   return (
     isVersion(constraint) ||
-    (constraint?.startsWith('==') && isVersion(constraint.substring(2).trim()))
+    (constraint.startsWith('==') && isVersion(constraint.substring(2).trim()))
   );
 }
 

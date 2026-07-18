@@ -24,8 +24,9 @@ class DockerVersioningApi extends GenericVersioningApi {
       return null;
     }
     const versionPieces = version.replace(regEx(/^v/), '').split('-');
+    // split() always returns at least one element
     const [prefix, ...suffixPieces] = versionPieces;
-    const matchGroups = prefix?.match(versionPattern)?.groups;
+    const matchGroups = prefix.match(versionPattern)?.groups;
     if (!matchGroups) {
       return null;
     }
@@ -44,8 +45,8 @@ class DockerVersioningApi extends GenericVersioningApi {
     }
     const length = Math.max(parsed1.release.length, parsed2.release.length);
     for (let i = 0; i < length; i += 1) {
-      const part1 = parsed1.release[i];
-      const part2 = parsed2.release[i];
+      const part1 = parsed1.release.at(i);
+      const part2 = parsed2.release.at(i);
       // shorter is bigger 2.1 > 2.1.1
       if (part1 === undefined) {
         return 1;

@@ -227,30 +227,30 @@ export function getNewValue({
 
 export function isLessThanRange(input: string, range: string): boolean {
   try {
-    let invertResult = true;
+    const specifiers = range.split(',').map((x) =>
+      x
+        .replace(regEx(/\s*/g), '')
+        .split(regEx(/(~=|==|!=|<=|>=|<|>|===)/))
+        .slice(1),
+    );
 
-    const results = range
-      .split(',')
-      .map((x) =>
-        x
-          .replace(regEx(/\s*/g), '')
-          .split(regEx(/(~=|==|!=|<=|>=|<|>|===)/))
-          .slice(1),
-      )
-      .map(([op, version]) => {
-        if (['!=', '<=', '<'].includes(op)) {
-          return true;
-        }
-        invertResult = false;
-        if (['~=', '==', '>=', '==='].includes(op)) {
-          return lt(input, version);
-        }
-        if (op === '>') {
-          return lte(input, version);
-        }
-        // istanbul ignore next
-        return false;
-      });
+    const invertResult = specifiers.every(([op]) =>
+      ['!=', '<=', '<'].includes(op),
+    );
+
+    const results = specifiers.map(([op, version]) => {
+      if (['!=', '<=', '<'].includes(op)) {
+        return true;
+      }
+      if (['~=', '==', '>=', '==='].includes(op)) {
+        return lt(input, version);
+      }
+      if (op === '>') {
+        return lte(input, version);
+      }
+      // istanbul ignore next
+      return false;
+    });
 
     const result = results.every((res) => res === true);
 
@@ -261,7 +261,8 @@ export function isLessThanRange(input: string, range: string): boolean {
 }
 
 function parseCurrentRange(currentValue: string): Range[] {
-  const ranges: Range[] = parseRange(currentValue);
+  // the upstream .d.ts lies: parse() returns null for invalid ranges
+  const ranges = parseRange(currentValue) as Range[] | null;
   if (!ranges) {
     throw new TypeError('Invalid pep440 currentValue');
   }

@@ -24,9 +24,9 @@ export const supportedRangeStrategies: RangeStrategy[] = ['bump'];
 const equals = (a: string, b: string): boolean => compare(a, b) === 0;
 
 const getMajor = (version: string): number | null => {
-  const tokens = parse(version?.replace(regEx(/^v/i), ''));
+  const tokens = parse(version.replace(regEx(/^v/i), ''));
   if (tokens) {
-    const majorToken = tokens?.[0];
+    const majorToken = tokens.at(0);
     if (majorToken?.type === TokenType.Number) {
       return majorToken.val as number;
     }
@@ -35,10 +35,10 @@ const getMajor = (version: string): number | null => {
 };
 
 const getMinor = (version: string): number | null => {
-  const tokens = parse(version?.replace(regEx(/^v/i), ''));
+  const tokens = parse(version.replace(regEx(/^v/i), ''));
   if (tokens) {
-    const majorToken = tokens[0];
-    const minorToken = tokens[1];
+    const majorToken = tokens.at(0);
+    const minorToken = tokens.at(1);
     if (
       majorToken?.type === TokenType.Number &&
       minorToken?.type === TokenType.Number
@@ -51,11 +51,11 @@ const getMinor = (version: string): number | null => {
 };
 
 const getPatch = (version: string): number | null => {
-  const tokens = parse(version?.replace(regEx(/^v/i), ''));
+  const tokens = parse(version.replace(regEx(/^v/i), ''));
   if (tokens) {
-    const majorToken = tokens[0];
-    const minorToken = tokens[1];
-    const patchToken = tokens[2];
+    const majorToken = tokens.at(0);
+    const minorToken = tokens.at(1);
+    const patchToken = tokens.at(2);
     if (
       majorToken?.type === TokenType.Number &&
       minorToken?.type === TokenType.Number &&

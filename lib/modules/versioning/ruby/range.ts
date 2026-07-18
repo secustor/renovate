@@ -95,7 +95,8 @@ export function stringifyRanges(ranges: Range[]): string {
 type GemRequirement = [string, Version];
 
 const ltr = (version: string, range: string): boolean => {
-  const gemVersion = create(version);
+  // the upstream .d.ts lies: create() returns null for invalid versions
+  const gemVersion = create(version) as Version | null;
   if (!gemVersion) {
     logger.warn({ version }, `Invalid ruby version`);
     return false;

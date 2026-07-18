@@ -29,7 +29,7 @@ for (const version of Object.keys(nodeSchedule)) {
 export function findScheduleForCodename(
   codename: string,
 ): Nullish<NodeJsScheduleWithVersion> {
-  return nodeCodenames.get(codename?.toUpperCase());
+  return nodeCodenames.get(codename.toUpperCase());
 }
 
 export function findScheduleForVersion(

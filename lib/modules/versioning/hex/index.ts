@@ -59,7 +59,7 @@ const isValid = (input: string): boolean => !!npm.isValid(hex2npm(input));
 function isSingleVersion(constraint: string): boolean {
   return (
     npm.isVersion(constraint) ||
-    (constraint?.startsWith('==') &&
+    (constraint.startsWith('==') &&
       npm.isVersion(constraint.substring(2).trim()))
   );
 }

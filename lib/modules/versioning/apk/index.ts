@@ -54,9 +54,24 @@ class ApkVersioningApi extends GenericVersioningApi {
       packageFixType,
       packageFixNum,
       releaseNum,
-    } = match.groups;
+      // the optional capture groups are undefined when unmatched, which the
+      // built-in `groups` type does not reflect
+    } = match.groups as {
+      major: string;
+      minor?: string;
+      patch?: string;
+      extra: string;
+      letter?: string;
+      prereleaseType?: string;
+      prereleaseNum?: string;
+      packageFixType?: string;
+      packageFixNum?: string;
+      releaseNum?: string;
+    };
 
-    const packageFixFull = packageFixType ? packageFixType + packageFixNum : '';
+    const packageFixFull = packageFixType
+      ? packageFixType + (packageFixNum ?? '')
+      : '';
 
     const minorPatchStr =
       (minor ? `.${minor}` : '') + (patch ? `.${patch}` : '') + extra;
@@ -66,7 +81,7 @@ class ApkVersioningApi extends GenericVersioningApi {
 
     let prerelease: string | undefined;
     if (prereleaseType) {
-      prerelease = prereleaseType.substring(1) + prereleaseNum;
+      prerelease = prereleaseType.substring(1) + (prereleaseNum ?? '');
     }
 
     // Extract numeric parts for major/minor/patch/extra

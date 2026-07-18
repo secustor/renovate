@@ -134,7 +134,8 @@ export abstract class GenericVersioningApi<
     if (currentVersion === `v${currentValue}`) {
       return newVersion.replace(/^v/, '');
     }
-    return newVersion ?? null;
+    // despite the `NewValueConfig` type, `newVersion` may be missing at runtime
+    return (newVersion as string | undefined) ?? null;
   }
 
   sortVersions(version: string, other: string): number {

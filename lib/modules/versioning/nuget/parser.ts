@@ -11,8 +11,14 @@ const versionRegex = regEx(
   /^(?<major>\d+)(?:\s*\.\s*(?<minor>\d+)(?:\s*\.\s*(?<patch>\d+)(?:\s*\.\s*(?<revision>\d+))?)?)?\s*(?:-(?<prerelease>[-a-zA-Z0-9]+(?:\.[-a-zA-Z0-9]+)*))?(?:\+(?<metadata>[-a-zA-Z0-9]+(?:\.[-a-zA-Z0-9]+)*))?$/,
 );
 
-export function parseVersion(input: string): NugetVersion | null {
-  const groups = versionRegex.exec(input?.trim())?.groups;
+// despite the `VersioningApi` types, callers pass nullish inputs at runtime
+export function parseVersion(
+  input: string | null | undefined,
+): NugetVersion | null {
+  if (!input) {
+    return null;
+  }
+  const groups = versionRegex.exec(input.trim())?.groups;
   if (!groups) {
     return null;
   }

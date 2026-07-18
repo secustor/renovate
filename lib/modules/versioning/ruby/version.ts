@@ -11,7 +11,8 @@ interface RubyVersion {
 }
 
 function releaseSegments(version: string): SegmentElement[] {
-  const v = create(version);
+  // the upstream .d.ts lies: create() returns null for invalid versions
+  const v = create(version) as ReturnType<typeof create> | null;
   if (v) {
     return v.release().getSegments();
   }

@@ -21,7 +21,7 @@ export function get(versioning: string | null | undefined): VersioningApi {
   const res = Versioning.safeParse(versioning ?? defaultVersioning.id);
 
   if (!res.success) {
-    const [issue] = res.error.issues;
+    const issue = res.error.issues.at(0);
     // oxlint-disable-next-line typescript/prefer-optional-chain
     if (issue && issue.code === 'custom' && issue.params?.error) {
       throw issue.params.error;

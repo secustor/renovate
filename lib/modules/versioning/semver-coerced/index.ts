@@ -23,10 +23,18 @@ function isStable(version: string): boolean {
     return false;
   }
 
-  const major = m.groups.major;
-  const newMinor = m.groups.minor ?? '.0';
-  const newPatch = m.groups.patch ?? '.0';
-  const others = m.groups.others ?? '';
+  // the optional capture groups are undefined when unmatched, which the
+  // built-in `groups` type does not reflect
+  const groups = m.groups as {
+    major: string;
+    minor?: string;
+    patch?: string;
+    others?: string;
+  };
+  const major = groups.major;
+  const newMinor = groups.minor ?? '.0';
+  const newPatch = groups.patch ?? '.0';
+  const others = groups.others ?? '';
   const fixed = major + newMinor + newPatch + others;
   return stable.is(fixed);
 }

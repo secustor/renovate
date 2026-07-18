@@ -97,9 +97,9 @@ export class DistroInfo {
    * @returns A codename if exists, otherwise input string is returned
    */
   public getCodenameByVersion(input: string): string {
-    const di = this._distroInfo[input];
-    if (di) {
-      return di.series;
+    // the index signature hides that `input` may be an unknown version
+    if (input in this._distroInfo) {
+      return this._distroInfo[input].series;
     }
     // istanbul ignore next
     return input;

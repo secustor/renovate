@@ -84,7 +84,7 @@ const getMajor = (version: string): number | null => {
 const getMinor = (version: string): number | null => {
   if (isVersion(version)) {
     const tokens = tokenize(version);
-    const minorToken = tokens[1];
+    const minorToken = tokens.at(1);
     if (minorToken?.type === TYPE_NUMBER) {
       return +minorToken.val;
     }
@@ -96,11 +96,11 @@ const getMinor = (version: string): number | null => {
 const getPatch = (version: string): number | null => {
   if (isVersion(version)) {
     const tokens = tokenize(version);
-    const minorToken = tokens[1];
-    const patchToken = tokens[2];
+    const minorToken = tokens.at(1);
+    const patchToken = tokens.at(2);
     if (
       patchToken &&
-      minorToken.type === TYPE_NUMBER &&
+      minorToken?.type === TYPE_NUMBER &&
       patchToken.type === TYPE_NUMBER
     ) {
       return +patchToken.val;

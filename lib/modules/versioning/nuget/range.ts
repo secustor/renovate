@@ -110,11 +110,9 @@ export function rangeToString(range: NugetRange): string {
       res = `.${minorPart}${res}`;
     }
 
-    if (major !== undefined) {
-      const majorPart =
-        floating === 'major' ? floatingComponentToString(major) : `${major}`;
-      res = `${majorPart}${res}`;
-    }
+    const majorPart =
+      floating === 'major' ? floatingComponentToString(major) : `${major}`;
+    res = `${majorPart}${res}`;
 
     return res;
   }
