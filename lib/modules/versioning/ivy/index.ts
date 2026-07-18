@@ -80,11 +80,9 @@ function matches(a: string, b: string): boolean {
       return true;
     }
     const tokens = tokenize(a);
-    if (tokens.length) {
-      const token = tokens.at(-1)!;
-      if (token.type === TYPE_QUALIFIER) {
-        return token.val.toLowerCase() === value;
-      }
+    const token = tokens.at(-1);
+    if (token?.type === TYPE_QUALIFIER) {
+      return token.val.toLowerCase() === value;
     }
     return false;
   }

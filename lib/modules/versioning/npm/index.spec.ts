@@ -115,7 +115,7 @@ describe('modules/versioning/npm/index', () => {
     ${'^1.0.0 || ^2.0.0'} | ${'^1.1.0 || ^2.0.0'} | ${false}
     ${'1.x.5'}            | ${'1.x'}              | ${true}
   `('subset("$a", "$b") === $expected', ({ a, b, expected }) => {
-    expect(semver.subset!(a, b)).toBe(expected);
+    expect(semver.subset(a, b)).toBe(expected);
   });
 
   it.each`
@@ -136,7 +136,7 @@ describe('modules/versioning/npm/index', () => {
     ${'^1.0.0 || ^2.0.0'} | ${'^1.1.0 || ^2.0.0'} | ${true}
     ${'1.x.5'}            | ${'1.2.x'}            | ${true}
   `('intersects("$a", "$b") === $expected', ({ a, b, expected }) => {
-    expect(semver.intersects!(a, b)).toBe(expected);
+    expect(semver.intersects(a, b)).toBe(expected);
   });
 
   it.each`
@@ -152,7 +152,7 @@ describe('modules/versioning/npm/index', () => {
   `(
     'isBreaking("$currentVersion", "$newVersion") === $expected',
     ({ currentVersion, newVersion, expected }) => {
-      expect(semver.isBreaking!(currentVersion, newVersion)).toBe(expected);
+      expect(semver.isBreaking(currentVersion, newVersion)).toBe(expected);
     },
   );
 

@@ -44,7 +44,7 @@ function getSatisfyingVersion(
 }
 
 const isLessThanRange = (version: string, range: string): boolean =>
-  npm.isLessThanRange!(version, toNpmRange(range));
+  npm.isLessThanRange(version, toNpmRange(range));
 
 export const isValid = (input: string): boolean => !!input.match(validRegex);
 

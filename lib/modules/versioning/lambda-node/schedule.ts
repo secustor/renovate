@@ -1,4 +1,4 @@
-import dataFiles from '../../../data-files.generated.ts';
+import { getDataFile } from '../../../data-files.ts';
 import { regEx } from '../../../util/regex.ts';
 import { isStable } from '../node/index.ts';
 
@@ -14,7 +14,7 @@ interface LambdaSchedule {
 export type LambdaData = Record<string, LambdaSchedule>;
 
 const lambdaSchedule: LambdaData = JSON.parse(
-  dataFiles.get('data/lambda-node-js-schedule.json')!,
+  getDataFile('data/lambda-node-js-schedule.json'),
 );
 
 export function findLambdaScheduleForVersion(

@@ -29,9 +29,7 @@ const {
 } = pep440;
 
 function isVersion(input: string | undefined | null): boolean {
-  // @renovatebot/pep440 isn't strict null save
-  // oxlint-disable-next-line typescript/no-unnecessary-type-assertion
-  return !!valid(input!);
+  return !!input && !!valid(input);
 }
 
 const isStable = (input: string): boolean => {
@@ -52,7 +50,7 @@ function getSatisfyingVersion(
   range: string,
 ): string | null {
   const found = pep440.filter(versions, range).sort(sortVersions);
-  return found.length === 0 ? null : found.at(-1)!;
+  return found.at(-1) ?? null;
 }
 
 function minSatisfyingVersion(
@@ -85,7 +83,7 @@ function matches(version: string, range: string): boolean {
   return isValid(range) && satisfies(version, range, { prereleases: true });
 }
 
-export const api: VersioningApi = {
+export const api = {
   equals,
   getMajor,
   getMinor,
@@ -103,6 +101,6 @@ export const api: VersioningApi = {
   getPinnedValue,
   sortVersions,
   isLessThanRange,
-};
+} satisfies VersioningApi;
 
 export default api;

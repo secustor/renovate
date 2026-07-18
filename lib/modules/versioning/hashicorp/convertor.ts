@@ -23,19 +23,19 @@ export function hashicorp2npm(input: string): string {
   return input
     .split(',')
     .map((single) => {
-      const r = single.match(
+      const groups = single.match(
         regEx(
           `^\\s*(?<operator>(|=|!=|>|<|>=|<=|~>))\\s*v?(?<version>${semverRegex.source})\\s*$`,
         ),
-      );
-      if (!r) {
+      )?.groups;
+      if (!groups) {
         logger.warn(
           { constraint: input, element: single },
           'Invalid hashicorp constraint',
         );
         throw new Error('Invalid hashicorp constraint');
       }
-      if (r.groups!.operator === '!=') {
+      if (groups.operator === '!=') {
         logger.warn(
           { constraint: input, element: single },
           'Unsupported hashicorp constraint',
@@ -43,8 +43,8 @@ export function hashicorp2npm(input: string): string {
         throw new Error('Unsupported hashicorp constraint');
       }
       return {
-        operator: r.groups!.operator,
-        version: r.groups!.version,
+        operator: groups.operator,
+        version: groups.version,
       };
     })
     .map(({ operator, version }) => {
@@ -78,17 +78,17 @@ export function npm2hashicorp(input: string): string {
   return input
     .split(' ')
     .map((single) => {
-      const r = single.match(
+      const groups = single.match(
         regEx(
           `^(?<operator>(|>|<|>=|<=|~|\\^))v?(?<version>${semverRegex.source})$`,
         ),
-      );
-      if (!r) {
+      )?.groups;
+      if (!groups) {
         throw new Error('invalid npm constraint');
       }
       return {
-        operator: r.groups!.operator,
-        version: r.groups!.version,
+        operator: groups.operator,
+        version: groups.version,
       };
     })
     .map(({ operator, version }) => {

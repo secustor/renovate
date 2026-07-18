@@ -301,5 +301,5 @@ it.each`
   ${'^1.1.0 || ^2.0.0'} | ${'^1.0.0 || ^2.0.0'} | ${true}
   ${'^1.0.0 || ^2.0.0'} | ${'^1.1.0 || ^2.0.0'} | ${false}
 `('subset("$a", "$b") === $expected', ({ a, b, expected }) => {
-  expect(versioning.subset!(a, b)).toBe(expected);
+  expect(versioning.subset(a, b)).toBe(expected);
 });

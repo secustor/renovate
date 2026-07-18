@@ -187,13 +187,9 @@ class RustReleaseChannelVersioning implements VersioningApi {
 
   getSatisfyingVersion(versions: string[], range: string): string | null {
     const matching = versions.filter((version) => this.matches(version, range));
-    if (matching.length === 0) {
-      return null;
-    }
-
     // Sort and return the highest (last in sorted array)
     matching.sort((a, b) => this.sortVersions(a, b));
-    return matching.at(-1)!;
+    return matching.at(-1) ?? null;
   }
 
   minSatisfyingVersion(versions: string[], range: string): string | null {

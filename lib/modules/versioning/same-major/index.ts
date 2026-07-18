@@ -22,15 +22,18 @@ function massageVersion(input: string): string {
     return input;
   }
 
-  // we are sure to get a major because of the isSingleVersion check
-  const major = semverCoerced.getMajor(input)!;
+  const major = semverCoerced.getMajor(input);
+  /* v8 ignore if -- unreachable: the isSingleVersion() check above guarantees a major */
+  if (major === null) {
+    return input;
+  }
   return `>=${input} <${major + 1}`;
 }
 
 // for same major versioning one version is greater than the other if its major is greater
 function isGreaterThan(version: string, other: string): boolean {
-  const versionMajor = semverCoerced.getMajor(version)!;
-  const otherMajor = semverCoerced.getMajor(other)!;
+  const versionMajor = semverCoerced.getMajor(version);
+  const otherMajor = semverCoerced.getMajor(other);
 
   if (!versionMajor || !otherMajor) {
     return false;
@@ -58,7 +61,7 @@ function minSatisfyingVersion(
 }
 
 function isLessThanRange(version: string, range: string): boolean {
-  return semverCoerced.isLessThanRange!(version, massageVersion(range));
+  return semverCoerced.isLessThanRange(version, massageVersion(range));
 }
 
 export const api: VersioningApi = {

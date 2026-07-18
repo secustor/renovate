@@ -88,7 +88,11 @@ export function getNewValue({
     });
   }
   const parsedRange = semverUtils.parseRange(currentValue);
-  const element = parsedRange.at(-1)!;
+  const element = parsedRange.at(-1);
+  /* v8 ignore if -- unreachable: parseRange() always returns at least one element */
+  if (!element) {
+    return null;
+  }
   if (rangeStrategy === 'widen') {
     if (satisfiesRange(newVersion, currentValue)) {
       return currentValue;
@@ -103,24 +107,21 @@ export function getNewValue({
       // TODO fix this
       const splitCurrent = currentValue.split(element.operator);
       splitCurrent.pop();
-      // TODO: types (#22198)
-      return `${splitCurrent.join(element.operator)}${newValue!}`;
+      return `${splitCurrent.join(element.operator)}${newValue ?? ''}`;
     }
     if (parsedRange.length > 1) {
-      const previousElement = parsedRange.at(-2)!;
-      if (previousElement.operator === '-') {
+      const previousElement = parsedRange.at(-2);
+      if (previousElement?.operator === '-') {
         const splitCurrent = currentValue.split('-');
         splitCurrent.pop();
-        // TODO: types (#22198)
-        return `${splitCurrent.join('-')}- ${newValue!}`;
+        return `${splitCurrent.join('-')}- ${newValue ?? ''}`;
       }
       if (element.operator?.startsWith('>')) {
         logger.warn(`Complex ranges ending in greater than are not supported`);
         return null;
       }
     }
-    // TODO: types (#22198)
-    return `${currentValue} || ${newValue!}`;
+    return `${currentValue} || ${newValue ?? ''}`;
   }
   const toVersionMajor = major(newVersion);
   const toVersionMinor = minor(newVersion);
@@ -222,8 +223,7 @@ export function getNewValue({
       const newMinor = toVersionMinor + 1;
       res = `<${toVersionMajor}.${newMinor}${element.patch ? '.0' : ''}`;
     } else if (element.patch) {
-      // TODO: types (#22198)
-      res = `<${increment(newVersion, 'patch')!}`;
+      res = `<${increment(newVersion, 'patch') ?? ''}`;
     } else if (element.minor) {
       res = `<${toVersionMajor}.${toVersionMinor + 1}`;
     } else {

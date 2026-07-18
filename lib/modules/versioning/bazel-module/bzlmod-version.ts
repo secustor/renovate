@@ -224,11 +224,11 @@ export class BzlmodVersion {
     }
     const vparts: Partial<VersionRegexResult> | undefined =
       BzlmodVersion.versionMatcher.exec(version)?.groups;
-    if (!vparts) {
+    // A successful match always produces a release group.
+    if (!vparts?.release) {
       throw new Error(`Invalid Bazel module version: ${version}`);
     }
-    // The regex check above ensures that we will have a release group.
-    const rparts = vparts.release!.split('.');
+    const rparts = vparts.release.split('.');
     this.release = VersionPart.create(...rparts);
     const pparts = vparts.prerelease ? vparts.prerelease.split('.') : [];
     this.prerelease = VersionPart.create(...pparts);

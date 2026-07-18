@@ -36,6 +36,6 @@ export function findScheduleForVersion(
   version: string,
 ): Nullish<NodeJsSchedule> {
   const major = semver.getMajor(version);
-  const schedule = nodeSchedule[`v${major!}`];
+  const schedule = nodeSchedule[`v${major ?? ''}`];
   return schedule;
 }

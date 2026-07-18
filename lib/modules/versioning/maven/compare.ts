@@ -92,7 +92,11 @@ function iterateTokens(versionStr: string, cb: (token: Token) => void): void {
     } else if (prevChar === null && (nextChar === 'v' || nextChar === 'V')) {
       currentPrefix = nextChar;
     } else {
-      if (currentVal !== '' && isTransition(prevChar!, nextChar)) {
+      if (
+        currentVal !== '' &&
+        prevChar !== null &&
+        isTransition(prevChar, nextChar)
+      ) {
         yieldToken(true);
         currentPrefix = PREFIX_HYPHEN;
         currentVal = nextChar;
@@ -489,8 +493,8 @@ function coerceRangeValue(prev: string, next: string): string {
 
 function incrementRangeValue(value: string): string {
   const tokens = tokenize(value);
-  const lastToken = tokens.at(-1)!;
-  if (typeof lastToken.val === 'number') {
+  const lastToken = tokens.at(-1);
+  if (typeof lastToken?.val === 'number') {
     lastToken.val += 1;
     return coerceRangeValue(value, tokensToStr(tokens));
   }
@@ -568,8 +572,8 @@ function autoExtendMavenRange(
   } else if (rightValue !== null) {
     if (interval.rightType === INCLUDING_POINT) {
       const tokens = tokenize(rightValue);
-      const lastToken = tokens.at(-1)!;
-      if (typeof lastToken.val === 'number') {
+      const lastToken = tokens.at(-1);
+      if (typeof lastToken?.val === 'number') {
         interval.rightValue = coerceRangeValue(rightValue, newValue);
       } else {
         interval.rightValue = newValue;

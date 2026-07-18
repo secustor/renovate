@@ -22,9 +22,9 @@ function getOptionLink(
 export async function generateTemplates(dist: string): Promise<void> {
   const options = getOptions();
   const optionParentMap = new Map(
-    options
-      .filter((o) => o.parents?.length)
-      .map((o) => [o.name, o.parents![0]]),
+    options.flatMap((o) =>
+      o.parents?.length ? [[o.name, o.parents[0]] as const] : [],
+    ),
   );
   const optionGlobalOnly = new Set(
     options.filter((o) => o.globalOnly).map((o) => o.name),

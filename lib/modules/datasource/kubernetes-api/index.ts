@@ -1,11 +1,11 @@
 import JSON5 from 'json5';
-import dataFiles from '../../../data-files.generated.ts';
+import { getDataFile } from '../../../data-files.ts';
 import * as kubernetesApiVersioning from '../../versioning/kubernetes-api/index.ts';
 import { Datasource } from '../datasource.ts';
 import type { GetReleasesConfig, ReleaseResult } from '../types.ts';
 
 const apiData: Record<string, string[]> = JSON5.parse(
-  dataFiles.get('data/kubernetes-api.json5')!,
+  getDataFile('data/kubernetes-api.json5'),
 );
 
 export const supportedApis = new Set(Object.keys(apiData));

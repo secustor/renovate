@@ -137,7 +137,7 @@ function getMinor(version: string | SemVer): null | number {
 
 function getPatch(version: string | SemVer): null | number {
   try {
-    return pep440.api.getPatch(version);
+    return pep440.api.getPatch(version as string);
   } catch {
     return null;
   }
@@ -161,11 +161,7 @@ function getSatisfyingVersion(
       return a[0].compare(b[0]);
     });
 
-  if (satisfiedVersions.length === 0) {
-    return null;
-  }
-
-  return satisfiedVersions.at(-1)![1];
+  return satisfiedVersions.at(-1)?.[1] ?? null;
 }
 
 function minSatisfyingVersion(

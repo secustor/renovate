@@ -44,7 +44,7 @@ class DebVersioningApi extends GenericVersioningApi {
 
     // split of first element by `:` as epoch:
     const epochSplit = version.split(':');
-    const epochStr = epochSplit.length > 1 ? epochSplit.shift()! : '0';
+    const epochStr = epochSplit.length > 1 ? (epochSplit.shift() ?? '0') : '0';
     const remainingVersion = epochSplit.join(':');
 
     // split of last element by `-`
@@ -53,7 +53,8 @@ class DebVersioningApi extends GenericVersioningApi {
       return null;
     }
     const debianSplit = remainingVersion.split('-');
-    const debianRevision = debianSplit.length > 1 ? debianSplit.pop()! : '';
+    const debianRevision =
+      debianSplit.length > 1 ? (debianSplit.pop() ?? '') : '';
     const upstreamVersion = debianSplit.join('-');
 
     if (

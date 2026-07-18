@@ -163,8 +163,9 @@ class ApkVersioningApi extends GenericVersioningApi {
     if (v1 === v2) {
       return 0;
     }
-    const matchesv1 = v1.match(alphaNumRegex)!;
-    const matchesv2 = v2.match(alphaNumRegex)!;
+    // both inputs always contain at least one alphanumeric character
+    const matchesv1 = v1.match(alphaNumRegex) ?? [];
+    const matchesv2 = v2.match(alphaNumRegex) ?? [];
     const matches = Math.min(matchesv1.length, matchesv2.length);
 
     for (let i = 0; i < matches; i++) {
@@ -283,8 +284,12 @@ class ApkVersioningApi extends GenericVersioningApi {
         case '==':
           return this.equals(version, targetVersion);
         case '~': {
-          const targetParsed = this._parse(targetVersion)!;
-          const versionParsed = this._parse(version)!;
+          const targetParsed = this._parse(targetVersion);
+          const versionParsed = this._parse(version);
+          /* v8 ignore if -- unreachable: both versions passed isValid() above */
+          if (!targetParsed || !versionParsed) {
+            return false;
+          }
 
           // Must have same major and minor versions
           if (

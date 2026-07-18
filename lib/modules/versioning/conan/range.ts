@@ -124,7 +124,11 @@ export function replaceRange({
   newVersion,
 }: NewValueConfig): string {
   const parsedRange = parseRange(currentValue);
-  const element = parsedRange.at(-1)!;
+  const element = parsedRange.at(-1);
+  /* v8 ignore if -- unreachable: parseRange() always returns at least one element */
+  if (!element) {
+    return newVersion;
+  }
   const toVersionMajor = getMajor(newVersion);
   const toVersionMinor = getMinor(newVersion);
   const toVersionPatch = getPatch(newVersion);
@@ -218,7 +222,11 @@ export function widenRange(
   options: semver.Options,
 ): string | null {
   const parsedRange = parseRange(currentValue);
-  const element = parsedRange.at(-1)!;
+  const element = parsedRange.at(-1);
+  /* v8 ignore if -- unreachable: parseRange() always returns at least one element */
+  if (!element) {
+    return null;
+  }
 
   if (matchesWithOptions(newVersion, currentValue, options)) {
     return currentValue;
@@ -235,8 +243,8 @@ export function widenRange(
     return splitCurrent.join(element.operator) + newValue;
   }
   if (parsedRange.length > 1) {
-    const previousElement = parsedRange.at(-2)!;
-    if (previousElement.operator === '-') {
+    const previousElement = parsedRange.at(-2);
+    if (previousElement?.operator === '-') {
       const splitCurrent = currentValue.split('-');
       splitCurrent.pop();
       return `${splitCurrent.join('-')}- ${newValue}`;
@@ -265,7 +273,11 @@ export function bumpRange(
     );
   }
   const parsedRange = parseRange(currentValue);
-  const element = parsedRange.at(-1)!;
+  const element = parsedRange.at(-1);
+  /* v8 ignore if -- unreachable: parseRange() always returns at least one element */
+  if (!element) {
+    return null;
+  }
 
   const toVersionMajor = getMajor(newVersion);
   const toVersionMinor = getMinor(newVersion);

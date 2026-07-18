@@ -112,11 +112,9 @@ function calculateSatisfyingVersionIntenal(
 function removeComposerSpecificPatchPart(input: string): [string, boolean] {
   // the regex is based on the original from composer implementation https://github.com/composer/semver/blob/fa1ec24f0ab1efe642671ec15c51a3ab879f59bf/src/VersionParser.php#L137
   const pattern = /^v?\d+(\.\d+(\.\d+(\.\d+)?)?)?(?<suffix>-p[1-9]\d*)$/gi;
-  const match = pattern.exec(input);
+  const suffix = pattern.exec(input)?.groups?.suffix;
 
-  return match
-    ? [input.replace(match.groups!.suffix, ''), true]
-    : [input, false];
+  return suffix ? [input.replace(suffix, ''), true] : [input, false];
 }
 
 function composer2npm(input: string): string {
@@ -228,7 +226,7 @@ function minSatisfyingVersion(
 
 function subset(subRange: string, superRange: string): boolean | undefined {
   try {
-    return npm.subset!(composer2npm(subRange), composer2npm(superRange));
+    return npm.subset(composer2npm(subRange), composer2npm(superRange));
   } catch (err) {
     logger.trace({ err }, 'composer.subset error');
     return false;
@@ -237,7 +235,7 @@ function subset(subRange: string, superRange: string): boolean | undefined {
 
 function intersects(subRange: string, superRange: string): boolean {
   try {
-    return npm.intersects!(composer2npm(subRange), composer2npm(superRange));
+    return npm.intersects(composer2npm(subRange), composer2npm(superRange));
   } catch (err) {
     logger.trace({ err }, 'composer.intersects error');
     return false;
@@ -271,17 +269,14 @@ function getNewValue({
     const operator = currentValue.substring(0, 1);
     // handle ~0.4 case first
     if (toMajor === 0) {
-      // TODO: types (#22198)
-      newValue = `${operator}0.${toMinor!}`;
+      newValue = `${operator}0.${toMinor ?? 0}`;
     } else {
-      // TODO: types (#22198)
-      newValue = `${operator}${toMajor!}.0`;
+      newValue = `${operator}${toMajor ?? 0}.0`;
     }
   } else if (regEx(/^[~^]([0-9]*)$/).test(currentValue)) {
     // handle ~4 case
     const operator = currentValue.substring(0, 1);
-    // TODO: types (#22198)
-    newValue = `${operator}${toMajor!}`;
+    newValue = `${operator}${toMajor ?? 0}`;
   } else if (
     toMajor &&
     regEx(/^[~^]([0-9]*(?:\.[0-9]*)?)$/).test(currentValue)
@@ -315,7 +310,8 @@ function getNewValue({
     const hasOr = currentValue.includes(' || ');
     if (hasOr || rangeStrategy === 'widen') {
       const splitValues = currentValue.split('||');
-      const lastValue = splitValues.at(-1)!;
+      // split() always returns at least one element
+      const lastValue = splitValues.at(-1) ?? '';
       const replacementValue = getNewValue({
         currentValue: lastValue.trim(),
         rangeStrategy: 'replace',
@@ -326,11 +322,11 @@ function getNewValue({
         newValue = replacementValue;
       } else if (replacementValue) {
         const parsedRange = parseRange(replacementValue);
-        const element = parsedRange.at(-1)!;
-        if (element.operator?.startsWith('<')) {
-          const splitCurrent = currentValue.split(element.operator);
+        const operator = parsedRange.at(-1)?.operator;
+        if (operator?.startsWith('<')) {
+          const splitCurrent = currentValue.split(operator);
           splitCurrent.pop();
-          newValue = `${splitCurrent.join(element.operator)}${replacementValue}`;
+          newValue = `${splitCurrent.join(operator)}${replacementValue}`;
         } else {
           newValue = `${currentValue} || ${replacementValue}`;
         }
@@ -378,7 +374,7 @@ function isCompatible(version: string): boolean {
 }
 
 function isBreaking(current: string, version: string): boolean {
-  return npm.isBreaking!(composer2npm(current), composer2npm(version));
+  return npm.isBreaking(composer2npm(current), composer2npm(version));
 }
 
 export const api: VersioningApi = {

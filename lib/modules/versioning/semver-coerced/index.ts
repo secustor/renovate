@@ -148,7 +148,7 @@ function isCompatible(version: string): boolean {
   return isVersion(version);
 }
 
-export const api: VersioningApi = {
+export const api = {
   equals,
   getMajor,
   getMinor,
@@ -166,5 +166,5 @@ export const api: VersioningApi = {
   minSatisfyingVersion,
   getNewValue,
   sortVersions,
-};
+} satisfies VersioningApi;
 export default api;

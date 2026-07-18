@@ -87,7 +87,7 @@ function isSingleVersion(constraint: string): boolean {
   );
 }
 
-export const api: VersioningApi = {
+export const api = {
   equals,
   getMajor,
   getMinor,
@@ -107,6 +107,6 @@ export const api: VersioningApi = {
   sortVersions,
   subset,
   intersects,
-};
+} satisfies VersioningApi;
 
 export default api;

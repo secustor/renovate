@@ -71,8 +71,8 @@ export function sortParsed(
 
     // Both have prerelease -> compare beta numbers
     if (hasPreA && hasPreB) {
-      const numA = channelA.prerelease!.number ?? 0;
-      const numB = channelB.prerelease!.number ?? 0;
+      const numA = channelA.prerelease?.number ?? 0;
+      const numB = channelB.prerelease?.number ?? 0;
       if (numA !== numB) {
         return numA - numB;
       }

@@ -9,8 +9,8 @@ export const supportsRanges = false;
 
 function isLessThanRange(version: string, range: string): boolean {
   return poetry.isValid(range)
-    ? poetry.isLessThanRange!(version, range)
-    : pep440.isLessThanRange!(version, range);
+    ? poetry.isLessThanRange(version, range)
+    : pep440.isLessThanRange(version, range);
 }
 
 function isValid(input: string): boolean {
@@ -47,7 +47,7 @@ function getNewValue(newValue: NewValueConfig): string | null {
 
 function subset(subRange: string, superRange: string): boolean | undefined {
   return poetry.isValid(subRange) && poetry.isValid(superRange)
-    ? poetry.subset!(subRange, superRange)
+    ? poetry.subset(subRange, superRange)
     : undefined;
 }
 

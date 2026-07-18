@@ -182,8 +182,8 @@ function getNewValue({
       );
     }
     const parsedRange = parseRange(npmCurrentValue);
-    const element = parsedRange.at(-1)!;
-    if (parsedRange.length === 1 && element.operator) {
+    const element = parsedRange.at(-1);
+    if (parsedRange.length === 1 && element?.operator) {
       if (element.operator === '^') {
         const version = handleShort('^', npmCurrentValue, newVersion);
         if (version) {
@@ -243,10 +243,10 @@ function sortVersions(a: string, b: string): number {
 }
 
 function subset(subRange: string, superRange: string): boolean | undefined {
-  return npm.subset!(poetry2npm(subRange), poetry2npm(superRange));
+  return npm.subset(poetry2npm(subRange), poetry2npm(superRange));
 }
 
-export const api: VersioningApi = {
+export const api = {
   equals,
   getMajor,
   getMinor,
@@ -264,5 +264,5 @@ export const api: VersioningApi = {
   minSatisfyingVersion,
   sortVersions,
   subset,
-};
+} satisfies VersioningApi;
 export default api;
