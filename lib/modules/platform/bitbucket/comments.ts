@@ -164,7 +164,7 @@ export async function ensureCommentRemoval(
       const byTopic = (comment: Comment): boolean =>
         comment.content.raw.startsWith(`### ${deleteConfig.topic}\n\n`);
       commentId = comments.find(byTopic)?.id;
-    } else if (deleteConfig.type === 'by-content') {
+    } else {
       const byContent = (comment: Comment): boolean =>
         comment.content.raw.trim() === deleteConfig.content;
       commentId = comments.find(byContent)?.id;

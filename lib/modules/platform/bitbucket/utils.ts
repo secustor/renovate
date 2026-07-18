@@ -50,13 +50,21 @@ export function prInfo(pr: PrResponse): Pr {
   return {
     number: pr.id,
     bodyStruct: getPrBodyStruct(pr.summary?.raw),
-    sourceBranch: pr.source?.branch?.name,
-    targetBranch: pr.destination?.branch?.name,
+    // `Pr.sourceBranch`/`targetBranch` are contractually always a real
+    // `string`; `source`/`destination` can genuinely be missing on some
+    // responses (see the PrResponse type), so fall back to '' rather than
+    // silently letting `undefined` slip through the required field.
+    sourceBranch: pr.source?.branch?.name ?? '',
+    targetBranch: pr.destination?.branch?.name ?? '',
     title: pr.title,
+    // `state` can genuinely be missing (see the PrResponse type); fall back
+    // to '' rather than letting `undefined` slip through the required
+    // `Pr.state: string` field.
     // v8 ignore start -- TODO: add test #40625
-    state: prStates.closed?.includes(pr.state)
-      ? 'closed'
-      : pr.state?.toLowerCase(),
+    state:
+      pr.state && prStates.closed.includes(pr.state)
+        ? 'closed'
+        : (pr.state?.toLowerCase() ?? ''),
     // v8 ignore stop
     createdAt: pr.created_on,
   };

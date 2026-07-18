@@ -181,7 +181,7 @@ export async function initPlatform({
         )
       ).body;
 
-      if (!emailAddress?.length) {
+      if (!emailAddress.length) {
         throw new Error(`No email address configured for username ${username}`);
       }
 
@@ -330,8 +330,11 @@ export async function getBranchForceRebase(
   _branchName: string,
 ): Promise<boolean> {
   // https://docs.atlassian.com/bitbucket-server/rest/7.0.1/bitbucket-rest.html#idp342
+  // `getJsonUnchecked`: no runtime schema validation, and a repo without a
+  // customized merge configuration can genuinely omit `mergeConfig`, so keep
+  // these honestly optional rather than dropping the `?.` guards below.
   const res = await bitbucketServerHttp.getJsonUnchecked<{
-    mergeConfig: { defaultStrategy: { id: string } };
+    mergeConfig?: { defaultStrategy?: { id: string } };
   }>(
     `./rest/api/1.0/projects/${config.projectKey}/repos/${config.repositorySlug}/settings/pull-requests`,
   );
@@ -340,9 +343,7 @@ export async function getBranchForceRebase(
   // if it is up to date with the base branch.
   // The current options for id are:
   // no-ff, ff, ff-only, rebase-no-ff, rebase-ff-only, squash, squash-ff-only
-  return Boolean(
-    res.body?.mergeConfig?.defaultStrategy?.id.includes('ff-only'),
-  );
+  return Boolean(res.body.mergeConfig?.defaultStrategy?.id.includes('ff-only'));
 }
 
 // Gets details for a PR
@@ -989,7 +990,7 @@ export async function ensureCommentRemoval(
       const byTopic = (comment: Comment): boolean =>
         comment.text.startsWith(`### ${deleteConfig.topic}\n\n`);
       commentId = comments.find(byTopic)?.id;
-    } else if (deleteConfig.type === 'by-content') {
+    } else {
       const byContent = (comment: Comment): boolean =>
         comment.text.trim() === deleteConfig.content;
       commentId = comments.find(byContent)?.id;
@@ -1005,8 +1006,7 @@ export async function ensureCommentRemoval(
 
 // Pull Request
 
-const escapeHash = (input: string): string =>
-  input?.replace(regEx(/#/g), '%23');
+const escapeHash = (input: string): string => input.replace(regEx(/#/g), '%23');
 
 export async function createPr({
   sourceBranch,
@@ -1370,7 +1370,7 @@ async function getUsersFromReviewerGroup(groupName: string): Promise<string[]> {
 
   // First, try to find a repo-scoped group with this name
   const repoGroup = allGroups.find(
-    (group) => group.name === groupName && group.scope?.type === 'REPOSITORY',
+    (group) => group.name === groupName && group.scope.type === 'REPOSITORY',
   );
 
   if (repoGroup) {
@@ -1381,7 +1381,7 @@ async function getUsersFromReviewerGroup(groupName: string): Promise<string[]> {
 
   // If no repo-level group, fall back to project-level group
   const projectGroup = allGroups.find(
-    (group) => group.name === groupName && group.scope?.type === 'PROJECT',
+    (group) => group.name === groupName && group.scope.type === 'PROJECT',
   );
 
   if (projectGroup) {

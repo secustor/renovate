@@ -51,20 +51,28 @@ export interface BitbucketStatus {
 export interface PrResponse {
   id: number;
   title: string;
-  state: string;
+  // Genuinely absent on some responses in practice (e.g. the minimal
+  // `{ id }` body returned right after `POST .../pullrequests`, see
+  // index.spec.ts's "pr cache gets updated after a pr is created"), so
+  // keep optional rather than asserting always present.
+  state?: string;
   links: {
     commits: {
       href: string;
     };
   };
   summary?: { raw: string };
-  source: {
-    branch: {
+  // Genuinely absent on some responses in practice (e.g. the minimal
+  // `{ id }` body returned right after `POST .../pullrequests`, see
+  // index.spec.ts's "pr cache gets updated after a pr is created"), so
+  // keep these optional rather than asserting them always present.
+  source?: {
+    branch?: {
       name: string;
     };
   };
-  destination: {
-    branch: {
+  destination?: {
+    branch?: {
       name: string;
     };
   };

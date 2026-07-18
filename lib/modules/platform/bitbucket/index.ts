@@ -258,7 +258,7 @@ export async function initRepo({
         await bitbucketHttp.getJsonUnchecked<RepoBranchingModel>(
           `/2.0/repositories/${repository}/branching-model`,
         )
-      ).body.development?.branch?.name;
+      ).body.development.branch?.name;
 
       if (developmentBranch) {
         mainBranch = developmentBranch;
@@ -417,12 +417,16 @@ export async function findPr({
 
 // Gets details for a PR
 export async function getPr(prNo: number): Promise<Pr | null> {
+  // `getJsonUnchecked` performs no runtime validation, and a non-JSON/empty
+  // response body (e.g. an auth-proxy sign-in page) resolves to `null`
+  // instead of throwing, so keep this honestly nullable rather than
+  // dropping the guard below.
   const pr = (
     await bitbucketHttp.getJsonUnchecked<PrResponse>(
       `/2.0/repositories/${config.repository}/pullrequests/${prNo}`,
       { cacheProvider: aggressiveRepoCacheProvider },
     )
-  ).body;
+  ).body as PrResponse | null;
 
   /* v8 ignore next */
   if (!pr) {
@@ -442,8 +446,7 @@ export async function getPr(prNo: number): Promise<Pr | null> {
   return res;
 }
 
-const escapeHash = (input: string): string =>
-  input?.replace(regEx(/#/g), '%23');
+const escapeHash = (input: string): string => input.replace(regEx(/#/g), '%23');
 
 // Return the commit SHA for a branch
 async function getBranchCommit(
@@ -523,7 +526,7 @@ export async function getBranchStatus(
     !internalChecksAsSuccess &&
     statuses.every(
       (status) =>
-        status.state === 'SUCCESSFUL' && status.key?.startsWith('renovate/'),
+        status.state === 'SUCCESSFUL' && status.key.startsWith('renovate/'),
     )
   ) {
     logger.debug(
@@ -534,7 +537,11 @@ export async function getBranchStatus(
   return 'green';
 }
 
-const bbToRenovateStatusMapping: Record<string, BranchStatus> = {
+// `Partial<...>` (rather than a fully exhaustive `Record<string, ...>`):
+// `context` is arbitrary, so a lookup miss is real, not just a type-level
+// nicety (see "getBranchStatusCheck 3" in the spec, which looks up a
+// context that has no matching status at all).
+const bbToRenovateStatusMapping: Partial<Record<string, BranchStatus>> = {
   SUCCESSFUL: 'green',
   INPROGRESS: 'yellow',
   FAILED: 'red',
@@ -546,8 +553,7 @@ export async function getBranchStatusCheck(
 ): Promise<BranchStatus | null> {
   const statuses = await getStatus(branchName);
   const bbState = statuses.find((status) => status.key === context)?.state;
-  // TODO #22198
-  return bbToRenovateStatusMapping[bbState!] || null;
+  return (bbState && bbToRenovateStatusMapping[bbState]) ?? null;
 }
 
 export async function setBranchStatus({
@@ -600,15 +606,12 @@ async function findOpenIssues(title: string): Promise<BbIssue[]> {
       filters.push(`reporter.uuid="${renovateUserUuid}"`);
     }
     const filter = encodeURIComponent(filters.join(' AND '));
-    // v8 ignore next -- TODO: add test #40625
     return (
-      (
-        await bitbucketHttp.getJsonUnchecked<{ values: BbIssue[] }>(
-          `/2.0/repositories/${config.repository}/issues?q=${filter}`,
-          { cacheProvider: aggressiveRepoCacheProvider },
-        )
-      ).body.values || []
-    );
+      await bitbucketHttp.getJsonUnchecked<{ values: BbIssue[] }>(
+        `/2.0/repositories/${config.repository}/issues?q=${filter}`,
+        { cacheProvider: aggressiveRepoCacheProvider },
+      )
+    ).body.values;
   } catch (err) /* v8 ignore next */ {
     logger.warn({ err }, 'Error finding issues');
     return [];
@@ -856,7 +859,7 @@ export async function getIssueList(): Promise<Issue[]> {
     const res = await bitbucketHttp.getJsonUnchecked<{ values: Issue[] }>(url, {
       cacheProvider: repoCacheProvider,
     });
-    return res.body.values || [];
+    return res.body.values;
   } catch (err) {
     logger.warn({ err }, 'Error finding issues');
     return [];
@@ -1247,7 +1250,7 @@ export async function updatePr({
     }
   }
 
-  if (state === 'closed' && pr) {
+  if (state === 'closed') {
     await bitbucketHttp.postJson(
       `/2.0/repositories/${config.repository}/pullrequests/${prNo}/decline`,
     );

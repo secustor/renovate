@@ -9,7 +9,13 @@ import { regEx } from '../../../util/regex.ts';
 import { ensureTrailingSlash, parseUrl } from '../../../util/url.ts';
 import { getPrBodyStruct } from '../pr-body.ts';
 import type { GitUrlOption } from '../types.ts';
-import type { BbsPr, BbsRestPr, BbsRestRepo, BitbucketError } from './types.ts';
+import type {
+  BbsPr,
+  BbsRestPr,
+  BbsRestRepo,
+  BitbucketError,
+  BitbucketErrorResponse,
+} from './types.ts';
 
 export const BITBUCKET_INVALID_REVIEWERS_EXCEPTION =
   'com.atlassian.bitbucket.pull.InvalidPullRequestReviewersException';
@@ -51,8 +57,20 @@ export interface BitbucketStatus {
   state: BitbucketBranchState;
 }
 
+// `got`'s `Response<T>.body` type claims `body` is always `T`, but callers
+// construct/mock `BitbucketError` objects that don't always go through a
+// real request (see utils.spec.ts's `createError()`), so `body` can
+// genuinely be missing.
+function getErrors(
+  err: BitbucketError,
+): NonNullable<BitbucketErrorResponse['errors']> {
+  return (
+    (err.response.body as BitbucketErrorResponse | undefined)?.errors ?? []
+  );
+}
+
 export function isInvalidReviewersResponse(err: BitbucketError): boolean {
-  const errors = err?.response?.body?.errors ?? [];
+  const errors = getErrors(err);
   return (
     errors.length > 0 &&
     errors.every(
@@ -62,7 +80,7 @@ export function isInvalidReviewersResponse(err: BitbucketError): boolean {
 }
 
 export function getInvalidReviewers(err: BitbucketError): string[] {
-  const errors = err?.response?.body?.errors ?? [];
+  const errors = getErrors(err);
   let invalidReviewers: string[] = [];
   for (const error of errors) {
     // v8 ignore else -- TODO: add test #40625
@@ -191,5 +209,5 @@ export function parseModifier(value: string): number | null {
   if (!match) {
     return null;
   }
-  return parseInt(match[1] ?? '1', 10);
+  return parseInt(match.at(1) ?? '1', 10);
 }
