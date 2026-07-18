@@ -4,7 +4,7 @@ import * as hostRules from '../../../util/host-rules.ts';
 import { regEx } from '../../../util/regex.ts';
 import { parseUrl } from '../../../util/url.ts';
 import type { GitUrlOption, Pr } from '../types.ts';
-import type { PrMergeMethod, Repo } from './schema.ts';
+import type { Link, PrMergeMethod, Repo } from './schema.ts';
 import type { PrFilterByState } from './types.ts';
 
 export function mapPrState(
@@ -41,7 +41,10 @@ export function getRepoUrl(
   gitUrl: GitUrlOption | undefined,
   endpoint: string,
 ): string {
-  const protocolLinks = repo._links.protocol;
+  // `_links` is a zod `z.record(...)`, which (like `Record<string, ...>`)
+  // claims every key is present, but this is looked up by a specific
+  // well-known key and can genuinely be missing.
+  const protocolLinks = repo._links.protocol as Link | Link[] | undefined;
 
   if (!protocolLinks) {
     throw new Error('Missing protocol links.');

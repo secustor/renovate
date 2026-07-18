@@ -36,19 +36,19 @@ export async function ensureCommentRemoval(
   const repoCache = getCache();
 
   const { type, number } = config;
+  const cachedTopics = repoCache.prComments?.[number];
   // v8 ignore else -- TODO: add test #40625
-  if (repoCache.prComments?.[number]) {
-    // v8 ignore else -- TODO: add test #40625
+  if (cachedTopics) {
     if (type === 'by-topic') {
-      delete repoCache.prComments?.[number]?.[config.topic];
-    } else if (type === 'by-content') {
+      delete cachedTopics[config.topic];
+    } else {
       const contentHash = hash(config.content);
       for (const [cachedTopic, cachedContentHash] of Object.entries(
-        repoCache.prComments?.[number],
+        cachedTopics,
       )) {
         // v8 ignore else -- TODO: add test #40625
         if (cachedContentHash === contentHash) {
-          delete repoCache.prComments?.[number]?.[cachedTopic];
+          delete cachedTopics[cachedTopic];
           return;
         }
       }

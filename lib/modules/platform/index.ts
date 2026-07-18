@@ -53,16 +53,13 @@ export async function initPlatform(config: AllConfig): Promise<AllConfig> {
   const returnConfig: any = {
     ...config,
     ...platformInfo,
-    hostRules: [
-      ...(platformInfo?.hostRules ?? []),
-      ...(config.hostRules ?? []),
-    ],
+    hostRules: [...(platformInfo.hostRules ?? []), ...(config.hostRules ?? [])],
   };
   // v8 ignore else -- TODO: add test #40625
-  if (config?.gitAuthor) {
+  if (config.gitAuthor) {
     logger.debug(`Using configured gitAuthor (${config.gitAuthor})`);
     returnConfig.gitAuthor = config.gitAuthor;
-  } else if (platformInfo?.gitAuthor) {
+  } else if (platformInfo.gitAuthor) {
     logger.debug(`Using platform gitAuthor: ${String(platformInfo.gitAuthor)}`);
     returnConfig.gitAuthor = platformInfo.gitAuthor;
   }
