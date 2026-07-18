@@ -186,8 +186,14 @@ export async function updateArtifacts({
     }
 
     const status = await getRepoStatus();
+    /* oxlint-disable typescript/no-unnecessary-condition -- getRepoStatus()'s real
+       return type is always a StatusResult, but several specs in artifacts.spec.ts
+       call updateArtifacts without stubbing `git.getRepoStatus`, so it resolves
+       undefined under test (confirmed: removing this guard throws "Cannot read
+       properties of undefined (reading 'not_added')" in 7 specs). */
     const chartsAddition = status?.not_added ?? [];
     const chartsDeletion = status?.deleted ?? [];
+    /* oxlint-enable typescript/no-unnecessary-condition */
 
     const fileChanges: UpdateArtifactsResult[] = [];
 
