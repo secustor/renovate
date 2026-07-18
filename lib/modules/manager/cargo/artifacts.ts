@@ -113,7 +113,7 @@ async function updateArtifactsImpl(
   }
 
   const { isLockFileMaintenance } = config;
-  if (!isLockFileMaintenance && !updatedDeps?.length) {
+  if (!isLockFileMaintenance && !updatedDeps.length) {
     logger.debug('No more dependencies to update');
     return [
       {

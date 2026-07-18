@@ -56,11 +56,16 @@ export async function updateArtifacts({
   updatedDeps,
   config,
 }: UpdateArtifact): Promise<UpdateArtifactsResult[] | null> {
-  if (updatedDeps?.length !== 1) {
+  // UpdateArtifact.updatedDeps is typed as a required array, but a spec
+  // ("reports an error updated deps is undefined") deliberately calls this
+  // with `updatedDeps: null as never` to verify graceful handling of a
+  // malformed call, so this is cast rather than relying on the real type.
+  const deps = updatedDeps as typeof updatedDeps | null | undefined;
+  if (deps?.length !== 1) {
     // Each answers file (~ packageFileName) has exactly one dependency to update.
     return artifactError(
       packageFileName,
-      `Unexpected number of dependencies: ${updatedDeps?.length} (should be 1)`,
+      `Unexpected number of dependencies: ${deps?.length} (should be 1)`,
     );
   }
 
