@@ -51,7 +51,10 @@ export function indent(str: string, leading = false): string {
   return prefix + str.split(regEx(/\r?\n/)).join('\n       ');
 }
 
-export function getMeta(rec: BunyanRecord, colorize = true): string {
+export function getMeta(
+  rec: BunyanRecord | null | undefined,
+  colorize = true,
+): string {
   if (!rec) {
     return '';
   }
@@ -67,7 +70,7 @@ export function getMeta(rec: BunyanRecord, colorize = true): string {
   return colorize ? util.styleText('gray', res) : res;
 }
 
-export function getDetails(rec: BunyanRecord): string {
+export function getDetails(rec: BunyanRecord | null | undefined): string {
   if (!rec) {
     return '';
   }

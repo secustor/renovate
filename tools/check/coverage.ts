@@ -105,10 +105,12 @@ function extractFileCoverage(
       continue;
     }
 
-    const stmt = statementMap[stmtId];
-    if (!stmt) {
+    // `s` and `statementMap` are separate records in the coverage JSON, so a
+    // statement id may be missing from `statementMap`
+    if (!(stmtId in statementMap)) {
       continue;
     }
+    const stmt = statementMap[stmtId];
 
     for (let line = stmt.start.line; line <= stmt.end.line; line++) {
       uncoveredLineSet.add(line);

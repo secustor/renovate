@@ -197,9 +197,9 @@ function parseCliArgs(): CliArgs {
   });
 
   return {
-    all: values.all ?? false,
-    fix: values.fix ?? false,
-    noTest: values['no-test'] ?? false,
+    all: values.all,
+    fix: values.fix,
+    noTest: values['no-test'],
     targets: positionals,
   };
 }

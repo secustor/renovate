@@ -24,7 +24,9 @@ const ICONS = {
   SPINNER: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'] as const,
 } as const;
 
-export const isTTY = process.stdout.isTTY ?? false;
+// `isTTY` is `undefined` (not `false`) when stdout is not a TTY, despite the
+// `boolean` type claimed by @types/node, so coerce instead of defaulting.
+export const isTTY = !!(process.stdout.isTTY as boolean | undefined);
 
 export function formatCompletedLine(
   name: string,

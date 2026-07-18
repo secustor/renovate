@@ -138,7 +138,7 @@ export async function generateManagers(
       }
       md += `For details on how to extend a manager's \`managerFilePatterns\` value, please follow [this link](../index.md#file-matching).\n\n`;
       md += '## Supported datasources\n\n';
-      const escapedDatasources = (supportedDatasources || [])
+      const escapedDatasources = supportedDatasources
         .map(
           (datasource) =>
             `[\`${datasource}\`](../../datasource/${datasource}/index.md)`,
@@ -228,7 +228,9 @@ export async function generateManagers(
       .map(getManagerLink)
       .join(', ');
     const displayName =
-      CategoryNames[category as Category] ?? noCategoryDisplayName;
+      category === noCategoryID
+        ? noCategoryDisplayName
+        : CategoryNames[category as Category];
     const massagedCategory =
       category === noCategoryID ? 'n/a' : `\`${category}\``;
     categoryText += `| ${displayName} | ${massagedCategory} | ${managerLinkList} | \n`;

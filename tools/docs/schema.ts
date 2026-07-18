@@ -357,7 +357,7 @@ export async function generateSchema(
       return true;
     }
 
-    if (o.globalOnly && o.inheritConfigSupport) {
+    if (o.inheritConfigSupport) {
       const allowed = isInherit || isGlobal;
       if (!allowed) {
         schema.not ??= {
@@ -371,21 +371,17 @@ export async function generateSchema(
       return isInherit || isGlobal;
     }
 
-    if (o.globalOnly) {
-      if (!isGlobal) {
-        schema.not ??= {
-          anyOf: [],
-        };
-        // we have to use `anyOf` here with each rule, so any of the properties can be found in isolation, and will be excluded
-        schema.not.anyOf.push({
-          required: [o.name],
-        });
-      }
-      return isGlobal;
+    // globalOnly options without inheritConfigSupport
+    if (!isGlobal) {
+      schema.not ??= {
+        anyOf: [],
+      };
+      // we have to use `anyOf` here with each rule, so any of the properties can be found in isolation, and will be excluded
+      schema.not.anyOf.push({
+        required: [o.name],
+      });
     }
-
-    // we don't currently have any config options that are hitting this, but to be safe, let's throw an error if we ever hit this
-    throw new Error(`Unhandled case for \`${o.name}\``);
+    return isGlobal;
   });
 
   configurationOptions.sort((a, b) => {

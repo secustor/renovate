@@ -97,9 +97,9 @@ const updateTypeConfidenceMapping: Record<UpdateType, MergeConfidence | null> =
 export async function getMergeConfidenceLevel(
   datasource: string,
   packageName: string,
-  currentVersion: string,
-  newVersion: string,
-  updateType: UpdateType,
+  currentVersion: string | undefined,
+  newVersion: string | undefined,
+  updateType: UpdateType | undefined,
 ): Promise<MergeConfidence | undefined> {
   return await instrument(
     'getMergeConfidenceLevel',
@@ -268,7 +268,7 @@ export function getApiToken(): string | undefined {
   return hostRules.find({
     url: apiBaseUrl,
     hostType,
-  })?.token;
+  }).token;
 }
 
 /**

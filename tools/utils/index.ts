@@ -51,7 +51,7 @@ export async function updateFile(file: string, code: string): Promise<void> {
     if (!code) {
       logger.error({ file }, 'Missing content');
     }
-    await fs.outputFile(file, code ?? '', { encoding: 'utf8' });
+    await fs.outputFile(file, code, { encoding: 'utf8' });
   }
   newFiles.add(file);
 }

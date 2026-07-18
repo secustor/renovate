@@ -9,7 +9,7 @@ export function withSanitizer(streamConfig: BunyanStream): BunyanStream {
     throw new Error("Rotating files aren't supported");
   }
 
-  const stream = streamConfig.stream as BunyanNodeStream;
+  const stream = streamConfig.stream as BunyanNodeStream | undefined;
   if (stream?.writable) {
     const write = (
       chunk: BunyanRecord,

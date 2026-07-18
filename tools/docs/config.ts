@@ -277,7 +277,7 @@ function generateLockFileTable(): string {
   for (const [name, definition] of allManagers) {
     if (
       definition.supportsLockFileMaintenance &&
-      definition.lockFileNames?.length
+      definition.lockFileNames.length
     ) {
       rows.push({ name, lockFiles: definition.lockFileNames });
     }
@@ -355,9 +355,6 @@ function generateToolsForConstraints(): string {
   output += '| --- | --- | --- | --- |\n';
   for (const toolDef of toolDefinitions) {
     const toolConfig = getToolConfig(toolDef.name);
-    if (!toolConfig) {
-      continue;
-    }
     const def: ConstraintDefinition = toolDef;
     // Newlines in the Markdown-rendered table will break table rendering
     const desc = def.description?.replaceAll('\n', '<br>') ?? '';
@@ -416,14 +413,14 @@ export async function generateConfig(dist: string, bot = false): Promise<void> {
       for (const parent of option.parents ?? []) {
         if (parent !== '.') {
           const key = `${parent}.${option.name}`;
-          if (indexed[key]) {
+          if (key in indexed) {
             lookupKeys.push(key);
           }
         }
       }
       // Fall back to plain name for top-level ## options (e.g. enabled, managerFilePatterns)
       if (lookupKeys.length === 0) {
-        if (!indexed[option.name]) {
+        if (!(option.name in indexed)) {
           throw new Error(
             `Config option "${option.name}" is missing an entry in ${configFile}`,
           );

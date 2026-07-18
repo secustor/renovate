@@ -134,10 +134,6 @@ function extractIssues(items: ItemsEntity[], labelPrefix: string): OpenItems {
 
   for (const item of items) {
     const type = item.issueType;
-
-    if (!type) {
-      continue;
-    }
     const label = item.labels
       .find((l) => l.name.startsWith(labelPrefix))
       ?.name.split(':')[1];

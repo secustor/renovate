@@ -92,6 +92,7 @@ program
       logger.info('* running mkdocs serve');
       activeChild = spawnServe();
       const res = await activeChild;
+      // oxlint-disable-next-line typescript/no-unnecessary-condition -- shouldRestart is set by the fs.watch callback while the child process is awaited, which narrowing cannot see
       if (!shouldRestart) {
         checkResult(res);
         break;

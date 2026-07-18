@@ -104,28 +104,23 @@ export async function exportStats(config: RenovateConfig): Promise<void> {
       return;
     }
 
-    // v8 ignore else -- TODO: add test #40625
-    if (config.reportType === 's3') {
-      const s3Url = parseS3Url(config.reportPath!);
-      if (isNullOrUndefined(s3Url)) {
-        logger.warn(
-          { reportPath: config.reportPath },
-          'Failed to parse s3 URL',
-        );
-        return;
-      }
-
-      const s3Params: PutObjectCommandInput = {
-        Bucket: s3Url.Bucket,
-        Key: s3Url.Key,
-        Body: await getReportBody(config),
-        ContentType: 'application/json',
-      };
-
-      const client = getS3Client(config.s3Endpoint, config.s3PathStyle);
-      const command = new PutObjectCommand(s3Params);
-      await client.send(command);
+    // only 's3' is left at this point
+    const s3Url = parseS3Url(config.reportPath!);
+    if (isNullOrUndefined(s3Url)) {
+      logger.warn({ reportPath: config.reportPath }, 'Failed to parse s3 URL');
+      return;
     }
+
+    const s3Params: PutObjectCommandInput = {
+      Bucket: s3Url.Bucket,
+      Key: s3Url.Key,
+      Body: await getReportBody(config),
+      ContentType: 'application/json',
+    };
+
+    const client = getS3Client(config.s3Endpoint, config.s3PathStyle);
+    const command = new PutObjectCommand(s3Params);
+    await client.send(command);
   } catch (err) {
     logger.warn({ err }, 'Reporting.exportStats() - failure');
   }
