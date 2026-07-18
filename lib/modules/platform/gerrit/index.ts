@@ -33,7 +33,11 @@ import { repoFingerprint } from '../util.ts';
 import { smartTruncate } from '../utils/pr-body.ts';
 import { readOnlyIssueBody } from '../utils/read-only-issue-body.ts';
 import { client } from './client.ts';
-import type { GerritLabelTypeInfo, GerritProjectInfo } from './schema.ts';
+import type {
+  GerritLabelInfo,
+  GerritLabelTypeInfo,
+  GerritProjectInfo,
+} from './schema.ts';
 import { configureScm, pushForReview } from './scm.ts';
 import {
   MAX_GERRIT_COMMENT_SIZE,
@@ -56,7 +60,10 @@ let config: {
   repository?: string;
   head?: string;
   config?: GerritProjectInfo;
-  labels: Record<string, GerritLabelTypeInfo>;
+  // Honestly optional value type: a plain `Record<string, ...>` claims
+  // every key is present, but this is looked up by arbitrary
+  // `context`/label name and is frequently missing one.
+  labels: Record<string, GerritLabelTypeInfo | undefined>;
   gerritUsername?: string;
 } = {
   labels: {},
@@ -418,7 +425,14 @@ export async function getBranchStatusCheck(
     ).pop();
     // v8 ignore else -- TODO: add test #40625
     if (change) {
-      const label = change.labels![context];
+      // Honestly optional value type: `change.labels` is a zod
+      // `z.record(...)`, which (like `Record<string, T>`) claims every key
+      // is present, but this is looked up by arbitrary label name and is
+      // frequently missing one.
+      const labelsByName = change.labels as
+        | Record<string, GerritLabelInfo | undefined>
+        | undefined;
+      const label = labelsByName?.[context];
       // v8 ignore else -- TODO: add test #40625
       if (label) {
         // Check for rejected or blocking first, as a label could have both rejected and approved

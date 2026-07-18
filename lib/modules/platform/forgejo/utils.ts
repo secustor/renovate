@@ -12,12 +12,12 @@ import type { PR, PRMergeMethod, Repo } from './schema.ts';
 
 export function smartLinks(body: string): string {
   return body
-    ?.replace(regEx(/\]\(\.\.\/issues\//g), '](issues/')
+    .replace(regEx(/\]\(\.\.\/issues\//g), '](issues/')
     .replace(regEx(/\]\(\.\.\/pull\//g), '](pulls/');
 }
 
 export function trimTrailingApiPath(url: string): string {
-  return url?.replace(regEx(/api\/v1\/?$/g), '');
+  return url.replace(regEx(/api\/v1\/?$/g), '');
 }
 
 export function getRepoUrl(
@@ -93,8 +93,8 @@ export function toRenovatePR(data: PR, author: string | null): Pr | null {
   if (
     !data.base?.ref ||
     !data.head?.label ||
-    !data.head?.sha ||
-    !data.head?.repo?.full_name
+    !data.head.sha ||
+    !data.head.repo?.full_name
   ) {
     logger.trace(
       `Skipping Pull Request #${data.number} due to missing base and/or head branch`,

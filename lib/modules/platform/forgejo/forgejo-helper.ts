@@ -2,6 +2,7 @@ import { isBoolean } from '@sindresorhus/is';
 import { z } from 'zod/v4';
 import { logger } from '../../../logger/index.ts';
 import type { BranchStatus } from '../../../types/index.ts';
+import { isNotNullOrUndefined } from '../../../util/array.ts';
 import { getCache } from '../../../util/cache/repository/index.ts';
 import type { ForgejoHttpOptions } from '../../../util/http/forgejo.ts';
 import { ForgejoHttp } from '../../../util/http/forgejo.ts';
@@ -472,9 +473,13 @@ export const forgejoToRenovateStatusMapping: Record<
   error: 'red',
 };
 
-export const renovateToForgejoStatusMapping: Record<
-  BranchStatus,
-  CommitStatusType
+// `Partial<...>` (rather than a fully exhaustive `Record`): despite the
+// `BranchStatus` type claiming only 'green'/'yellow'/'red' reach here,
+// callers are not fully trustworthy about it (see the "should default to
+// pending state" spec, which passes an invalid state on purpose), so a
+// lookup miss is real and must fall back to 'pending' at the call site.
+export const renovateToForgejoStatusMapping: Partial<
+  Record<BranchStatus, CommitStatusType>
 > = {
   green: 'success',
   yellow: 'pending',
@@ -482,13 +487,17 @@ export const renovateToForgejoStatusMapping: Record<
 };
 
 function filterStatus(data: CommitStatus[]): CommitStatus[] {
-  const ret: Record<string, CommitStatus> = {};
+  // Honestly optional value type: plain `Record<string, CommitStatus>`
+  // claims every key is present, but this map starts empty and is filled
+  // in incrementally below.
+  const ret: Record<string, CommitStatus | undefined> = {};
   for (const i of data) {
-    if (!ret[i.context] || ret[i.context].id < i.id) {
+    const existing = ret[i.context];
+    if (!existing || existing.id < i.id) {
       ret[i.context] = i;
     }
   }
-  return Object.values(ret);
+  return Object.values(ret).filter(isNotNullOrUndefined);
 }
 
 export async function getCombinedCommitStatus(
