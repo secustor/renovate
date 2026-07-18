@@ -70,8 +70,12 @@ abstract class PrivateKey {
 
   async configSigningKey(cwd: string): Promise<void> {
     logger.debug('gitPrivateKey: configuring commit signing');
-    // TODO: types (#22198)
-    await exec(`git config user.signingkey ${this.keyId!}`, { cwd });
+    const { keyId } = this;
+    /* v8 ignore if -- keyId is always set by writeKey() before this call */
+    if (!keyId) {
+      throw new Error(PLATFORM_GPG_FAILED);
+    }
+    await exec(`git config user.signingkey ${keyId}`, { cwd });
     await exec(`git config commit.gpgsign true`, { cwd });
     await exec(`git config gpg.format ${this.gpgFormat}`, { cwd });
   }

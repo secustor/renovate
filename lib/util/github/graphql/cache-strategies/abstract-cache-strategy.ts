@@ -8,6 +8,15 @@ import type {
 } from '../types.ts';
 import { isDateExpired } from '../util.ts';
 
+function toISOString(date: DateTime): string {
+  const iso = date.toISO();
+  /* v8 ignore if -- toISO is only null for invalid dates, which are never constructed here */
+  if (!iso) {
+    throw new Error('Cannot convert invalid date to ISO string');
+  }
+  return iso;
+}
+
 /**
  * Cache strategy handles the caching Github GraphQL items
  * and reconciling them with newly obtained ones from paginated queries.
@@ -75,7 +84,7 @@ export abstract class AbstractGithubGraphqlCacheStrategy<
 
     let result: GithubGraphqlCacheRecord<GithubItem> = {
       items: {},
-      createdAt: this.createdAt.toISO()!,
+      createdAt: toISOString(this.createdAt),
     };
 
     const storedData = await this.load();
@@ -177,7 +186,7 @@ export abstract class AbstractGithubGraphqlCacheStrategy<
   private async store(cachedItems: Record<string, GithubItem>): Promise<void> {
     const cacheRecord: GithubGraphqlCacheRecord<GithubItem> = {
       items: cachedItems,
-      createdAt: this.createdAt.toISO()!,
+      createdAt: toISOString(this.createdAt),
     };
     await this.persist(cacheRecord);
   }

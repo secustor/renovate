@@ -159,7 +159,8 @@ export async function gitRetry<T>(gitFunc: () => Promise<T>): Promise<T> {
     round++;
   }
 
-  throw lastError!;
+  /* v8 ignore next -- the loop always returns or sets lastError first */
+  throw lastError ?? new Error('gitRetry: no rounds executed');
 }
 
 async function isDirectory(dir: string): Promise<boolean> {
@@ -179,11 +180,14 @@ async function getDefaultBranch(git: InstrumentedSimpleGit): Promise<string> {
     if (!res) {
       logger.debug('Could not determine default branch using git rev-parse');
       const headPrefix = 'HEAD branch: ';
-      res = (await git.raw(['remote', 'show', 'origin']))
+      const headLine = (await git.raw(['remote', 'show', 'origin']))
         .split('\n')
         .map((line) => line.trim())
-        .find((line) => line.startsWith(headPrefix))!
-        .replace(headPrefix, '');
+        .find((line) => line.startsWith(headPrefix));
+      if (!headLine) {
+        throw new Error('Could not determine default branch');
+      }
+      res = headLine.replace(headPrefix, '');
     }
 
     return res.replace('origin/', '').trim();
@@ -257,7 +261,7 @@ async function fetchBranchCommits(preferUpstream = true): Promise<void> {
   if (config.extraCloneOpts && !repoExists) {
     Object.entries(config.extraCloneOpts).forEach((e) =>
       // TODO: types (#22198)
-      opts.unshift(e[0], `${e[1]!}`),
+      opts.unshift(e[0], String(e[1])),
     );
   }
   try {
@@ -340,14 +344,14 @@ async function cleanLocalBranches(): Promise<void> {
 }
 
 export function setGitAuthor(gitAuthor: string | undefined): void {
-  const gitAuthorParsed = parseGitAuthor(
-    gitAuthor ?? 'Renovate Bot <renovate@whitesourcesoftware.com>',
-  );
+  const effectiveGitAuthor =
+    gitAuthor ?? 'Renovate Bot <renovate@whitesourcesoftware.com>';
+  const gitAuthorParsed = parseGitAuthor(effectiveGitAuthor);
   if (!gitAuthorParsed) {
     const error = new Error(CONFIG_VALIDATION);
     error.validationSource = 'None';
     error.validationError = 'Invalid gitAuthor';
-    error.validationMessage = `\`gitAuthor\` is not parsed as valid RFC5322 format: \`${gitAuthor!}\``;
+    error.validationMessage = `\`gitAuthor\` is not parsed as valid RFC5322 format: \`${effectiveGitAuthor}\``;
     throw error;
   }
   config.gitAuthorName = gitAuthorParsed.name;
@@ -522,7 +526,7 @@ export const syncGit = withInstrumenting(
           if (config.extraCloneOpts) {
             Object.entries(config.extraCloneOpts).forEach((e) =>
               // TODO: types (#22198)
-              opts.push(e[0], `${e[1]!}`),
+              opts.push(e[0], String(e[1])),
             );
           }
           const emptyDirAndClone = async (): Promise<void> => {
@@ -846,11 +850,14 @@ export async function getFileList(): Promise<string[]> {
     return [];
   }
   // submodules are starting with `160000 commit`
-  return files
-    .split(newlineRegex)
-    .filter(isString)
-    .filter((line) => line.startsWith('100'))
-    .map((line) => line.split(regEx(/\t/)).pop()!);
+  return (
+    files
+      .split(newlineRegex)
+      .filter(isString)
+      .filter((line) => line.startsWith('100'))
+      // the file name is everything after the last tab
+      .map((line) => line.slice(line.lastIndexOf('\t') + 1))
+  );
 }
 
 export function getBranchList(): string[] {
@@ -880,9 +887,15 @@ export async function isBranchBehindBase(
 
   await syncGit();
   try {
-    const behindCount = (
-      await git.raw(['rev-list', '--count', `${branchSha!}..${baseBranchSha!}`])
-    ).trim();
+    const behindCount =
+      // TODO: types (#22198) - the SHAs are only null when the branch is unknown
+      (
+        await git.raw([
+          'rev-list',
+          '--count',
+          `${String(branchSha)}..${String(baseBranchSha)}`,
+        ])
+      ).trim();
     isBehind = behindCount !== '0';
     logger.debug(
       { baseBranch, branchName },
@@ -1534,8 +1547,8 @@ export function getUrl({
   repository: string;
 }): string {
   if (protocol === 'ssh') {
-    // TODO: types (#22198)
-    return `git@${hostname!}:${repository}.git`;
+    // TODO: types (#22198) - hostname is always set for ssh URLs
+    return `git@${String(hostname)}:${repository}.git`;
   }
   return URL.format({
     protocol: protocol ?? 'https',

@@ -551,6 +551,15 @@ describe('util/git/auth', () => {
       });
     });
 
+    it('returns empty environment variables when matchHost cannot be parsed as URL', () => {
+      add({
+        hostType: 'github',
+        matchHost: 'invalid host',
+        token: 'token123',
+      });
+      expect(getGitEnvironmentVariables()).toStrictEqual({});
+    });
+
     it('returns empty environment variables when matchHost contains invalid protocol', () => {
       add({
         hostType: 'github',

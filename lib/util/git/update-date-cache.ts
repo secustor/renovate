@@ -32,5 +32,11 @@ export function setCachedUpdateDateResult(
     return;
   }
 
-  branch.commitTimestamp = updateDate.toISO()!;
+  const updateDateISO = updateDate.toISO();
+  if (!updateDateISO) {
+    logger.debug(`setCachedUpdateDateResult(): Invalid update date`);
+    return;
+  }
+
+  branch.commitTimestamp = updateDateISO;
 }

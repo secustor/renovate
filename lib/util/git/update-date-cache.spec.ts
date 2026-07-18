@@ -98,6 +98,19 @@ describe('util/git/update-date-cache', () => {
       );
     });
 
+    it('returns without updating when update date is invalid', () => {
+      repoCache.branches = [
+        partial<BranchCache>({ branchName: 'foo', sha: 'aaa' }),
+      ];
+      setCachedUpdateDateResult('foo', DateTime.invalid('reason'));
+      expect(repoCache.branches).toEqual([
+        partial<BranchCache>({ branchName: 'foo', sha: 'aaa' }),
+      ]);
+      expect(logger.logger.debug).toHaveBeenCalledExactlyOnceWith(
+        'setCachedUpdateDateResult(): Invalid update date',
+      );
+    });
+
     it('updates commitTimestamp', () => {
       const timestamp = '2023-05-20T14:25:30.123Z';
       repoCache.branches = [

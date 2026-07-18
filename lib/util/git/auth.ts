@@ -26,7 +26,23 @@ export function getGitAuthenticatedEnvironmentVariables(
   { token, username, password, hostType, matchHost }: HostRule,
   environmentVariables?: NodeJS.ProcessEnv,
 ): NodeJS.ProcessEnv {
-  if (!token && !(username && password)) {
+  let authenticationRules: AuthenticationRule[];
+  if (token) {
+    authenticationRules = getAuthenticationRulesWithToken(
+      originalGitUrl,
+      hostType,
+      token,
+    );
+  } else if (username && password) {
+    const encodedUsername = encodeURIComponent(username);
+    const encodedPassword = encodeURIComponent(password);
+
+    authenticationRules = getAuthenticationRules(
+      originalGitUrl,
+      hostType,
+      `${encodedUsername}:${encodedPassword}`,
+    );
+  } else {
     logger.warn(
       { host: matchHost },
       `Could not create environment variable for host as neither token or username and password was set`,
@@ -52,24 +68,6 @@ export function getGitAuthenticatedEnvironmentVariables(
       gitConfigCount = 0;
     }
   }
-  let authenticationRules: AuthenticationRule[];
-  if (token) {
-    authenticationRules = getAuthenticationRulesWithToken(
-      originalGitUrl,
-      hostType,
-      token,
-    );
-  } else {
-    const encodedUsername = encodeURIComponent(username!);
-    const encodedPassword = encodeURIComponent(password!);
-
-    authenticationRules = getAuthenticationRules(
-      originalGitUrl,
-      hostType,
-      `${encodedUsername}:${encodedPassword}`,
-    );
-  }
-
   // create a shallow copy of the environmentVariables as base so we don't modify the input parameter object
   // add the two new config key and value to the returnEnvironmentVariables object
   // increase the CONFIG_COUNT by one for each rule and add it to the object
@@ -195,9 +193,12 @@ export function getGitEnvironmentVariables(
   ]);
 
   // filter rules without `matchHost` and `token` or username and password and github api github rules
-  const hostRules = getAll()
-    .filter((r) => r.matchHost && (r.token ?? (r.username && r.password)))
-    .filter((r) => !gitHubHostRule || !githubApiUrls.has(r.matchHost!));
+  const hostRules = getAll().filter(
+    (r) =>
+      r.matchHost &&
+      (r.token ?? (r.username && r.password)) &&
+      (!gitHubHostRule || !githubApiUrls.has(r.matchHost)),
+  );
 
   // for each hostRule without hostType we add additional authentication variables to the environmentVariables
   // for each hostRule with hostType we add additional authentication variables to the environmentVariables
@@ -217,17 +218,22 @@ function addAuthFromHostRule(
   env: NodeJS.ProcessEnv,
 ): NodeJS.ProcessEnv {
   let environmentVariables = env;
-  const httpUrl = createURLFromHostOrURL(hostRule.matchHost!)?.toString();
-  if (isHttpUrl(httpUrl)) {
+  const matchHost = hostRule.matchHost;
+  /* v8 ignore if -- matchHost is filtered truthy by the caller */
+  if (!matchHost) {
+    return environmentVariables;
+  }
+  const httpUrl = createURLFromHostOrURL(matchHost)?.toString();
+  if (httpUrl && isHttpUrl(httpUrl)) {
     logger.trace(`Adding Git authentication for ${httpUrl} using token auth.`);
     environmentVariables = getGitAuthenticatedEnvironmentVariables(
-      httpUrl!,
+      httpUrl,
       hostRule,
       environmentVariables,
     );
   } else {
     logger.debug(
-      `Could not parse registryUrl ${hostRule.matchHost!} or not using http(s). Ignoring`,
+      `Could not parse registryUrl ${matchHost} or not using http(s). Ignoring`,
     );
   }
   return environmentVariables;
