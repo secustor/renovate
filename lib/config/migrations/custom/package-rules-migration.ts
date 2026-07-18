@@ -170,7 +170,7 @@ export class PackageRulesMigration extends AbstractMigration {
   override readonly propertyName = 'packageRules';
 
   override run(value: unknown): void {
-    let packageRules = this.get('packageRules')!;
+    let packageRules = this.get('packageRules');
     // v8 ignore else -- TODO: add test #40625
     if (isNonEmptyArray(packageRules)) {
       packageRules = packageRules.map(renameKeys);

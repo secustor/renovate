@@ -13,5 +13,13 @@ describe('config/validation-helpers/utils', () => {
     it('handles encrypted within array types', () => {
       expect(getParentName('hostRules[0].encrypted')).toBe('hostRules');
     });
+
+    it('returns the last segment of a dotted path', () => {
+      expect(getParentName('config.hostRules')).toBe('hostRules');
+    });
+
+    it('returns dot for undefined path', () => {
+      expect(getParentName(undefined)).toBe('.');
+    });
   });
 });

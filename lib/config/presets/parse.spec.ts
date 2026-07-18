@@ -564,5 +564,17 @@ describe('config/presets/parse', () => {
         presetSource: 'http',
       });
     });
+
+    it('throws when a scoped preset does not match the scope regex', () => {
+      expect(() => parsePreset('@foo\nbar')).toThrow('invalid preset');
+    });
+
+    it('throws when a subdirectory preset does not match the regex', () => {
+      expect(() => parsePreset('github>some/repo//')).toThrow('invalid preset');
+    });
+
+    it('throws when a git preset does not match the regex', () => {
+      expect(() => parsePreset('local>foo|bar')).toThrow('invalid preset');
+    });
   });
 });

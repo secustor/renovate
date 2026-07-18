@@ -12,13 +12,14 @@ import { regEx } from '../../util/regex.ts';
 import type { ValidationMessage } from '../types.ts';
 
 export function getParentName(parentPath: string | undefined): string {
-  return parentPath
-    ? parentPath
-        .replace(regEx(/\.?encrypted$/), '')
-        .replace(regEx(/\[\d+\]$/), '')
-        .split('.')
-        .pop()!
-    : '.';
+  if (!parentPath) {
+    return '.';
+  }
+  const cleanedPath = parentPath
+    .replace(regEx(/\.?encrypted$/), '')
+    .replace(regEx(/\[\d+\]$/), '');
+  // no dot means lastIndexOf is -1, so the whole string is returned
+  return cleanedPath.slice(cleanedPath.lastIndexOf('.') + 1);
 }
 
 export function validatePlainObject(

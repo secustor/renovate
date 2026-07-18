@@ -287,10 +287,11 @@ export async function validateConfig(
           !isIgnored(key) && // We need to ignore some reserved keys
           !(is as any).function(val) // Ignore all functions
         ) {
-          if (getDeprecationMessage(key)) {
+          const deprecationMessage = getDeprecationMessage(key);
+          if (deprecationMessage) {
             warnings.push({
               topic: 'Deprecation Warning',
-              message: getDeprecationMessage(key)!,
+              message: deprecationMessage,
             });
           }
           if (optionSupportsTemplating.has(key) && val) {
@@ -420,8 +421,9 @@ export async function validateConfig(
                           message: `${currentPath}: you should not extend "group:" presets`,
                         });
                       }
-                      if (tzRe.test(subval)) {
-                        const [, timezone] = tzRe.exec(subval)!;
+                      const tzMatch = tzRe.exec(subval);
+                      if (tzMatch) {
+                        const [, timezone] = tzMatch;
                         const [validTimezone, errorMessage] =
                           hasValidTimezone(timezone);
                         if (!validTimezone) {
@@ -478,14 +480,15 @@ export async function validateConfig(
                         packageRule as RenovateConfig,
                         config,
                       );
-                      const resolvedRule = migrateConfig({
-                        packageRules: [resolved],
-                      }).migratedConfig.packageRules![0];
+                      const resolvedRule =
+                        migrateConfig({
+                          packageRules: [resolved],
+                        }).migratedConfig.packageRules?.[0] ?? {};
                       warnings.push(
                         ...matchBaseBranchesValidator.check({
                           resolvedRule,
                           currentPath: `${currentPath}[${subIndex}]`,
-                          baseBranchPatterns: config.baseBranchPatterns!,
+                          baseBranchPatterns: config.baseBranchPatterns,
                         }),
                       );
                       const selectorLength = Object.keys(resolvedRule).filter(
@@ -662,8 +665,7 @@ export async function validateConfig(
                   (selectors.includes(key) ||
                     key === 'matchCurrentVersion' ||
                     key === 'matchCurrentValue') &&
-                  // TODO: can be undefined ? #22198
-                  !rulesRe.test(parentPath!) && // Inside a packageRule
+                  !rulesRe.test(parentPath ?? '') && // Inside a packageRule
                   (isString(parentPath) || !isPreset) // top level in a preset
                 ) {
                   errors.push({
@@ -1001,11 +1003,12 @@ async function validateGlobalConfig(
   currentPath: string | undefined,
   config: AllConfig,
 ): Promise<void> {
-  /* v8 ignore next 5 -- not testable yet */
-  if (getDeprecationMessage(key)) {
+  const deprecationMessage = getDeprecationMessage(key);
+  /* v8 ignore next 6 -- not testable yet */
+  if (deprecationMessage) {
     warnings.push({
       topic: 'Deprecation Warning',
-      message: getDeprecationMessage(key)!,
+      message: deprecationMessage,
     });
   }
 
@@ -1126,7 +1129,7 @@ async function validateGlobalConfig(
           warnings.push(
             ...regexOrGlobValidator.check({
               val,
-              currentPath: currentPath!,
+              currentPath: currentPath ?? '',
             }),
           );
         }

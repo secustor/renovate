@@ -37,8 +37,11 @@ export async function getPreset({
         NpmResponse,
       )
     ).body;
-    // TODO: check null #22198
-    dep = body.versions![body['dist-tags']!.latest];
+    const latestVersion = body['dist-tags']?.latest;
+    if (!body.versions || !latestVersion) {
+      throw new Error(PRESET_DEP_NOT_FOUND);
+    }
+    dep = body.versions[latestVersion];
   } catch {
     throw new Error(PRESET_DEP_NOT_FOUND);
   }

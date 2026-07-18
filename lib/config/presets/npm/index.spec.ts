@@ -15,6 +15,26 @@ describe('config/presets/npm/index', () => {
     ).rejects.toThrow(/dep not found/);
   });
 
+  it('should throw if package has no versions', async () => {
+    httpMock
+      .scope(defaultRegistryUrl)
+      .get('/noversions')
+      .reply(200, { name: 'noversions' });
+    await expect(
+      npm.getPreset({ repo: 'noversions', presetName: 'default' }),
+    ).rejects.toThrow(/dep not found/);
+  });
+
+  it('should throw if package has no dist-tags', async () => {
+    httpMock
+      .scope(defaultRegistryUrl)
+      .get('/nodisttags')
+      .reply(200, { name: 'nodisttags', versions: { '0.0.1': {} } });
+    await expect(
+      npm.getPreset({ repo: 'nodisttags', presetName: 'default' }),
+    ).rejects.toThrow(/dep not found/);
+  });
+
   it('should throw if no renovate-config', async () => {
     const presetPackage = {
       name: 'norenovateconfig',

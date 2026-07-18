@@ -86,7 +86,11 @@ export function parsePreset(input: string): ParsedPreset {
     presetName = str.slice(1);
   } else if (str.startsWith('@')) {
     // scoped namespace
-    [, repo] = regEx(/(@.*?)(:|$)/).exec(str)!;
+    const scopeMatch = regEx(/(@.*?)(:|$)/).exec(str);
+    if (!scopeMatch) {
+      throw new Error(PRESET_INVALID);
+    }
+    [, repo] = scopeMatch;
     str = str.slice(repo.length);
     if (!repo.includes('/')) {
       repo += '/renovate-config';
@@ -103,13 +107,17 @@ export function parsePreset(input: string): ParsedPreset {
     if (str.includes(':')) {
       throw new Error(PRESET_PROHIBITED_SUBPRESET);
     }
-    if (!nonScopedPresetWithSubdirRegex.test(str)) {
+    const subdirMatch = nonScopedPresetWithSubdirRegex.exec(str);
+    if (!subdirMatch?.groups) {
       throw new Error(PRESET_INVALID);
     }
-    ({ repo, presetPath, presetName, tag } =
-      nonScopedPresetWithSubdirRegex.exec(str)!.groups!);
+    ({ repo, presetPath, presetName, tag } = subdirMatch.groups);
   } else {
-    ({ repo, presetName, tag } = gitPresetRegex.exec(str)!.groups!);
+    const gitMatch = gitPresetRegex.exec(str);
+    if (!gitMatch?.groups) {
+      throw new Error(PRESET_INVALID);
+    }
+    ({ repo, presetName, tag } = gitMatch.groups);
 
     if (presetSource === 'npm' && !repo.startsWith('renovate-config-')) {
       repo = `renovate-config-${repo}`;

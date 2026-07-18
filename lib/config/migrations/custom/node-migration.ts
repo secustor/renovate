@@ -5,7 +5,11 @@ export class NodeMigration extends AbstractMigration {
   override readonly propertyName = 'node';
 
   override run(value: unknown): void {
-    const node = this.get('node')!;
+    const node = this.get('node');
+    /* v8 ignore if -- node is always defined when this migration runs */
+    if (!node) {
+      return;
+    }
     // v8 ignore else -- TODO: add test #40625
     if ((value as RenovateConfig).enabled === true) {
       // validated non-null
