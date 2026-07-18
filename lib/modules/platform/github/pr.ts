@@ -17,7 +17,7 @@ import type { ApiPageCache, GhPr, GhRestPr } from './types.ts';
 
 function getPrApiCache(): ApiCache<GhPr> {
   const repoCache = getCache();
-  if (!repoCache?.platform?.github?.pullRequestsCache) {
+  if (!repoCache.platform?.github?.pullRequestsCache) {
     logger.debug('PR cache: cached data not found, creating new cache');
     repoCache.platform ??= {};
     repoCache.platform.github ??= {};
@@ -134,7 +134,7 @@ export async function getPrCache(
 
         if (username) {
           const filteredPage = page.filter(
-            (ghPr) => ghPr?.user?.login && ghPr.user.login === username,
+            (ghPr) => ghPr.user?.login && ghPr.user.login === username,
           );
 
           logger.debug(

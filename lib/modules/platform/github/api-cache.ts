@@ -60,7 +60,11 @@ export class ApiCache<T extends ApiPageItem> {
 
     for (const newItem of page) {
       const number = newItem.number;
-      const oldItem = items[number];
+      // `items` is a `Record<number, T>`, which claims every key is
+      // present, but this is a sparse cache keyed by PR number and a
+      // never-before-seen `number` genuinely has no entry (see the
+      // "ignores page overlap" spec).
+      const oldItem = items[number] as T | undefined;
 
       const itemNewTime = DateTime.fromISO(newItem.updated_at);
       const itemOldTime = oldItem?.updated_at

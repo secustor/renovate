@@ -123,7 +123,7 @@ export function resetConfigs(): void {
 resetConfigs();
 
 function escapeHash(input: string): string {
-  return input?.replace(regEx(/#/g), '%23');
+  return input.replace(regEx(/#/g), '%23');
 }
 
 export function isGHApp(): boolean {
@@ -142,7 +142,7 @@ export async function detectGhe(token: string): Promise<void> {
   if (platformConfig.isGhe) {
     const gheHeaderKey = 'x-github-enterprise-version';
     const gheQueryRes = await githubApi.headJson('/', { token });
-    const gheHeaders = coerceObject(gheQueryRes?.headers);
+    const gheHeaders = coerceObject(gheQueryRes.headers);
     const [, gheVersion] =
       Object.entries(gheHeaders).find(
         ([k]) => k.toLowerCase() === gheHeaderKey,
@@ -319,13 +319,14 @@ export async function getRepos(config?: AutodiscoverConfig): Promise<string[]> {
       } archived repositories`,
     );
   }
-  if (!config?.topics) {
+  const topics = config?.topics;
+  if (!topics) {
     return nonArchivedRepositories.map((repo) => repo.full_name);
   }
 
-  logger.debug({ topics: config.topics }, 'Filtering by topics');
+  logger.debug({ topics }, 'Filtering by topics');
   const topicRepositories = nonArchivedRepositories.filter((repo) =>
-    repo.topics?.some((topic) => config?.topics?.includes(topic)),
+    repo.topics.some((topic) => topics.includes(topic)),
   );
 
   // v8 ignore else -- TODO: add test #40625
@@ -386,7 +387,7 @@ export async function getRawFile(
 
   // only use cache for the same org
   const httpOptions: GithubHttpOptions = {};
-  const isSameOrg = repo?.split('/')?.[0] === config.repositoryOwner;
+  const isSameOrg = repo?.split('/')[0] === config.repositoryOwner;
   // v8 ignore else -- TODO: add test #40625
   if (isSameOrg) {
     httpOptions.cacheProvider = repoCacheProvider;
@@ -574,6 +575,7 @@ export async function initRepo({
       throw new Error(PLATFORM_UNKNOWN_ERROR);
     }
 
+    // oxlint-disable-next-line typescript/no-unnecessary-condition -- tsgolint false positive: `requestGraphql` returns `GithubGraphqlResponse<T> | null`, and `res` really can be null here (verified with an explicit `: null` type-check probe); the preceding `if (res?.errors)` only rules out the errors branch, not a null `res`.
     repo = res?.data?.repository;
     /* v8 ignore next */
     if (!repo) {
@@ -581,7 +583,7 @@ export async function initRepo({
       throw new Error(REPOSITORY_NOT_FOUND);
     }
     /* v8 ignore next */
-    if (!repo.defaultBranchRef?.name) {
+    if (!repo.defaultBranchRef.name) {
       logger.debug(
         { res },
         'No default branch returned - treating repo as empty',
@@ -625,7 +627,7 @@ export async function initRepo({
 
     const recentIssues = Issue.array()
       .catch([])
-      .parse(res?.data?.repository?.issues?.nodes);
+      .parse(res?.data.repository.issues?.nodes);
     GithubIssueCache.addIssuesToReconcile(recentIssues);
   } catch (err) /* v8 ignore next */ {
     logger.debug({ err }, 'Caught initRepo error');
@@ -798,7 +800,7 @@ async function checkRulesetsForForceRebase(
     return rulesets.some((rule) => {
       if (
         rule.type === 'required_status_checks' &&
-        rule.parameters?.strict_required_status_checks_policy === true
+        rule.parameters.strict_required_status_checks_policy === true
       ) {
         logger.debug(
           `Ruleset: strict required status checks found for ${branchName}`,
@@ -821,7 +823,7 @@ async function checkBranchProtectionForForceRebase(
     const branchProtection = await getBranchProtection(branchName);
     logger.trace(`Found branch protection for branch ${branchName}`);
 
-    const strictStatusChecks = branchProtection?.required_status_checks?.strict;
+    const strictStatusChecks = branchProtection.required_status_checks?.strict;
     if (strictStatusChecks) {
       logger.debug(
         `Branch protection: PRs must be up-to-date before merging for ${branchName}`,
@@ -1156,10 +1158,10 @@ export async function getBranchStatus(
     { state: commitStatus.state, statuses: commitStatus.statuses },
     'branch status check result',
   );
-  if (commitStatus.statuses && !internalChecksAsSuccess) {
+  if (!internalChecksAsSuccess) {
     commitStatus.statuses = commitStatus.statuses.filter(
       (status) =>
-        status.state !== 'success' || !status.context?.startsWith('renovate/'),
+        status.state !== 'success' || !status.context.startsWith('renovate/'),
     );
     // v8 ignore else -- TODO: add test #40625
     if (!commitStatus.statuses.length) {
@@ -1188,16 +1190,18 @@ export async function getBranchStatus(
         check_runs: { name: string; status: string; conclusion: string }[];
       }>(checkRunsUrl, opts)
     ).body;
-    if (checkRunsRaw.check_runs?.length) {
+    if (checkRunsRaw.check_runs.length) {
       checkRuns = checkRunsRaw.check_runs.map((run) => ({
         name: run.name,
         status: run.status,
         conclusion: run.conclusion,
       }));
       logger.debug({ checkRuns }, 'check runs result');
-    } /* v8 ignore next */ else {
+      /* v8 ignore start */
+    } else {
       logger.debug({ result: checkRunsRaw }, 'No check runs found');
     }
+    /* v8 ignore stop */
   } catch (err) /* v8 ignore next */ {
     if (err instanceof ExternalHostError) {
       throw err;
@@ -1268,7 +1272,10 @@ export async function getBranchStatusCheck(
     const res = await getStatusCheck(branchName);
     for (const check of res) {
       if (check.context === context) {
-        return githubToRenovateStatusMapping[check.state] || 'yellow';
+        if (!check.state) {
+          return 'yellow';
+        }
+        return githubToRenovateStatusMapping[check.state];
       }
     }
     return null;
@@ -1389,9 +1396,11 @@ export async function getIssue(number: number): Promise<Issue | null> {
 
 export async function findIssue(title: string): Promise<Issue | null> {
   logger.debug(`findIssue(${title})`);
+  // TS types array destructuring as always-defined; a `.filter()` with no
+  // matches genuinely yields no first element.
   const [issue] = (await getIssueList()).filter(
     (i) => i.state === 'open' && i.title === title,
-  );
+  ) as [Issue?];
   if (!issue) {
     return null;
   }
@@ -1737,27 +1746,29 @@ export async function ensureComment({
   try {
     const comments = await getComments(number);
     let body: string;
-    let commentId: number | null = null;
-    let commentNeedsUpdating = false;
+    let commentId: number | null;
+    let commentNeedsUpdating: boolean;
     if (topic) {
       logger.debug(`Ensuring comment "${topic}" in #${number}`);
       body = `### ${topic}\n\n${sanitizedContent}`;
-      comments.forEach((comment) => {
-        if (comment.body.startsWith(`### ${topic}\n\n`)) {
-          commentId = comment.id;
-          commentNeedsUpdating = comment.body !== body;
-        }
-      });
+      // `findLast` (not `find`) to match the previous `forEach` behavior of
+      // letting the *last* matching comment in the list win when several
+      // match.
+      const matchedComment = comments.findLast((comment) =>
+        comment.body.startsWith(`### ${topic}\n\n`),
+      );
+      commentId = matchedComment?.id ?? null;
+      commentNeedsUpdating = matchedComment
+        ? matchedComment.body !== body
+        : false;
     } else {
       logger.debug(`Ensuring content-only comment in #${number}`);
       body = `${sanitizedContent}`;
-      comments.forEach((comment) => {
-        // v8 ignore else -- TODO: add test #40625
-        if (comment.body === body) {
-          commentId = comment.id;
-          commentNeedsUpdating = false;
-        }
-      });
+      const matchedComment = comments.findLast(
+        (comment) => comment.body === body,
+      );
+      commentId = matchedComment?.id ?? null;
+      commentNeedsUpdating = false;
     }
     if (!commentId) {
       await addComment(number, body);
@@ -1805,7 +1816,7 @@ export async function ensureCommentRemoval(
     const byTopic = (comment: Comment): boolean =>
       comment.body.startsWith(`### ${deleteConfig.topic}\n\n`);
     commentId = comments.find(byTopic)?.id;
-  } else if (deleteConfig.type === 'by-content') {
+  } else {
     const byContent = (comment: Comment): boolean =>
       comment.body.trim() === deleteConfig.content;
     commentId = comments.find(byContent)?.id;
@@ -1856,14 +1867,14 @@ async function tryPrAutomerge(
   }
 
   try {
-    const mergeMethod = config.mergeMethod?.toUpperCase() || 'MERGE';
+    const mergeMethod = config.mergeMethod?.toUpperCase() ?? 'MERGE';
 
     let commitHeadline: string | undefined;
     let commitBody: string | undefined;
     // For SQUASH and MERGE methods, pass the commit message explicitly to avoid
     // GitHub using the PR description as the commit body when "Use PR title and
     // body as commit message" is enabled in repository settings.
-    const automergeCommitMessage = platformPrOptions?.automergeCommitMessage;
+    const automergeCommitMessage = platformPrOptions.automergeCommitMessage;
     if (mergeMethod !== 'REBASE' && automergeCommitMessage) {
       const newlineIndex = automergeCommitMessage.indexOf('\n');
       if (newlineIndex === -1) {
@@ -2223,7 +2234,16 @@ export async function getVulnerabilityAlerts(): Promise<GithubVulnerabilityAlert
         alert.security_vulnerability.package.name = normalizedName;
         const key = `${ecosystem.toLowerCase()}/${normalizedName}`;
         const range = vulnerableVersionRange;
-        const elem = shortAlerts[key] || {};
+        // `AggregatedVulnerabilities` is a `Record<string, ...>`, which
+        // claims every key is present, but this map starts empty and is
+        // filled in incrementally below.
+        const elem =
+          (
+            shortAlerts as Record<
+              string,
+              Record<string, string | null> | undefined
+            >
+          )[key] ?? {};
         elem[range] = coerceToNull(patch);
         shortAlerts[key] = elem;
       }

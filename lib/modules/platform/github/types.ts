@@ -17,7 +17,10 @@ export type AggregatedVulnerabilities = Record<
 
 export interface GhBranchStatus {
   context: string;
-  state: BranchState;
+  // Genuinely absent on some responses in practice (this is an unvalidated
+  // `getJsonUnchecked` response type; see index.spec.ts's "returns yellow
+  // if state not present in context object"), so keep optional.
+  state?: BranchState;
 }
 
 export interface CombinedBranchStatus {
@@ -42,15 +45,23 @@ export interface GhRestRepo {
 }
 
 export interface GhRestPr {
-  head: {
+  // Genuinely absent on some responses in practice (this is an
+  // unvalidated `getJsonUnchecked` response type; see index.spec.ts's
+  // "should perform automerge if GHE >=3.3.0" fixture, whose mocked
+  // `POST .../pulls` response is just `{ number: 123 }`), so keep `head`
+  // and its nested fields optional rather than asserting always present.
+  head?: {
     ref: string;
-    sha: LongCommitSha;
-    repo: {
+    sha?: LongCommitSha;
+    repo?: {
       full_name: string;
       pushed_at?: string;
     };
   };
-  base: {
+  // Genuinely absent on some responses in practice (same unvalidated
+  // response type as `head` above; see index.spec.ts's
+  // "reattemptPlatformAutomerge" fixtures), so keep optional.
+  base?: {
     repo: {
       pushed_at?: string;
     };
@@ -103,13 +114,20 @@ export interface LocalRepoConfig {
   repositoryName: string;
   pushProtection: boolean;
   prReviewsRequired: boolean;
-  branchForceRebase?: Record<string, boolean>;
+  // Honestly optional value type: a plain `Record<string, boolean>` claims
+  // every branch name is present, but this cache starts empty and is
+  // filled in incrementally per-branch by getBranchForceRebase().
+  branchForceRebase?: Record<string, boolean | undefined>;
   parentRepo: string | null;
   forkOrg?: string;
   forkToken?: string;
   forkCreation?: boolean;
   prList: GhPr[] | null;
-  mergeMethod: 'rebase' | 'squash' | 'merge';
+  // Genuinely unset when none of squash/merge/rebase is allowed on the repo
+  // (e.g. missing admin read access; see initRepo's "Could not find allowed
+  // merge methods for repo" case and the "should perform automerge if GHE
+  // >=3.3.0" spec), so keep optional rather than asserting always present.
+  mergeMethod?: 'rebase' | 'squash' | 'merge';
   defaultBranch: string;
   repositoryOwner: string;
   repository: string | null;
@@ -143,7 +161,10 @@ export interface GhRepo {
       oid: string;
     };
   };
-  issues: { nodes: unknown[] };
+  // Genuinely absent on some responses in practice (this is a
+  // `requestGraphql` field cast, not zod-validated; the initRepo specs'
+  // GraphQL fixtures routinely omit it), so keep optional.
+  issues?: { nodes: unknown[] };
 }
 
 export interface GhAutomergeResponse {

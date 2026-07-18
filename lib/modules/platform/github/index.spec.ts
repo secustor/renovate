@@ -3533,6 +3533,25 @@ describe('modules/platform/github/index', () => {
       ).toResolve();
     });
 
+    it('adds content-only comment if not found', async () => {
+      const scope = httpMock.scope(githubApiHost);
+      initRepoMock(scope, 'some/repo');
+      scope
+        .get('/repos/some/repo/issues/42/comments?per_page=100')
+        .reply(200, [{ id: 1234, body: 'unrelated comment' }])
+        .post('/repos/some/repo/issues/42/comments')
+        .reply(200);
+      await github.initRepo({ repository: 'some/repo' });
+
+      await expect(
+        github.ensureComment({
+          number: 42,
+          topic: null,
+          content: '!merge',
+        }),
+      ).toResolve();
+    });
+
     it('handles comment with no description', async () => {
       const scope = httpMock.scope(githubApiHost);
       initRepoMock(scope, 'some/repo');

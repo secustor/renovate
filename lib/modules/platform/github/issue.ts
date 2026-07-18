@@ -118,7 +118,10 @@ export class GithubIssueCache {
     let isReconciled = false;
 
     for (const issue of issuesToReconcile) {
-      const cachedIssue = cacheData[issue.number];
+      // `cacheData` is a `Record<number, GithubIssue>`, which claims every
+      // key is present, but this is a sparse cache keyed by issue number
+      // and a newly-seen issue genuinely has no entry yet.
+      const cachedIssue = cacheData[issue.number] as GithubIssue | undefined;
 
       // If we reached the item which is already in the cache,
       // it means sync is done.

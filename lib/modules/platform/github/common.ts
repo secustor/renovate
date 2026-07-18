@@ -14,7 +14,11 @@ export function coerceRestPr(pr: GhRestPr): GhPr {
   const bodyStruct = pr.bodyStruct ?? getPrBodyStruct(pr.body);
   const result: GhPr = {
     number: pr.number,
-    sourceBranch: pr.head?.ref,
+    // `Pr.sourceBranch` is contractually always a real `string`; `head`
+    // can genuinely be missing on some responses (see the GhRestPr type),
+    // so fall back to '' rather than silently letting `undefined` slip
+    // through the required field.
+    sourceBranch: pr.head?.ref ?? '',
     title: pr.title,
     state:
       pr.state === 'closed' && isString(pr.merged_at) ? 'merged' : pr.state,

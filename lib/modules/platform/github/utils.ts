@@ -43,7 +43,13 @@ export function getRepoUrl(
   // clone to avoid mutating the caller's URL; href is known-valid
   const url = parseUrl(endpoint.href)!;
   if (authToken) {
-    const [username, password] = authToken.split(':');
+    // `authToken.split(':')` returns `string[]`; TS types this destructure
+    // as always-defined `string`s, but a token with no `:` genuinely
+    // yields no second element (see the "gitUrl is endpoint" spec).
+    const [username, password] = authToken.split(':') as [
+      string,
+      string | undefined,
+    ];
     url.username = username;
     url.password = password ?? '';
   }
