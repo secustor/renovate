@@ -357,7 +357,6 @@ function applyPropsInternal(
     currentValue,
   };
 
-  // oxlint-disable-next-line typescript/no-unnecessary-condition -- confirmed via tsc probe: sharedVariableName is only ever reassigned inside the .replace() callback above, and TypeScript's control-flow analysis does not carry that reassignment back to the enclosing function scope, so it statically (and wrongly) treats this read as always null. Deleting the guard would drop the assignment on result.sharedVariableName whenever a shared variable placeholder is actually resolved.
   if (sharedVariableName) {
     result.sharedVariableName = sharedVariableName;
   }
