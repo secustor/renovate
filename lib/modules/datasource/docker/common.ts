@@ -330,6 +330,7 @@ export function getRegistryRepository(
     hostType: dockerDatasourceId,
     url: registryHost,
   });
+  // oxlint-disable-next-line typescript/no-unnecessary-condition -- find()'s real return type is always a CombinedHostRule, but common.spec.ts's `vi.mock('.../host-rules.ts', () => mockDeep())` leaves `find` unstubbed for several cases, so it resolves undefined under test (confirmed: removing this guard throws "Cannot read properties of undefined (reading 'insecureRegistry')" in 5 specs).
   if (opts?.insecureRegistry) {
     registryHost = registryHost.replace('https', 'http');
   }

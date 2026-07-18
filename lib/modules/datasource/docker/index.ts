@@ -290,7 +290,7 @@ export class DockerDatasource extends Datasource {
   ): Promise<string | null> {
     return (
       (await this.getManifest(registry, dockerRepository, tag))?.config
-        ?.digest ?? null
+        .digest ?? null
     );
   }
 
@@ -498,7 +498,7 @@ export class DockerDatasource extends Datasource {
       return {};
     }
     try {
-      let labels: Record<string, string> | undefined = {};
+      let labels: Record<string, string> = {};
       const manifest = await this.getManifest(
         registryHost,
         dockerRepository,
@@ -568,14 +568,12 @@ export class DockerDatasource extends Datasource {
         }
       }
 
-      if (labels) {
-        logger.debug(
-          {
-            labels,
-          },
-          'found labels in manifest',
-        );
-      }
+      logger.debug(
+        {
+          labels,
+        },
+        'found labels in manifest',
+      );
       return labels;
     } catch (err) /* istanbul ignore next: should be tested in future */ {
       if (err instanceof ExternalHostError) {

@@ -37,7 +37,7 @@ export async function getECRAuthToken(
   const ecr = new ECR(config);
   try {
     const data = await ecr.getAuthorizationToken({});
-    const authorizationToken = data?.authorizationData?.[0]?.authorizationToken;
+    const authorizationToken = data.authorizationData?.[0]?.authorizationToken;
     if (authorizationToken) {
       // sanitize token
       addSecretForSanitizing(authorizationToken);
@@ -58,7 +58,7 @@ export function isECRMaxResultsResponse(resp: HttpResponse<unknown>): boolean {
   const body = resp.body as { errors?: { message?: string }[] } | undefined;
   return !!(
     resp.statusCode === 405 &&
-    resp.headers?.['docker-distribution-api-version'] &&
+    resp.headers['docker-distribution-api-version'] &&
     body?.errors?.[0]?.message?.includes(
       'Member must have value less than or equal to 1000',
     )
