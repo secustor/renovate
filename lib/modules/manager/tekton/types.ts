@@ -1,5 +1,7 @@
 export interface TektonResource {
-  spec: TektonResourceSpec;
+  // Not every Tekton resource kind (e.g. plain ConfigMaps) has a spec, and
+  // this is untrusted YAML parsed from the repo, so it may genuinely be absent.
+  spec?: TektonResourceSpec;
   items?: TektonResource[];
   metadata?: {
     annotations: Record<string, string>;
@@ -10,19 +12,19 @@ export interface TektonResourceSpec {
   // StepAction
   image?: string;
   // TaskRun
-  taskRef: TektonBundle;
+  taskRef?: TektonBundle;
   // TaskRun with inline Pipeline definition
   taskSpec?: TektonResourceSpec;
   // PipelineRun
-  pipelineRef: TektonBundle;
+  pipelineRef?: TektonBundle;
   // PipelienRun with inline Pipeline definition
   pipelineSpec?: TektonResourceSpec;
   // Pipeline
-  tasks: TektonResourceSpec[];
+  tasks?: TektonResourceSpec[];
   // Pipeline
   finally?: TektonResourceSpec[];
   // TriggerTemplate
-  resourcetemplates: TektonResource[];
+  resourcetemplates?: TektonResource[];
 
   steps?: TektonStep[];
   stepTemplate?: TektonStep;

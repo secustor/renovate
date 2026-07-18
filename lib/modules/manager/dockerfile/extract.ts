@@ -23,7 +23,7 @@ export function extractVariables(image: string): Record<string, string> {
     match = variableRegex.exec(image);
     if (match?.groups?.fullvariable) {
       variables[match.groups.fullvariable] =
-        match.groups?.simplearg || match.groups?.complexarg;
+        match.groups.simplearg || match.groups.complexarg;
     }
   } while (match);
 
@@ -75,7 +75,10 @@ function processDepForAutoReplace(
     return a[0] - b[0];
   });
 
-  const minLine = lineNumberRangesToReplace[0]?.[0];
+  // Use `.at(0)` (not `[0]`) so TS actually tracks that this can be
+  // `undefined` when the array is empty, rather than lying that index
+  // access on a non-empty-looking type is always safe.
+  const minLine = lineNumberRangesToReplace.at(0)?.[0];
   const maxLine = lineNumberRangesToReplace.at(-1)?.[1];
   if (
     lineNumberRanges.length === 1 ||
@@ -107,7 +110,7 @@ export function splitImageParts(currentFrom: string): PackageDependency {
 
   // Check if we have a variable in format of "${VARIABLE:-<image>:<defaultVal>@<digest>}"
   // If so, remove everything except the image, defaultVal and digest.
-  if (cleanedCurrentFrom?.includes(variableMarker)) {
+  if (cleanedCurrentFrom.includes(variableMarker)) {
     const defaultValueRegex = regEx(/^\${.+?:-"?(?<value>.*?)"?}$/);
     const defaultValueMatch =
       defaultValueRegex.exec(cleanedCurrentFrom)?.groups;
@@ -116,7 +119,7 @@ export function splitImageParts(currentFrom: string): PackageDependency {
       cleanedCurrentFrom = defaultValueMatch.value;
     }
 
-    if (cleanedCurrentFrom?.includes(variableMarker)) {
+    if (cleanedCurrentFrom.includes(variableMarker)) {
       // If cleanedCurrentFrom contains a variable, after cleaning, e.g. "$REGISTRY/alpine", we do not support this.
       return {
         skipReason: 'contains-variable',
@@ -265,7 +268,7 @@ export function extractPackageFile(
       if (!directivesMatch) {
         lookForEscapeChar = false;
       } else if (directivesMatch.groups?.directive.toLowerCase() === 'escape') {
-        if (directivesMatch.groups?.escapeChar === '`') {
+        if (directivesMatch.groups.escapeChar === '`') {
           escapeChar = '`';
         }
         lookForEscapeChar = false;
@@ -317,7 +320,7 @@ export function extractPackageFile(
     const argMatch = argRegex.exec(instruction);
     if (argMatch?.groups?.name) {
       argsLines[argMatch.groups.name] = [lineNumberInstrStart, lineNumber];
-      let argMatchValue = argMatch.groups?.value;
+      let argMatchValue = argMatch.groups.value;
 
       if (argMatchValue.startsWith('"') && argMatchValue.endsWith('"')) {
         argMatchValue = argMatchValue.slice(1, -1);
@@ -346,7 +349,7 @@ export function extractPackageFile(
         }
       }
 
-      if (fromMatch.groups?.name) {
+      if (fromMatch.groups.name) {
         logger.debug(
           `Found a multistage build stage name: ${fromMatch.groups.name}`,
         );
