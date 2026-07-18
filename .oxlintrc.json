@@ -165,6 +165,7 @@
     "typescript/consistent-type-definitions": "error",
     "typescript/no-array-constructor": "error",
     "typescript/no-confusing-non-null-assertion": "error",
+    "typescript/no-non-null-assertion": "error",
     "typescript/no-namespace": "error",
     "typescript/no-require-imports": "error",
     "typescript/no-unnecessary-type-constraint": "error",
@@ -197,7 +198,18 @@
         "renovate/prefer-nullish-util": "off",
         "renovate/prefer-partial-in-specs": "error",
         "renovate/test-root-describe": "error",
-        "typescript/explicit-function-return-type": "off"
+        "typescript/explicit-function-return-type": "off",
+        "typescript/no-non-null-assertion": "off"
+      }
+    },
+    {
+      "files": [
+        "lib/modules/manager/**",
+        "lib/modules/platform/**",
+        "lib/workers/repository/**"
+      ],
+      "rules": {
+        "typescript/no-non-null-assertion": "off"
       }
     },
     {
