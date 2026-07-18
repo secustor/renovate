@@ -43,8 +43,8 @@ export class BitbucketHttp extends HttpBase<BitbucketHttpOptions> {
     };
     const paginate = opts.httpOptions?.paginate;
 
-    if (paginate && !hasPagelen(resolvedUrl)) {
-      const pagelen = opts.httpOptions!.pagelen ?? MAX_PAGELEN;
+    if (opts.httpOptions?.paginate && !hasPagelen(resolvedUrl)) {
+      const pagelen = opts.httpOptions.pagelen ?? MAX_PAGELEN;
       resolvedUrl.searchParams.set('pagelen', pagelen.toString());
     }
 

@@ -152,7 +152,7 @@ function handleGotError(
         );
       } else {
         logger.once.warn(
-          { host: parsed!.host },
+          { host: parsed?.host },
           'Rate limit exceeded, as no hostRules set for this host',
         );
       }
@@ -359,32 +359,34 @@ export class GithubHttp extends HttpBase<GithubHttpOptions> {
   ): void {
     if (!opts.token) {
       // create a mutable copy of `url`
-      const authUrl = parseUrl(url.toString())!;
+      const authUrl = parseUrl(url.toString());
+      // v8 ignore else -- url is already a valid URL
+      if (authUrl) {
+        if (opts.repository) {
+          // set authUrl to https://api.github.com/repos/org/repo or https://gihub.domain.com/api/v3/repos/org/repo
+          authUrl.hash = '';
+          authUrl.search = '';
+          authUrl.pathname = joinUrlParts(
+            authUrl.pathname.startsWith('/api/v3') ? '/api/v3' : '',
+            'repos',
+            `${opts.repository}`,
+          );
+        }
 
-      if (opts.repository) {
-        // set authUrl to https://api.github.com/repos/org/repo or https://gihub.domain.com/api/v3/repos/org/repo
-        authUrl.hash = '';
-        authUrl.search = '';
-        authUrl.pathname = joinUrlParts(
-          authUrl.pathname.startsWith('/api/v3') ? '/api/v3' : '',
-          'repos',
-          `${opts.repository}`,
-        );
+        let readOnly = opts.readOnly;
+        const { method = 'get' } = opts;
+        if (
+          readOnly === undefined &&
+          ['get', 'head'].includes(method.toLowerCase())
+        ) {
+          readOnly = true;
+        }
+        const { token } = findMatchingRule(authUrl.toString(), {
+          hostType: this.hostType,
+          readOnly,
+        });
+        opts.token = token;
       }
-
-      let readOnly = opts.readOnly;
-      const { method = 'get' } = opts;
-      if (
-        readOnly === undefined &&
-        ['get', 'head'].includes(method.toLowerCase())
-      ) {
-        readOnly = true;
-      }
-      const { token } = findMatchingRule(authUrl.toString(), {
-        hostType: this.hostType,
-        readOnly,
-      });
-      opts.token = token;
     }
 
     const accept = constructAcceptString(opts.headers?.accept);
@@ -442,7 +444,11 @@ export class GithubHttp extends HttpBase<GithubHttpOptions> {
         const queue = [...range(2, lastPage)].map(
           (pageNumber) => (): Promise<HttpResponse<T>> => {
             // copy before modifying searchParams
-            const nextUrl = parseUrl(firstPageUrl.toString())!;
+            const nextUrl = parseUrl(firstPageUrl.toString());
+            /* v8 ignore if -- firstPageUrl is already a valid URL */
+            if (!nextUrl) {
+              throw new Error('Failed to parse next page URL');
+            }
             nextUrl.searchParams.set('page', String(pageNumber));
             return super.requestJsonUnsafe<T>(method, {
               ...opts,

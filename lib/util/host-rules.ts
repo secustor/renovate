@@ -43,14 +43,14 @@ export function add(params: HostRule): void {
 
   const confidentialFields: (keyof HostRule)[] = ['password', 'token'];
   if (rule.matchHost) {
-    rule.matchHost = massageHostUrl(rule.matchHost);
-    const parsedUrl = parseUrl(rule.matchHost);
-    rule.resolvedHost = parsedUrl?.hostname ?? rule.matchHost;
+    const matchHost = massageHostUrl(rule.matchHost);
+    rule.matchHost = matchHost;
+    const parsedUrl = parseUrl(matchHost);
+    rule.resolvedHost = parsedUrl?.hostname ?? matchHost;
     confidentialFields.forEach((field) => {
       if (rule[field]) {
         logger.debug(
-          // TODO: types (#22198)
-          `Adding ${field} authentication for ${rule.matchHost!} (hostType=${
+          `Adding ${field} authentication for ${matchHost} (hostType=${
             rule.hostType
           }) to hostRules`,
         );
@@ -84,8 +84,8 @@ export function matchesHost(url: string, matchHost: string): boolean {
   }
 
   const parsedMatchHost = parseUrl(matchHost);
-  if (isHttpUrl(parsedUrl) && isHttpUrl(parsedMatchHost)) {
-    return parsedUrl.href.startsWith(parsedMatchHost!.href);
+  if (parsedMatchHost && isHttpUrl(parsedUrl) && isHttpUrl(parsedMatchHost)) {
+    return parsedUrl.href.startsWith(parsedMatchHost.href);
   }
 
   const { hostname } = parsedUrl;

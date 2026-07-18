@@ -132,7 +132,7 @@ export class PackageCacheSqlite extends PackageCacheBase {
     try {
       const startTime = Date.now();
       // `COUNT(*)` is always returning a row
-      const totalCount = this.countStatement.get()!.total as number;
+      const totalCount = (this.countStatement.get() as { total: number }).total;
       const { changes: deletedCount } = this.deleteExpiredRows.run();
       const durationMs = Date.now() - startTime;
       logger.debug(

@@ -21,11 +21,10 @@ const digestRegex = regEx('Digest: (.*?)\n');
 export const sideCarName = 'sidecar';
 
 export async function prefetchDockerImage(taggedImage: string): Promise<void> {
-  if (prefetchedImages.has(taggedImage)) {
+  const prefetchedImageDigest = prefetchedImages.get(taggedImage);
+  if (prefetchedImageDigest) {
     logger.debug(
-      `Docker image is already prefetched: ${taggedImage}@${prefetchedImages.get(
-        taggedImage,
-      )!}`,
+      `Docker image is already prefetched: ${taggedImage}@${prefetchedImageDigest}`,
     );
   } else {
     logger.debug(`Fetching Docker image: ${taggedImage}`);

@@ -17,20 +17,26 @@ export async function initRepoCache(config: RepoCacheConfig): Promise<void> {
     repoFingerprint,
   } = config;
 
+  /* v8 ignore if -- repository is always set when initializing the repo cache */
+  if (!repository) {
+    setCache(new RepoCacheNull());
+    return;
+  }
+
   if (repositoryCache === 'disabled') {
     setCache(new RepoCacheNull());
     return;
   }
 
   if (repositoryCache === 'enabled') {
-    const cache = CacheFactory.get(repository!, repoFingerprint, type);
+    const cache = CacheFactory.get(repository, repoFingerprint, type);
     await instrument('load RepoCache', () => cache.load());
     setCache(cache);
     return;
   }
 
   if (repositoryCache === 'reset') {
-    const cache = CacheFactory.get(repository!, repoFingerprint, type);
+    const cache = CacheFactory.get(repository, repoFingerprint, type);
     await instrument('save RepoCache', () => cache.save());
     setCache(cache);
     return;

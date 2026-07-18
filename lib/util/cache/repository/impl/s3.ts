@@ -20,7 +20,11 @@ export class RepoCacheS3 extends RepoCacheBase {
 
   constructor(repository: string, fingerprint: string, url: string) {
     super(repository, fingerprint);
-    const { Bucket, Key } = parseS3Url(url)!;
+    const s3Url = parseS3Url(url);
+    if (!s3Url) {
+      throw new Error(`Failed to parse s3 url: ${url}`);
+    }
+    const { Bucket, Key } = s3Url;
     this.dir = this.getCacheFolder(Key);
     this.bucket = Bucket;
     this.s3Client = getS3Client();

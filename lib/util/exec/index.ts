@@ -85,7 +85,10 @@ async function prepareRawExec(
   const { containerbaseDir, binarySource } = GlobalConfig.get();
 
   if (binarySource === 'docker' || binarySource === 'install') {
-    logger.debug(`Setting CONTAINERBASE_CACHE_DIR to ${containerbaseDir!}`);
+    // TODO: types (#22198) - containerbaseDir is always set here
+    logger.debug(
+      `Setting CONTAINERBASE_CACHE_DIR to ${String(containerbaseDir)}`,
+    );
     opts.env ??= {};
     opts.env.CONTAINERBASE_CACHE_DIR = containerbaseDir;
   }

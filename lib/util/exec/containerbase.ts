@@ -364,7 +364,12 @@ export async function resolveConstraint(
     );
   }
 
-  const highestVersion = releases.pop()!.version;
+  const highestRelease = releases.pop();
+  /* v8 ignore if -- releases is checked to be non-empty above */
+  if (!highestRelease) {
+    throw new Error('No tool releases found.');
+  }
+  const highestVersion = highestRelease.version;
   logger.warn(
     { toolName, constraint, highestVersion },
     'No matching or stable tool versions found - using an unstable version',

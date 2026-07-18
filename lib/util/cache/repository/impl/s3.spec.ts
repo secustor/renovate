@@ -72,6 +72,12 @@ describe('util/cache/repository/impl/s3', () => {
     );
   });
 
+  it('throws when the s3 url cannot be parsed', () => {
+    expect(
+      () => new RepoCacheS3(repository, '0123456789abcdef', 'not-an-s3-url'),
+    ).toThrow('Failed to parse s3 url: not-an-s3-url');
+  });
+
   it('successfully reads from s3', async () => {
     const json = '{}';
     s3Mock
