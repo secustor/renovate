@@ -189,6 +189,12 @@
   },
   "overrides": [
     {
+      "files": ["lib/modules/manager/deps-edn/parser.ts"],
+      "rules": {
+        "typescript/no-unnecessary-condition": "off"
+      }
+    },
+    {
       "files": ["**/*.spec.ts", "test/**"],
       "rules": {
         "no-template-curly-in-string": "off",

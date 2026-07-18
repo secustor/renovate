@@ -108,7 +108,6 @@ export function parseDepsEdnFile(content: string): ParsedEdnResult | null {
 
   for (const token of tokens) {
     const tokenType = token.type as TokenType;
-    const stateType = state.type;
 
     // istanbul ignore else: token type comprehension
     if (
@@ -159,7 +158,7 @@ export function parseDepsEdnFile(content: string): ParsedEdnResult | null {
       tokenType === 'rational' ||
       tokenType === 'integer'
     ) {
-      if (stateType === 'record') {
+      if (state.type === 'record') {
         if (state.skipKey) {
           state.currentKey = null;
           state.skipKey = false;
@@ -169,9 +168,9 @@ export function parseDepsEdnFile(content: string): ParsedEdnResult | null {
         } else {
           state.currentKey = token.value;
         }
-      } else if (stateType === 'array') {
+      } else if (state.type === 'array') {
         state.data.push(token.value);
-      } else if (stateType === 'root') {
+      } else if (state.type === 'root') {
         state.data = token.value;
       }
     } else {
