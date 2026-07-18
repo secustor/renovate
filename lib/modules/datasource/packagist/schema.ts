@@ -254,7 +254,10 @@ export const RegistryMeta = z
       ['metadata-url']: metadataUrl,
       ['available-packages']: availablePackages,
     }) => ({
-      packages,
+      // `packages` is a LooseRecord keyed by whatever package names the
+      // registry happens to return; zod types every string key as present,
+      // but callers look it up by an arbitrary requested packageName.
+      packages: packages as Record<string, ComposerReleases | undefined>,
       includesFiles,
       providerPackages,
       files,

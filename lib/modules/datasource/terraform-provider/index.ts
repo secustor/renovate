@@ -6,6 +6,7 @@ import { regEx } from '../../../util/regex.ts';
 import { getQueryString, joinUrlParts } from '../../../util/url.ts';
 import * as hashicorpVersioning from '../../versioning/hashicorp/index.ts';
 import { TerraformDatasource } from '../terraform-module/base.ts';
+import type { ServiceDiscoveryResponse } from '../terraform-module/schema.ts';
 import { createSDBackendURL } from '../terraform-module/utils.ts';
 import type { GetReleasesConfig, ReleaseResult } from '../types.ts';
 import {
@@ -249,8 +250,12 @@ export class TerraformProviderDatasource extends TerraformDatasource {
     }
 
     // check public or private Terraform registry
-    const serviceDiscovery =
-      await this.getTerraformServiceDiscoveryResult(registryURL);
+    // Cast (rather than rely on the function's real, always-non-null return
+    // type) because this defensive "should never happen" branch is itself
+    // covered by a spec that deliberately mocks a null result.
+    const serviceDiscovery = (await this.getTerraformServiceDiscoveryResult(
+      registryURL,
+    )) as ServiceDiscoveryResponse | null;
     if (!serviceDiscovery) {
       // throw an error to disable caching
       throw new ExternalHostError(

@@ -25,5 +25,7 @@ export const Registry = LooseArray(ReleaseItem).transform((items) => {
     result[packageName].releases.push(release);
     result[packageName].sourceUrl = sourceUrl;
   }
-  return result;
+  // Callers look this up by an arbitrary requested package name, which may
+  // not be one of the ones the registry actually returned.
+  return result as Record<string, ReleaseResult | undefined>;
 });
