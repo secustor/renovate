@@ -20,7 +20,21 @@ export const defaults = {
   version: '0.0.0',
 };
 
-export function prInfo(mr: GitLabMergeRequest): GitlabPr {
+// Some callers (merge-request.ts/index.ts) fetch this via
+// `getJsonUnchecked`, which skips zod parsing entirely, so the schema's
+// `.catch([])`/`.optional()` defaults for `assignees`/`reviewers` are not
+// actually applied there — only `prInfo`'s validated caller (pr-cache.ts)
+// gets the schema's real guarantees. Widen the param type here to the
+// honest, worst-case shape rather than trusting the schema-inferred type.
+type PossiblyUnvalidatedMergeRequest = Omit<
+  GitLabMergeRequest,
+  'assignees' | 'reviewers'
+> & {
+  assignees?: GitLabMergeRequest['assignees'];
+  reviewers?: GitLabMergeRequest['reviewers'];
+};
+
+export function prInfo(mr: PossiblyUnvalidatedMergeRequest): GitlabPr {
   const pr: GitlabPr = {
     sourceBranch: mr.source_branch,
     targetBranch: mr.target_branch,
@@ -28,18 +42,18 @@ export function prInfo(mr: GitLabMergeRequest): GitlabPr {
     number: mr.iid,
     title: mr.title,
     createdAt: mr.created_at,
-    hasAssignees: !!(mr.assignee?.id ?? mr.assignees?.[0]?.id),
+    hasAssignees: !!(mr.assignee?.id ?? mr.assignees?.at(0)?.id),
     bodyStruct: getPrBodyStruct(mr.description),
 
     ...(mr.target_branch && { targetBranch: mr.target_branch }),
 
     ...(mr.head_pipeline?.status && {
-      headPipelineStatus: mr.head_pipeline?.status,
+      headPipelineStatus: mr.head_pipeline.status,
     }),
-    ...(mr.head_pipeline?.sha && { headPipelineSha: mr.head_pipeline?.sha }),
+    ...(mr.head_pipeline?.sha && { headPipelineSha: mr.head_pipeline.sha }),
 
     ...(isNonEmptyArray(mr.reviewers) && {
-      reviewers: mr.reviewers?.map(({ username }) => username),
+      reviewers: mr.reviewers.map(({ username }) => username),
     }),
 
     ...(mr.labels && { labels: mr.labels }),

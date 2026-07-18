@@ -37,14 +37,20 @@ export interface RepoResponse {
   id: number;
   archived: boolean;
   mirror: boolean;
-  default_branch: string;
+  // Genuinely `null` for an empty repo (this is a plain, unvalidated
+  // `getJsonUnchecked` response type, and GitLab really does this), so
+  // keep this honestly nullable rather than asserting always a string.
+  default_branch: string | null;
   empty_repo: boolean;
   ssh_url_to_repo: string | null;
   http_url_to_repo: string | null;
   forked_from_project: boolean;
   repository_access_level: 'disabled' | 'private' | 'enabled';
   merge_requests_access_level: 'disabled' | 'private' | 'enabled';
-  merge_method: MergeMethod;
+  // Genuinely absent in some responses in practice (same unvalidated
+  // response type; see index.spec.ts's initRepo snapshot fixtures, which
+  // omit it), so keep optional rather than asserting always present.
+  merge_method?: MergeMethod;
   /**
    * only available with paid plans
    * https://docs.gitlab.com/ci/pipelines/merge_trains

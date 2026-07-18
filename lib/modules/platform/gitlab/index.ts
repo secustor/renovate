@@ -112,7 +112,19 @@ export function resetPlatform(): void {
 export const id = 'gitlab';
 
 let draftPrefix = DRAFT_PREFIX;
-let botUserName: string;
+// Only assigned when `initPlatform` is called without `gitAuthor` (see
+// below); genuinely absent otherwise, so keep this honestly optional
+// rather than lying that it is always set.
+let botUserName: string | undefined;
+
+// `initPlatform` always sets `botUserName` (either from the fetched user or
+// from `username`) except in the pathological case of neither `gitAuthor`
+// nor `username` being configured; treat that edge case as "no known
+// author" for the PR cache rather than asserting it away.
+function getBotUserName(): string | null {
+  /* v8 ignore next -- see comment above */
+  return botUserName ?? null;
+}
 
 export async function initPlatform({
   endpoint,
@@ -322,7 +334,7 @@ export async function initRepo({
       logger.warn({ resBody: res.body }, 'Error fetching GitLab project');
       throw new Error(TEMPORARY_ERROR);
     }
-    config.mergeMethod = res.body.merge_method || 'merge';
+    config.mergeMethod = res.body.merge_method ?? 'merge';
     config.mergeTrainsEnabled = res.body.merge_trains_enabled ?? false;
     if (res.body.squash_option) {
       config.squash =
@@ -366,7 +378,7 @@ export async function initRepo({
 
 export function getBranchForceRebase(): Promise<boolean> {
   const forceRebase =
-    config?.mergeMethod !== 'merge' && !config.mergeTrainsEnabled;
+    config.mergeMethod !== 'merge' && !config.mergeTrainsEnabled;
   if (forceRebase) {
     logger.once.debug(
       `mergeMethod is ${config.mergeMethod} so PRs will be kept up-to-date with base branch`,
@@ -422,7 +434,13 @@ async function getStatus(
   }
 }
 
-const gitlabToRenovateStatusMapping: Record<BranchState, BranchStatus> = {
+// `Partial<...>` (rather than a fully exhaustive `Record`): this is an
+// unvalidated (`getJsonUnchecked`) response, and GitLab has been observed
+// sending status values outside this hardcoded list (see the "Could not
+// map GitLab check.status" warning below), so a lookup miss is real.
+const gitlabToRenovateStatusMapping: Partial<
+  Record<BranchState, BranchStatus>
+> = {
   pending: 'yellow',
   created: 'yellow',
   manual: 'yellow',
@@ -477,7 +495,7 @@ export async function getBranchStatus(
     !internalChecksAsSuccess &&
     branchStatuses.every(
       (check) =>
-        check.name?.startsWith('renovate/') &&
+        check.name.startsWith('renovate/') &&
         gitlabToRenovateStatusMapping[check.status] === 'green',
     )
   ) {
@@ -493,8 +511,7 @@ export async function getBranchStatus(
       // v8 ignore else -- TODO: add test #40625
       if (status !== 'red') {
         // if red, stay red
-        let mappedStatus: BranchStatus =
-          gitlabToRenovateStatusMapping[check.status];
+        let mappedStatus = gitlabToRenovateStatusMapping[check.status];
         if (!mappedStatus) {
           logger.warn(
             { check },
@@ -516,7 +533,7 @@ export async function getPrList(): Promise<Pr[]> {
   return await GitlabPrCache.getPrs(
     gitlabApi,
     config.repository,
-    botUserName,
+    getBotUserName(),
     !!config.ignorePrAuthor,
   );
 }
@@ -534,10 +551,10 @@ async function ignoreApprovals(pr: number): Promise<void> {
 
     const ruleName = 'renovateIgnoreApprovals';
 
-    const existingAnyApproverRule = rules?.find(
+    const existingAnyApproverRule = rules.find(
       ({ rule_type }) => rule_type === 'any_approver',
     );
-    const existingRegularApproverRules = rules?.filter(
+    const existingRegularApproverRules = rules.filter(
       ({ rule_type, name }) =>
         rule_type !== 'any_approver' &&
         name !== ruleName &&
@@ -545,7 +562,7 @@ async function ignoreApprovals(pr: number): Promise<void> {
         rule_type !== 'code_owner',
     );
 
-    if (existingRegularApproverRules?.length) {
+    if (existingRegularApproverRules.length) {
       await p.all(
         existingRegularApproverRules.map((rule) => async (): Promise<void> => {
           await gitlabApi.deleteJson(`${url}/${rule.id}`);
@@ -560,7 +577,7 @@ async function ignoreApprovals(pr: number): Promise<void> {
       return;
     }
 
-    const zeroApproversRule = rules?.find(({ name }) => name === ruleName);
+    const zeroApproversRule = rules.find(({ name }) => name === ruleName);
     if (!zeroApproversRule) {
       await gitlabApi.postJson(url, {
         body: {
@@ -613,9 +630,12 @@ async function tryPrAutomerge(
           merge_status?: string;
           detailed_merge_status?: string;
           merge_when_pipeline_succeeds?: boolean;
+          // Genuinely `null` when the MR has no pipeline (this is an
+          // unvalidated `getJsonUnchecked` response, and not all MRs have
+          // CI configured), hence the `body.pipeline !== null` check below.
           pipeline: {
             status: string;
-          };
+          } | null;
         }>(`projects/${config.repository}/merge_requests/${pr}`, {
           memCache: false,
         });
@@ -751,7 +771,7 @@ export async function createPr({
   await GitlabPrCache.setPr(
     gitlabApi,
     config.repository,
-    botUserName,
+    getBotUserName(),
     pr,
     !!config.ignorePrAuthor,
   );
@@ -821,7 +841,7 @@ export async function updatePr({
   await GitlabPrCache.setPr(
     gitlabApi,
     config.repository,
-    botUserName,
+    getBotUserName(),
     updatedPr,
     !!config.ignorePrAuthor,
   );
@@ -963,7 +983,7 @@ export async function getBranchStatusCheck(
   logger.debug(`Got res with ${res.length} results`);
   for (const check of res) {
     if (check.name === context) {
-      return gitlabToRenovateStatusMapping[check.status] || 'yellow';
+      return gitlabToRenovateStatusMapping[check.status] ?? 'yellow';
     }
   }
   return null;
@@ -1447,7 +1467,7 @@ export async function ensureCommentRemoval(
     const byTopic = (comment: GitlabComment): boolean =>
       comment.body.startsWith(`### ${deleteConfig.topic}\n\n`);
     commentId = comments.find(byTopic)?.id;
-  } else if (deleteConfig.type === 'by-content') {
+  } else {
     const byContent = (comment: GitlabComment): boolean =>
       comment.body.trim() === deleteConfig.content;
     commentId = comments.find(byContent)?.id;
