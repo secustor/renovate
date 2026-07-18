@@ -53,17 +53,26 @@ import { REPOSITORY_UNINITIATED } from '../../../constants/error-messages.ts';
 import { logger } from '../../../logger/index.ts';
 import { getEnv } from '../../../util/env.ts';
 
-let codeCommitClient: CodeCommitClient;
+// Module-level singleton: really starts out `undefined` at runtime (no
+// initializer), so keep the type honest rather than lying that it is
+// always assigned.
+let codeCommitClient: CodeCommitClient | undefined;
 
 export function buildCodeCommitClient(): void {
-  if (!codeCommitClient) {
-    codeCommitClient = new CodeCommitClient({});
-  }
+  codeCommitClient ??= new CodeCommitClient({});
+}
 
-  /* v8 ignore next */
+// All exported functions below assume `buildCodeCommitClient()` has already
+// run (it is called once from `initPlatform`); this getter turns that
+// invariant into an explicit, honestly-typed check instead of asserting
+// non-null at every call site.
+function getClient(): CodeCommitClient {
+  /* v8 ignore start -- defensive: buildCodeCommitClient() always runs first in practice */
   if (!codeCommitClient) {
-    throw new Error('Failed to initialize codecommit client');
+    throw new Error('CodeCommit client used before buildCodeCommitClient()');
   }
+  /* v8 ignore stop */
+  return codeCommitClient;
 }
 
 export async function deleteComment(
@@ -73,7 +82,7 @@ export async function deleteComment(
     commentId,
   };
   const cmd = new DeleteCommentContentCommand(input);
-  return await codeCommitClient.send(cmd);
+  return await getClient().send(cmd);
 }
 
 export async function getPrComments(
@@ -83,7 +92,7 @@ export async function getPrComments(
     pullRequestId,
   };
   const cmd = new GetCommentsForPullRequestCommand(input);
-  return await codeCommitClient.send(cmd);
+  return await getClient().send(cmd);
 }
 
 export async function updateComment(
@@ -95,7 +104,7 @@ export async function updateComment(
     content,
   };
   const cmd = new UpdateCommentCommand(input);
-  return await codeCommitClient.send(cmd);
+  return await getClient().send(cmd);
 }
 
 export async function createPrComment(
@@ -113,7 +122,7 @@ export async function createPrComment(
     beforeCommitId,
   };
   const cmd = new PostCommentForPullRequestCommand(input);
-  return await codeCommitClient.send(cmd);
+  return await getClient().send(cmd);
 }
 
 // export async function fastForwardMerge(
@@ -128,7 +137,7 @@ export async function createPrComment(
 //     targetBranch: destinationReference,
 //   };
 //   const cmd = new MergeBranchesByFastForwardCommand(input);
-//   return await codeCommitClient.send(cmd);
+//   return await getClient().send(cmd);
 // }
 
 // export async function squashMerge(
@@ -145,7 +154,7 @@ export async function createPrComment(
 //     commitMessage,
 //   };
 //   const cmd = new MergeBranchesBySquashCommand(input);
-//   return await codeCommitClient.send(cmd);
+//   return await getClient().send(cmd);
 // }
 
 export async function updatePrStatus(
@@ -157,7 +166,7 @@ export async function updatePrStatus(
     pullRequestStatus,
   };
   const cmd = new UpdatePullRequestStatusCommand(input);
-  return await codeCommitClient.send(cmd);
+  return await getClient().send(cmd);
 }
 
 export async function updatePrTitle(
@@ -169,7 +178,7 @@ export async function updatePrTitle(
     title,
   };
   const cmd = new UpdatePullRequestTitleCommand(input);
-  return await codeCommitClient.send(cmd);
+  return await getClient().send(cmd);
 }
 
 export async function updatePrDescription(
@@ -181,7 +190,7 @@ export async function updatePrDescription(
     description,
   };
   const cmd = new UpdatePullRequestDescriptionCommand(input);
-  return await codeCommitClient.send(cmd);
+  return await getClient().send(cmd);
 }
 
 export async function createPr(
@@ -203,7 +212,7 @@ export async function createPr(
     ],
   };
   const cmd = new CreatePullRequestCommand(input);
-  return await codeCommitClient.send(cmd);
+  return await getClient().send(cmd);
 }
 
 export async function getFile(
@@ -217,7 +226,7 @@ export async function getFile(
     commitSpecifier,
   };
   const cmd: GetFileCommand = new GetFileCommand(input);
-  return await codeCommitClient.send(cmd);
+  return await getClient().send(cmd);
 }
 
 export async function listPullRequests(
@@ -229,7 +238,7 @@ export async function listPullRequests(
   };
 
   const cmd = new ListPullRequestsCommand(input);
-  return await codeCommitClient.send(cmd);
+  return await getClient().send(cmd);
 }
 
 export async function getRepositoryInfo(
@@ -239,7 +248,7 @@ export async function getRepositoryInfo(
     repositoryName: `${repository}`,
   };
   const cmd = new GetRepositoryCommand(input);
-  return await codeCommitClient.send(cmd);
+  return await getClient().send(cmd);
 }
 
 export async function getPr(
@@ -251,7 +260,7 @@ export async function getPr(
   const cmd = new GetPullRequestCommand(input);
   let res;
   try {
-    res = await codeCommitClient.send(cmd);
+    res = await getClient().send(cmd);
   } catch (err) {
     logger.debug({ err }, 'failed to get PR using prId');
   }
@@ -261,7 +270,7 @@ export async function getPr(
 export async function listRepositories(): Promise<ListRepositoriesOutput> {
   const input: ListRepositoriesInput = {};
   const cmd = new ListRepositoriesCommand(input);
-  return await codeCommitClient.send(cmd);
+  return await getClient().send(cmd);
 }
 
 export async function createPrApprovalRule(
@@ -274,7 +283,7 @@ export async function createPrApprovalRule(
     pullRequestId,
   };
   const cmd = new CreatePullRequestApprovalRuleCommand(input);
-  return await codeCommitClient.send(cmd);
+  return await getClient().send(cmd);
 }
 
 export function getCodeCommitUrl(
