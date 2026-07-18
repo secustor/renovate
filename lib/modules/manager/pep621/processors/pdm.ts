@@ -164,7 +164,7 @@ export class PdmProcessor extends BasePyProjectProcessor {
 
 function generateCMDs(updatedDeps: Upgrade<Pep621ManagerData>[]): string[] {
   const cmds: string[] = [];
-  const packagesByCMD: Record<string, string[]> = {};
+  const packagesByCMD: Record<string, string[] | undefined> = {};
   for (const dep of updatedDeps) {
     switch (dep.depType) {
       case depTypes.optionalDependencies: {
@@ -208,8 +208,8 @@ function generateCMDs(updatedDeps: Upgrade<Pep621ManagerData>[]): string[] {
     }
   }
 
-  for (const commandPrefix in packagesByCMD) {
-    const packageList = packagesByCMD[commandPrefix].map(quote).join(' ');
+  for (const [commandPrefix, packages] of Object.entries(packagesByCMD)) {
+    const packageList = (packages ?? []).map(quote).join(' ');
     const cmd = `${commandPrefix} ${packageList}`;
     cmds.push(cmd);
   }
@@ -218,12 +218,10 @@ function generateCMDs(updatedDeps: Upgrade<Pep621ManagerData>[]): string[] {
 }
 
 function addPackageToCMDRecord(
-  packagesByCMD: Record<string, string[]>,
+  packagesByCMD: Record<string, string[] | undefined>,
   commandPrefix: string,
   packageName: string,
 ): void {
-  if (!packagesByCMD[commandPrefix]) {
-    packagesByCMD[commandPrefix] = [];
-  }
+  packagesByCMD[commandPrefix] ??= [];
   packagesByCMD[commandPrefix].push(packageName);
 }
