@@ -14,7 +14,7 @@ export interface ToolingDefinition {
  * Maps proto built-in tool names to Renovate datasource configurations.
  * @see https://moonrepo.dev/docs/proto/config
  */
-export const protoTooling: Record<string, ToolingDefinition> = {
+export const protoTooling: Record<string, ToolingDefinition | undefined> = {
   bun: {
     config: {
       packageName: 'oven-sh/bun',

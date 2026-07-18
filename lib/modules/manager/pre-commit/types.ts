@@ -1,5 +1,7 @@
 export interface PreCommitConfig {
-  repos: PreCommitDependency[];
+  // This is untrusted, unvalidated YAML content, so `repos` may genuinely be
+  // absent despite being conventionally required.
+  repos?: PreCommitDependency[];
 }
 
 export interface PreCommitHook {

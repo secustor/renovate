@@ -70,7 +70,16 @@ function parseDep(
     return null;
   }
 
-  const [, depName, , currVal] = packageMatches;
+  // `packageMatches` can come from either `pkgValRegex` (which has a
+  // `currVal` group) or the `pkgRegex` fallback (which doesn't, so this
+  // index is genuinely absent then) -- RegExpExecArray's element type
+  // doesn't reflect that.
+  const [, depName, , currVal] = packageMatches as unknown as [
+    string,
+    string,
+    string,
+    string?,
+  ];
   const currentValue = currVal?.trim();
 
   const dep: PackageDependency = {

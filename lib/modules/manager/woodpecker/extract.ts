@@ -20,7 +20,9 @@ export function extractPackageFile(
   extractConfig: ExtractConfig,
 ): PackageFileContent | null {
   logger.debug('woodpecker.extractPackageFile()');
-  let config: WoodpeckerConfig;
+  // This is untrusted, unvalidated YAML content, so `config` may genuinely
+  // be nullish (or not even object-shaped) despite the annotation below.
+  let config: WoodpeckerConfig | undefined;
   try {
     // TODO: use schema (#9610)
     config = parseSingleYaml(content);
@@ -57,7 +59,7 @@ export function extractPackageFile(
   // use variables and if the image is not built locally
   const deps = pipelineKeys.flatMap((pipelineKey) =>
     Object.values(config[pipelineKey] ?? {})
-      .filter((step) => isString(step?.image))
+      .filter((step) => isString(step.image))
       .map((step) => getDep(step.image, true, extractConfig.registryAliases)),
   );
 

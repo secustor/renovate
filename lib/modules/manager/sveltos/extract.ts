@@ -75,10 +75,15 @@ function processAppSpec(
 
   const depType = definition.kind;
 
+  // `extractDefinition` is exported and its spec.ts calls it directly with
+  // `{} as ProfileDefinition` to exercise malformed-input handling, so
+  // `.spec` genuinely can be undefined here despite the zod schema requiring
+  // it for real (validated) input -- cast rather than relying on the type.
   const helmCharts =
     definition.kind === 'ClusterPromotion'
-      ? definition.spec?.profileSpec?.helmCharts
-      : definition.spec?.helmCharts;
+      ? (definition.spec as typeof definition.spec | undefined)?.profileSpec
+          ?.helmCharts
+      : (definition.spec as typeof definition.spec | undefined)?.helmCharts;
 
   for (const source of coerceArray(helmCharts)) {
     const dep = processHelmCharts(source, config?.registryAliases);
