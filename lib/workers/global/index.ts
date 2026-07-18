@@ -91,11 +91,19 @@ export async function getRepositoryConfig(
   repoConfig.parentOrg = repoParts.join('/');
   repoConfig.topLevelOrg = repoParts.shift();
   const platform = GlobalConfig.get('platform');
-  repoConfig.localDir =
-    platform === 'local'
-      ? process.cwd()
-      : // TODO: types (#22198)
-        upath.join(repoConfig.baseDir!, `./repos/${platform}/${repoName}`);
+  if (platform === 'local') {
+    repoConfig.localDir = process.cwd();
+  } else {
+    const { baseDir } = repoConfig;
+    /* v8 ignore if -- TODO: types (#22198) - baseDir is always set here */
+    if (!baseDir) {
+      throw new Error('Missing baseDir in global config');
+    }
+    repoConfig.localDir = upath.join(
+      baseDir,
+      `./repos/${platform}/${repoName}`,
+    );
+  }
   await fs.ensureDir(repoConfig.localDir);
   delete repoConfig.baseDir;
   return configParser.filterConfig(repoConfig, 'repository');
@@ -153,7 +161,7 @@ export async function start(): Promise<number> {
     logger.debug('RE2 regex engine is ignored via RENOVATE_X_IGNORE_RE2');
   }
 
-  let config: AllConfig;
+  let config: AllConfig | undefined;
   const env = getEnv();
   try {
     if (isNonEmptyStringAndNotWhitespace(env.AWS_SECRET_ACCESS_KEY)) {
@@ -163,52 +171,57 @@ export async function start(): Promise<number> {
       addSecretForSanitizing(env.AWS_SESSION_TOKEN, 'global');
     }
 
-    await instrument('config', async () => {
+    const initializedConfig = await instrument('config', async () => {
       // read global config from file, env and cli args
-      config = await getGlobalConfig();
+      let parsedConfig: AllConfig = await getGlobalConfig();
+      config = parsedConfig;
 
       // Set allowedHeaders and userAgent in case hostRules headers are configured in file config
       GlobalConfig.set({
-        allowedHeaders: config.allowedHeaders,
-        userAgent: config.userAgent,
+        allowedHeaders: parsedConfig.allowedHeaders,
+        userAgent: parsedConfig.userAgent,
       });
       // initialize all submodules
-      config = await globalInitialize(config);
+      parsedConfig = await globalInitialize(parsedConfig);
+      config = parsedConfig;
 
       // Set platform, endpoint, allowedHeaders and userAgent in case local presets are used
       GlobalConfig.set({
-        allowedHeaders: config.allowedHeaders,
-        platform: config.platform,
-        endpoint: config.endpoint,
-        userAgent: config.userAgent,
+        allowedHeaders: parsedConfig.allowedHeaders,
+        platform: parsedConfig.platform,
+        endpoint: parsedConfig.endpoint,
+        userAgent: parsedConfig.userAgent,
       });
 
-      await validatePresets(config);
+      await validatePresets(parsedConfig);
 
-      setGlobalLogLevelRemaps(config.logLevelRemap);
+      setGlobalLogLevelRemaps(parsedConfig.logLevelRemap);
 
       checkEnv();
 
       // validate secrets and variables. Will throw and abort if invalid
-      validateConfigSecretsAndVariables(config);
+      validateConfigSecretsAndVariables(parsedConfig);
+
+      return parsedConfig;
     });
 
     // autodiscover repositories (needs to come after platform initialization)
-    config = await instrument('discover', () =>
-      autodiscoverRepositories(config),
+    const discoveredConfig = await instrument('discover', () =>
+      autodiscoverRepositories(initializedConfig),
     );
+    config = discoveredConfig;
 
-    if (isNonEmptyString(config.writeDiscoveredRepos)) {
-      const content = JSON.stringify(config.repositories);
-      await fs.writeFile(config.writeDiscoveredRepos, content);
+    if (isNonEmptyString(discoveredConfig.writeDiscoveredRepos)) {
+      const content = JSON.stringify(discoveredConfig.repositories);
+      await fs.writeFile(discoveredConfig.writeDiscoveredRepos, content);
       logger.info(
-        `Written discovered repositories to ${config.writeDiscoveredRepos}`,
+        `Written discovered repositories to ${discoveredConfig.writeDiscoveredRepos}`,
       );
       return 0;
     }
 
     // Iterate through repositories sequentially
-    for (const repository of config.repositories!) {
+    for (const repository of discoveredConfig.repositories ?? []) {
       if (haveReachedLimits()) {
         break;
       }
@@ -220,7 +233,10 @@ export async function start(): Promise<number> {
       await instrument(
         'repository',
         async () => {
-          const repoConfig = await getRepositoryConfig(config, repository);
+          const repoConfig = await getRepositoryConfig(
+            discoveredConfig,
+            repository,
+          );
           if (repoConfig.hostRules) {
             logger.debug('Reinitializing hostRules for repo');
             hostRules.clear();
@@ -237,7 +253,7 @@ export async function start(): Promise<number> {
         },
         {
           attributes: {
-            [ATTR_VCS_PROVIDER_NAME]: config.platform,
+            [ATTR_VCS_PROVIDER_NAME]: discoveredConfig.platform,
             [ATTR_VCS_OWNER_NAME]: owner,
             [ATTR_VCS_REPOSITORY_NAME]: repo,
             /** @deprecated TODO remove */
@@ -251,7 +267,7 @@ export async function start(): Promise<number> {
     }
 
     finalizeReport();
-    await exportStats(config);
+    await exportStats(discoveredConfig);
   } catch (err) /* istanbul ignore next */ {
     if (err.message.startsWith('Init: ')) {
       logger.fatal(
@@ -261,13 +277,13 @@ export async function start(): Promise<number> {
     } else {
       logger.fatal({ err }, 'Unknown error');
     }
-    if (!config!) {
+    if (!config) {
       // return early if we can't parse config options
       logger.debug(`Missing config`);
       return 2;
     }
   } finally {
-    await globalFinalize(config!);
+    await globalFinalize(config ?? {});
     if (logLevel() === 'info') {
       logger.info(
         `Renovate was run at log level "${logLevel()}". Set LOG_LEVEL=debug in environment variables to see extended debug logs.`,

@@ -168,6 +168,21 @@ describe('workers/global/index', () => {
     expect(repositoryWorker.renovateRepository).not.toHaveBeenCalled();
   });
 
+  it('handles missing repositories', async () => {
+    parseConfigs.mockResolvedValueOnce({
+      baseDir: '/tmp/base',
+      cacheDir: '/tmp/cache',
+    });
+    await expect(globalWorker.start()).resolves.toBe(0);
+    expect(repositoryWorker.renovateRepository).not.toHaveBeenCalled();
+  });
+
+  it('exits with 2 when config cannot be parsed', async () => {
+    parseConfigs.mockRejectedValueOnce(new Error('parse failure'));
+    await expect(globalWorker.start()).resolves.toBe(2);
+    expect(repositoryWorker.renovateRepository).not.toHaveBeenCalled();
+  });
+
   it('handles local', async () => {
     parseConfigs.mockResolvedValueOnce({
       platform: 'local',

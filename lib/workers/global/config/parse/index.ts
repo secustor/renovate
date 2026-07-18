@@ -208,8 +208,11 @@ export async function parseConfigs(
       deleteSecrets: false,
       deleteVariables: false,
     });
-    // adding these secrets to the globalSecrets set so that they can be redacted from logs
-    for (const secret of Object.values(config.secrets!)) {
+  }
+
+  // adding these secrets to the globalSecrets set so that they can be redacted from logs
+  if (isNonEmptyObject(config.secrets)) {
+    for (const secret of Object.values(config.secrets)) {
       addSecretForSanitizing(secret, 'global');
     }
   }

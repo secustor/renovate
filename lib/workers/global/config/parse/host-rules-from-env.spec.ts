@@ -103,6 +103,13 @@ describe('workers/global/config/parse/host-rules-from-env', () => {
     }
   });
 
+  it('ignores datasource env without a suffix', () => {
+    const envParam: NodeJS.ProcessEnv = {
+      PYPI: 'some-token',
+    };
+    expect(hostRulesFromEnv(envParam)).toEqual([]);
+  });
+
   it('supports datasource env token', () => {
     const envParam: NodeJS.ProcessEnv = {
       PYPI_TOKEN: 'some-token',

@@ -69,18 +69,17 @@ export function hostRulesFromEnv(env: NodeJS.ProcessEnv): HostRule[] {
       continue;
     }
     // Double underscore __ is used in place of hyphen -
-    const splitEnv = envName
+    const [hostType, ...splitEnv] = envName
       .replace(/^RENOVATE_/, '')
       .toLowerCase()
       .replace(/__/g, '-')
       .split('_');
-    const hostType = splitEnv.shift()!;
     if (
       datasources.has(hostType) ||
       (platforms.has(hostType) && splitEnv.length > 1)
     ) {
-      let suffix = splitEnv.pop()!;
-      if (isAuthField(suffix) || isHttpsAuthField(suffix)) {
+      let suffix = splitEnv.pop();
+      if (suffix && (isAuthField(suffix) || isHttpsAuthField(suffix))) {
         suffix = restoreHttpsAuthField(suffix);
 
         let matchHost: string | undefined = undefined;
