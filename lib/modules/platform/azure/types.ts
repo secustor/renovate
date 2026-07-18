@@ -19,7 +19,10 @@ export interface Config {
   owner: string;
   repoId: string;
   project: string;
-  prList: AzurePr[];
+  // Populated lazily by getPrList(); config is reset to a partial object via
+  // an `as Config` cast on each `initRepo`, so this is genuinely absent
+  // until then.
+  prList?: AzurePr[];
   fileList: null;
   repository: string;
   defaultBranch: string;

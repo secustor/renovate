@@ -80,7 +80,7 @@ export class IssueService {
         workItemType,
       );
 
-      if (stateColors?.length) {
+      if (stateColors.length) {
         const openNames = namesByCategory(stateColors, openCategories);
         // A `Completed` state (e.g. Agile's `Closed`) is the true "done" state.
         // `Resolved`/`Removed` states also count as closed but must not be
@@ -94,7 +94,7 @@ export class IssueService {
         // process somehow exposes only closed states, this falls back to a
         // closed state name; that is intentional (there is no better reopen
         // target) rather than a bug.
-        states.open = openNames[0] ?? stateColors[0].name ?? states.open;
+        states.open = openNames.at(0) ?? stateColors[0].name ?? states.open;
         if (closedNames.length) {
           // Prefer a `Completed` state as the close target so processes that
           // order `Resolved` before `Closed` (e.g. some custom Agile
@@ -247,7 +247,7 @@ export class IssueService {
       }
 
       const existingIssue =
-        openIssues[0] ?? issues.find((issue) => issue.state === 'closed');
+        openIssues.at(0) ?? issues.find((issue) => issue.state === 'closed');
 
       if (existingIssue) {
         if (existingIssue.state === 'closed' && once) {
@@ -343,7 +343,14 @@ export class IssueService {
         return null;
       }
 
-      const newWorkItem = await azureApiWit.createWorkItem(
+      // Azure DevOps normally returns the created work item, but the
+      // underlying REST client resolves to `null` instead of throwing for
+      // some responses: a 404, or any 2xx with an empty/non-JSON body (e.g. a
+      // 203 sign-in page from an expired token or an SSO/proxy in front of the
+      // instance). The upstream `.d.ts` lies about this (`Promise<WorkItem>`,
+      // never `null`), so the cast below restores the honest, observed type
+      // rather than dropping the guard below.
+      const newWorkItem = (await azureApiWit.createWorkItem(
         undefined,
         [
           {
@@ -365,14 +372,8 @@ export class IssueService {
         ],
         this.config.project,
         workItemType,
-      );
+      )) as WorkItem | null;
 
-      // Azure DevOps normally returns the created work item, but the
-      // underlying REST client resolves to `null` instead of throwing for
-      // some responses: a 404, or any 2xx with an empty/non-JSON body (e.g. a
-      // 203 sign-in page from an expired token or an SSO/proxy in front of the
-      // instance). Guard the result so such a response does not crash the whole
-      // run with `Cannot read properties of null (reading 'id')`.
       if (!newWorkItem?.id) {
         logger.warn(
           'Azure: work item creation returned no result; skipping issue',

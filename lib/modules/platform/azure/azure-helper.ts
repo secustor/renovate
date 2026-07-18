@@ -82,7 +82,7 @@ export async function getFile(
     },
   );
 
-  if (item?.readable) {
+  if (item.readable) {
     const fileContent = await streamToString(item);
     try {
       const result = WrappedException.safeParse(fileContent);
@@ -144,7 +144,10 @@ export async function getMergeMethod(
     `getMergeMethod(branchRef=${branchRef}, defaultBranch=${defaultBranch})`,
   );
   interface Scope {
-    repositoryId: string;
+    // repositoryId comes from the untyped Azure DevOps policy settings
+    // payload (`any`) and can genuinely be null when a policy applies
+    // repository-wide, so keep this honestly nullable.
+    repositoryId: string | null;
     refName?: string;
     matchKind: 'Prefix' | 'Exact' | 'DefaultBranch';
   }

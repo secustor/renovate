@@ -138,7 +138,11 @@ export async function getRawFile(
       return null;
     }
 
-    let item: GitItem | undefined;
+    // The upstream `.d.ts` claims `getItem` always resolves to a `GitItem`,
+    // but the REST client resolves to `null` for a 404 (e.g. tag not found,
+    // see #36835 and the matching spec), so the cast below restores the
+    // honest, observed type rather than dropping the `if (item)` guard below.
+    let item: GitItem | null | undefined;
     const versionDescriptor: GitVersionDescriptor = {
       version: branchOrTag,
     } satisfies GitVersionDescriptor;
@@ -146,7 +150,7 @@ export async function getRawFile(
     for (const versionType of [GitVersionType.Tag, GitVersionType.Branch]) {
       versionDescriptor.versionType = versionType;
 
-      item = await azureApiGit.getItem(
+      item = (await azureApiGit.getItem(
         repoId, // repositoryId
         fileName, // path
         undefined, // project
@@ -157,7 +161,7 @@ export async function getRawFile(
         undefined, // download
         branchOrTag ? versionDescriptor : undefined, // versionDescriptor
         true, // includeContent
-      );
+      )) as GitItem | null;
       if (item) {
         break; // exit loop if item is found
       } else {
@@ -392,7 +396,13 @@ async function getStatusCheck(branchName: string): Promise<GitStatus[]> {
   );
 }
 
-const azureToRenovateStatusMapping: Record<GitStatusState, BranchStatus> = {
+// `Partial<...>` (rather than a fully exhaustive `Record`): Azure DevOps has
+// been observed sending state values outside the known `GitStatusState`
+// enum (see the "status is unknown" spec), so a lookup miss is real and
+// must fall back below, not just be a defensive type-level nicety.
+const azureToRenovateStatusMapping: Partial<
+  Record<GitStatusState, BranchStatus>
+> = {
   [GitStatusState.Succeeded]: 'green',
   [GitStatusState.NotApplicable]: 'green',
   [GitStatusState.NotSet]: 'yellow',
@@ -409,8 +419,11 @@ export async function getBranchStatusCheck(
   const res = await getStatusCheck(branchName);
   for (const check of res) {
     if (getGitStatusContextCombinedName(check.context) === context) {
-      // TODO #22198
-      return azureToRenovateStatusMapping[check.state!] ?? 'yellow';
+      // `state` is optional on the upstream type; Azure DevOps can omit it.
+      if (!check.state) {
+        return 'yellow';
+      }
+      return azureToRenovateStatusMapping[check.state] ?? 'yellow';
     }
   }
   return null;
@@ -671,20 +684,20 @@ export async function ensureComment({
   const azureApiGit = await azureApi.gitApi();
 
   const threads = await azureApiGit.getThreads(config.repoId, number);
-  let threadIdFound: number | undefined;
-  let commentIdFound: number | undefined;
-  let commentNeedsUpdating = false;
-  threads.forEach((thread) => {
+  // `findLast` (not `find`) to match the original `forEach` behavior of
+  // letting the *last* matching thread in the list win when several match.
+  const matchedThread = threads.findLast((thread) => {
     const firstCommentContent = thread.comments?.[0].content;
-    if (
+    return (
       (topic && firstCommentContent?.startsWith(header)) === true ||
       (!topic && firstCommentContent === body)
-    ) {
-      threadIdFound = thread.id;
-      commentIdFound = thread.comments?.[0].id;
-      commentNeedsUpdating = firstCommentContent !== body;
-    }
+    );
   });
+  const threadIdFound = matchedThread?.id;
+  const commentIdFound = matchedThread?.comments?.[0].id;
+  const commentNeedsUpdating = matchedThread
+    ? matchedThread.comments?.[0].content !== body
+    : false;
 
   if (!threadIdFound) {
     await azureApiGit.createThread(
