@@ -250,9 +250,13 @@ function getLockedDependencyVersions(
   const res: Record<string, Record<string, string>> = {};
   for (const depType of dependencyTypes) {
     res[depType] = {};
-    for (const [pkgName, versionCarrier] of Object.entries(
-      obj[depType] ?? {},
-    )) {
+    // `obj` may be an importer entry (`Record<string, PnpmDependency>`),
+    // which - unlike the top-level `PnpmLockFile` - genuinely may not
+    // have a `devDependencies`/`optionalDependencies` key at all (see the
+    // pnpm.spec.ts lockfile fixtures, whose importers only ever declare
+    // `dependencies`).
+    const depsOfType = obj[depType] as PnpmDependency | undefined;
+    for (const [pkgName, versionCarrier] of Object.entries(depsOfType ?? {})) {
       let version: string;
       if (isObject(versionCarrier)) {
         version = versionCarrier.version;

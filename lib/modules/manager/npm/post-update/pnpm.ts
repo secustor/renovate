@@ -105,9 +105,13 @@ export async function generateLockFile(
     // `--recursive` will install un-wanted project.
     // we should avoid this.
     if (await localPathExists(pnpmWorkspaceFilePath)) {
-      const pnpmWorkspace = parseSingleYaml<PnpmWorkspaceFile>(
+      // `parseSingleYaml` casts the raw parsed YAML to `ResT` without
+      // validation, so malformed/empty content can genuinely yield
+      // `undefined` here despite the declared type.
+      const pnpmWorkspace = parseSingleYaml<PnpmWorkspaceFile | undefined>(
         (await readLocalFile(pnpmWorkspaceFilePath, 'utf8'))!,
       );
+      // oxlint-disable-next-line typescript/no-unnecessary-condition -- tsgolint false positive: `pnpmWorkspace` is typed `PnpmWorkspaceFile | undefined` (verified with an explicit `: undefined` type-check probe), since `parseSingleYaml` casts unvalidated YAML content.
       if (pnpmWorkspace?.packages?.length) {
         logger.debug(
           `Found pnpm workspace with ${pnpmWorkspace.packages.length} package definitions`,
@@ -199,7 +203,10 @@ export async function getConstraintFromLockFile(
       return null;
     }
     // TODO: use schema (#9610)
-    const pnpmLock = parseSingleYaml<PnpmLockFile>(lockfileContent);
+    // `parseSingleYaml` casts the raw parsed YAML to `ResT` without
+    // validation, so malformed content can genuinely yield `undefined`
+    // here despite the declared type.
+    const pnpmLock = parseSingleYaml<PnpmLockFile | undefined>(lockfileContent);
     if (
       !isNumber(pnpmLock?.lockfileVersion) &&
       !isNumericString(pnpmLock?.lockfileVersion)

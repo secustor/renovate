@@ -33,7 +33,7 @@ export async function resolveNpmrc(
         if (npmrc.length && !npmrc.endsWith('\n')) {
           npmrc += '\n';
         }
-        if (repoNpmrc?.includes('package-lock')) {
+        if (repoNpmrc.includes('package-lock')) {
           logger.debug('Stripping package-lock setting from .npmrc');
           repoNpmrc = repoNpmrc.replace(
             regEx(/(^|\n)package-lock.*?(\n|$)/g),

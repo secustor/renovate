@@ -12,7 +12,10 @@ import { setNodeCommitTopic } from './node.ts';
  */
 export function extractOverrideDepsRec(
   parents: string[],
-  child: NpmManagerData,
+  // Callers cast an untrusted `package.json` value (`as unknown as
+  // NpmManagerData`) to get here, so a JSON `null` (e.g. `"overrides": {
+  // "foo": null }`) genuinely reaches this parameter despite the type.
+  child: NpmManagerData | null | undefined,
 ): PackageDependency[] {
   const deps: PackageDependency[] = [];
   if (!child || isEmptyObject(child)) {

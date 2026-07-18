@@ -1,4 +1,4 @@
-interface LockFilePackage {
+export interface LockFilePackage {
   name?: string;
   version?: string;
   resolved?: string;

@@ -227,7 +227,7 @@ export function updateDependency({
       return fileContent;
     }
 
-    if (parsedContents?.resolutions) {
+    if (parsedContents.resolutions) {
       let depKey: string | undefined;
       if (parsedContents.resolutions[depName]) {
         depKey = depName;
@@ -273,7 +273,7 @@ export function updateDependency({
         }
       }
     }
-    if (parsedContents?.dependenciesMeta) {
+    if (parsedContents.dependenciesMeta) {
       for (const [depKey] of Object.entries(parsedContents.dependenciesMeta)) {
         if (depKey.startsWith(`${depName}@`)) {
           newFileContent = replaceAsString(
@@ -300,20 +300,25 @@ function overrideDepPosition(
   parents: string[],
   depName: string,
 ): {
-  depObjectReference: Record<string, string>;
+  depObjectReference: Record<string, string> | undefined;
   overrideDepName: string;
 } {
   // get override dep position when its nested in an object
   const lastParent = parents.at(-1);
-  let overrideDep: OverrideDependency = overrideBlock;
+  // `OverrideDependency` is a `Record<string, ...>`, which claims every key
+  // is present, but a `parent` segment genuinely may not exist in the
+  // (untrusted, package.json-derived) override tree.
+  let overrideDep: OverrideDependency | undefined = overrideBlock;
   for (const parent of parents) {
     // v8 ignore else -- TODO: add test #40625
     if (overrideDep) {
-      overrideDep = overrideDep[parent] as Record<string, RecursiveOverride>;
+      overrideDep = overrideDep[parent] as
+        | Record<string, RecursiveOverride>
+        | undefined;
     }
   }
   const overrideDepName = depName === lastParent ? '.' : depName;
-  const depObjectReference = overrideDep as Record<string, string>;
+  const depObjectReference = overrideDep as Record<string, string> | undefined;
   return { depObjectReference, overrideDepName };
 }
 

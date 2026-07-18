@@ -328,7 +328,7 @@ async function updateYarnOffline(
           });
         }
       }
-      for (const f of status.deleted || []) {
+      for (const f of status.deleted) {
         if (resolvedPaths.some((p) => f.startsWith(p))) {
           updatedArtifacts.push({ type: 'deletion', path: f });
         }
@@ -356,8 +356,15 @@ export async function updateYarnBinary(
     }
 
     // TODO: use schema (#9610)
-    const oldYarnPath = parseSingleYaml<YarnRcYmlFile>(yarnrcYml)?.yarnPath;
-    const newYarnPath = parseSingleYaml<YarnRcYmlFile>(newYarnrcYml)?.yarnPath;
+    // `parseSingleYaml` casts the raw parsed YAML to `ResT` without
+    // validation, so malformed content can genuinely yield `undefined`
+    // despite the declared type.
+    const oldYarnPath = parseSingleYaml<YarnRcYmlFile | undefined>(
+      yarnrcYml,
+    )?.yarnPath;
+    const newYarnPath = parseSingleYaml<YarnRcYmlFile | undefined>(
+      newYarnrcYml,
+    )?.yarnPath;
     if (
       !isNonEmptyStringAndNotWhitespace(oldYarnPath) ||
       !isNonEmptyStringAndNotWhitespace(newYarnPath)

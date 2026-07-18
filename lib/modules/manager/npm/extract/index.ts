@@ -295,13 +295,10 @@ export async function extractAllPackageFiles(
               packageFile,
               hasPackageManagerResult,
             );
-            // v8 ignore else -- TODO: add tests #40625
-            if (catalogsDeps) {
-              npmFiles.push({
-                ...catalogsDeps,
-                packageFile,
-              });
-            }
+            npmFiles.push({
+              ...catalogsDeps,
+              packageFile,
+            });
           }
         }
       }

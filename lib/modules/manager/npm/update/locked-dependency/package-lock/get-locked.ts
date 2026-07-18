@@ -14,8 +14,10 @@ export function getLockedDependencies(
     if (!dependencies) {
       return [];
     }
-    const dep = dependencies[depName];
-    if (dep && (currentVersion === null || dep?.version === currentVersion)) {
+    // `dependencies` is a `Record<string, ...>`, which claims every key is
+    // present, but `depName` genuinely may not be one of its keys.
+    const dep = dependencies[depName] as PackageLockDependency | undefined;
+    if (dep && (currentVersion === null || dep.version === currentVersion)) {
       if (bundled || entry.bundled) {
         dep.bundled = true;
       }

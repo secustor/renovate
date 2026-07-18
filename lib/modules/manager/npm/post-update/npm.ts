@@ -29,6 +29,7 @@ import { Result } from '../../../../util/result.ts';
 import { trimSlashes } from '../../../../util/url.ts';
 import type { PostUpdateConfig, Upgrade } from '../../types.ts';
 import { PackageLock } from '../schema.ts';
+import type { LockFilePackage } from '../types.ts';
 import { composeLockFile, parseLockFile } from '../utils.ts';
 import { getNodeToolConstraint } from './node-version.ts';
 import type { GenerateLockFileResult } from './types.ts';
@@ -361,10 +362,15 @@ export async function generateLockFile(
 
           // TODO #22198
           // v8 ignore else -- TODO: add test #40625
-          if (
-            lockFileParsed.packages?.['']?.[depType]?.[lockUpdate.packageName!]
-          ) {
-            lockFileParsed.packages[''][depType][lockUpdate.packageName!] =
+          // `packages` is a `Record<string, LockFilePackage>`, which claims
+          // every key is present, but the root (`''`) entry is genuinely
+          // missing from some real lockfiles (e.g. an empty `packages: {}`
+          // fixture in npm.spec.ts).
+          const rootPackage = lockFileParsed.packages[''] as
+            | LockFilePackage
+            | undefined;
+          if (rootPackage?.[depType]?.[lockUpdate.packageName!]) {
+            rootPackage[depType][lockUpdate.packageName!] =
               lockUpdate.newValue!;
           }
         });

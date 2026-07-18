@@ -104,6 +104,31 @@ describe('modules/manager/npm/post-update/npm', () => {
     expect(execSnapshots).toMatchSnapshot();
   });
 
+  it('performs lock file updates when the root package entry is missing', async () => {
+    mockExecAll();
+    fs.readLocalFile.mockResolvedValueOnce(
+      JSON.stringify({ lockfileVersion: 3, packages: {} }),
+    );
+    const skipInstalls = true;
+    const updates = [
+      {
+        packageName: 'some-dep',
+        depType: 'dependencies',
+        newVersion: '1.0.1',
+        newValue: '^1.0.1',
+        isLockfileUpdate: true,
+      },
+    ];
+    const res = await npmHelper.generateLockFile(
+      'some-dir',
+      {},
+      'package-lock.json',
+      { skipInstalls, constraints: { npm: '^6.0.0' } },
+      updates,
+    );
+    expect(res.error).toBeFalse();
+  });
+
   it('performs lock file updates retaining the package.json counterparts', async () => {
     const execSnapshots = mockExecAll();
     fs.readLocalFile.mockResolvedValueOnce(
