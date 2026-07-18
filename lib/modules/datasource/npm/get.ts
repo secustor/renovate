@@ -13,7 +13,11 @@ import { asTimestamp } from '../../../util/timestamp.ts';
 import { joinUrlParts } from '../../../util/url.ts';
 import type { Release, ReleaseResult } from '../types.ts';
 import { defaultRegistryUrl } from './common.ts';
-import { CachedPackument, NpmResponse } from './schema.ts';
+import {
+  CachedPackument,
+  NpmResponse,
+  type NpmResponseVersion,
+} from './schema.ts';
 
 const SHORT_REPO_REGEX = regEx(
   /^((?<platform>bitbucket|github|gitlab):)?(?<shortRepo>[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/,
@@ -89,7 +93,7 @@ export async function getDependency(
     // set abortOnError for registry.npmjs.org if no hostRule with explicit abortOnError exists
     if (
       registryUrl === defaultRegistryUrl &&
-      hostRules.find({ url: defaultRegistryUrl })?.abortOnError === undefined
+      hostRules.find({ url: defaultRegistryUrl }).abortOnError === undefined
     ) {
       logger.trace(
         { packageName, registry: defaultRegistryUrl },
@@ -109,7 +113,12 @@ export async function getDependency(
       return null;
     }
 
-    const latestVersion = res.versions[res['dist-tags']?.latest ?? ''];
+    // `versions` is a `Record<string, ...>`, which claims every key is
+    // present, but `dist-tags.latest` genuinely may not match an existing
+    // version key (see the "handles missing dist-tags latest" spec).
+    const latestVersion = res.versions[res['dist-tags']?.latest ?? ''] as
+      | NpmResponseVersion
+      | undefined;
     res.repository ??= latestVersion?.repository;
     res.homepage ??= latestVersion?.homepage;
 
@@ -169,7 +178,8 @@ export async function getDependency(
       return release;
     });
 
-    const isPublic = resp.headers?.['cache-control']
+    // oxlint-disable-next-line typescript/no-unnecessary-condition -- tsgolint false positive: `resp.headers['cache-control']` is typed `string | undefined` per @types/node's `IncomingHttpHeaders` (verified with an explicit `: undefined` type-check probe), so the header genuinely may be absent.
+    const isPublic = resp.headers['cache-control']
       ?.toLocaleLowerCase()
       ?.split(regEx(/\s*,\s*/))
       ?.includes('public');

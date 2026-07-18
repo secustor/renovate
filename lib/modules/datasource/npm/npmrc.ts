@@ -51,7 +51,10 @@ export function convertNpmrcToRules(npmrc: Record<string, any>): NpmrcRules {
   };
   // Generate hostRules
   const hostType = 'npm';
-  const hosts: Record<string, HostRule> = {};
+  // Honestly optional value type: a plain `Record<string, HostRule>`
+  // claims every key is present, but this map starts empty and is
+  // filled in incrementally per-host below.
+  const hosts: Record<string, HostRule | undefined> = {};
   for (const [key, value] of Object.entries(npmrc)) {
     if (!isNonEmptyString(value)) {
       continue;
@@ -62,7 +65,7 @@ export function convertNpmrcToRules(npmrc: Record<string, any>): NpmrcRules {
     if (keyParts.length) {
       matchHost = getMatchHostFromNpmrcHost(keyParts.join(':'));
     }
-    const rule: HostRule = hosts[matchHost] || {};
+    const rule: HostRule = hosts[matchHost] ?? {};
     if (keyType === '_authToken' || keyType === '_auth') {
       rule.token = value;
       if (keyType === '_auth') {
@@ -82,7 +85,7 @@ export function convertNpmrcToRules(npmrc: Record<string, any>): NpmrcRules {
     if (matchHost) {
       hostRule.matchHost = matchHost;
     }
-    rules.hostRules?.push(hostRule);
+    rules.hostRules.push(hostRule);
   }
   // Generate packageRules
   const matchDatasources = ['npm'];
@@ -91,7 +94,7 @@ export function convertNpmrcToRules(npmrc: Record<string, any>): NpmrcRules {
   if (isNonEmptyString(registry)) {
     if (isHttpUrl(registry)) {
       // Default registry
-      rules.packageRules?.push({
+      rules.packageRules.push({
         matchDatasources,
         registryUrls: [registry],
       });
@@ -109,7 +112,7 @@ export function convertNpmrcToRules(npmrc: Record<string, any>): NpmrcRules {
     if (keyType === 'registry' && keyParts.length && isNonEmptyString(value)) {
       const scope = keyParts.join(':');
       if (isHttpUrl(value)) {
-        rules.packageRules?.push({
+        rules.packageRules.push({
           matchDatasources,
           matchPackageNames: [`${scope}/**`],
           registryUrls: [value],
@@ -153,11 +156,11 @@ export function setNpmrc(input?: string): void {
       }
     }
     const npmrcRules = convertNpmrcToRules(npmrc);
-    if (npmrcRules.hostRules?.length) {
+    if (npmrcRules.hostRules.length) {
       npmrcRules.hostRules.forEach((hostRule) => hostRules.add(hostRule));
     }
     packageRules = npmrcRules.packageRules;
-  } else if (npmrc) {
+  } else {
     logger.debug('Resetting npmrc');
     npmrc = {};
     npmrcRaw = '';
