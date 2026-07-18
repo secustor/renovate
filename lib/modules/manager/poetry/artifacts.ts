@@ -110,7 +110,7 @@ function getPoetrySources(content: string, fileName: string): PoetrySource[] {
     return [];
   }
 
-  const sources = pyprojectFile.tool?.poetry?.source ?? [];
+  const sources = pyprojectFile.tool.poetry.source ?? [];
   const sourceArray: PoetrySource[] = [];
   for (const source of sources) {
     if (source.name && source.url) {
@@ -123,7 +123,7 @@ function getPoetrySources(content: string, fileName: string): PoetrySource[] {
 async function getMatchingHostRule(url: string | undefined): Promise<HostRule> {
   const scopedMatch = find({ hostType: PypiDatasource.id, url });
   const hostRule = isNonEmptyObject(scopedMatch) ? scopedMatch : find({ url });
-  if (hostRule && Object.keys(hostRule).length !== 0) {
+  if (Object.keys(hostRule).length !== 0) {
     return hostRule;
   }
 
@@ -210,7 +210,7 @@ export async function updateArtifacts({
       );
     }
     const pythonConstraint =
-      config?.constraints?.python ??
+      config.constraints?.python ??
       getPythonConstraint(newPackageFileContent, existingLockFileContent);
     const poetryConstraint =
       config.constraints?.poetry ??
