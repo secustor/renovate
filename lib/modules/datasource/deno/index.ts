@@ -82,25 +82,29 @@ export class DenoDatasource extends Datasource {
     moduleAPIURL: string,
   ): Promise<ReleaseResult> {
     const detailsCacheKey = `details:${moduleAPIURL}`;
-    const releasesCache: Record<string, Release> =
+    // This is deserialized from the package cache, so a stale/partial cache
+    // entry may genuinely be missing a version that's now in `versions`.
+    const releasesCache: Record<string, Release | undefined> =
       (await packageCache.get(
         `datasource-${DenoDatasource.id}`,
         detailsCacheKey,
       )) ?? {};
-    let cacheModified = false;
 
     const {
       body: { versions, tags },
     } = await this.http.getJson(moduleAPIURL, DenoAPIModuleResponse);
 
     // get details for the versions
-    const releases = await pMap(
+    // Track whether each entry came from the cache via the return value
+    // instead of mutating a shared flag from inside the pMap callback --
+    // TS can't see through that closure to know the flag was ever flipped.
+    const results = await pMap(
       versions,
       async (version) => {
         const cacheRelease = releasesCache[version];
         /* v8 ignore next 3: hard to test */
         if (cacheRelease) {
-          return cacheRelease;
+          return { release: cacheRelease, cached: true };
         }
 
         // https://apiland.deno.dev/v2/modules/postgres/v0.17.0
@@ -117,14 +121,15 @@ export class DenoDatasource extends Datasource {
         );
 
         releasesCache[release.version] = release;
-        cacheModified = true;
 
-        return release;
+        return { release, cached: false };
       },
       { concurrency: 5 },
     );
 
-    if (cacheModified) {
+    const releases = results.map(({ release }) => release);
+
+    if (results.some(({ cached }) => !cached)) {
       // 1 week. Releases at Deno are immutable, therefore we can use a long term cache here.
       await packageCache.set(
         `datasource-${DenoDatasource.id}`,

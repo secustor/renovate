@@ -56,7 +56,7 @@ export async function detectNodeCompatWorkspaces({
 
   // npm workspace
   if (isNonEmptyArray(managerData?.workspaces)) {
-    filters = managerData?.workspaces;
+    filters = managerData.workspaces;
   }
 
   const localDir = GlobalConfig.get('localDir');
