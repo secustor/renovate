@@ -32,8 +32,13 @@ export function addBranchStats(
     return;
   }
 
-  coerceRepo(config.repository!);
-  report.repositories[config.repository!].branches = branchesInformation;
+  const { repository } = config;
+  /* v8 ignore if -- repository is always set at this point */
+  if (repository === undefined) {
+    return;
+  }
+  coerceRepo(repository);
+  report.repositories[repository].branches = branchesInformation;
 }
 
 export function addExtractionStats(
@@ -44,9 +49,13 @@ export function addExtractionStats(
     return;
   }
 
-  coerceRepo(config.repository!);
-  report.repositories[config.repository!].packageFiles =
-    extractResult.packageFiles;
+  const { repository } = config;
+  /* v8 ignore if -- repository is always set at this point */
+  if (repository === undefined) {
+    return;
+  }
+  coerceRepo(repository);
+  report.repositories[repository].packageFiles = extractResult.packageFiles;
 }
 
 export function addLibYears(
@@ -57,9 +66,13 @@ export function addLibYears(
     return;
   }
 
-  coerceRepo(config.repository!);
-  report.repositories[config.repository!].libYearsWithStatus =
-    libYearsWithDepCount;
+  const { repository } = config;
+  /* v8 ignore if -- repository is always set at this point */
+  if (repository === undefined) {
+    return;
+  }
+  coerceRepo(repository);
+  report.repositories[repository].libYearsWithStatus = libYearsWithDepCount;
 }
 
 export function finalizeReport(): void {
@@ -97,8 +110,13 @@ export async function exportStats(config: RenovateConfig): Promise<void> {
       return;
     }
 
+    const path = config.reportPath;
+    /* v8 ignore if -- reportPath is always set for file and s3 report types */
+    if (isNullOrUndefined(path)) {
+      return;
+    }
+
     if (config.reportType === 'file') {
-      const path = config.reportPath!;
       await writeSystemFile(path, await getReportBody(config));
       logger.debug({ path }, 'Writing report');
       return;
@@ -106,12 +124,9 @@ export async function exportStats(config: RenovateConfig): Promise<void> {
 
     // v8 ignore else -- TODO: add test #40625
     if (config.reportType === 's3') {
-      const s3Url = parseS3Url(config.reportPath!);
+      const s3Url = parseS3Url(path);
       if (isNullOrUndefined(s3Url)) {
-        logger.warn(
-          { reportPath: config.reportPath },
-          'Failed to parse s3 URL',
-        );
+        logger.warn({ reportPath: path }, 'Failed to parse s3 URL');
         return;
       }
 
