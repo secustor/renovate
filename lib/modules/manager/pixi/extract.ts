@@ -57,7 +57,7 @@ export function getUserPixiConfig(
     logger.debug({ packageFile, err }, `error parsing ${packageFile}`);
     return null;
   }
-  return val ?? null;
+  return val;
 }
 
 export async function extractPackageFile(

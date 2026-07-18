@@ -174,7 +174,13 @@ export async function updateArtifacts({
 
     logger.trace({ cmd }, 'pipenv lock command');
     await exec(cmd, execOptions);
-    const status = await getRepoStatus();
+    // getRepoStatus()'s real return type is always a StatusResult, but
+    // several specs deliberately call updateArtifacts without stubbing
+    // `git.getRepoStatus`, so it resolves undefined under test -- cast
+    // rather than relying on the real type.
+    const status = (await getRepoStatus()) as
+      | Awaited<ReturnType<typeof getRepoStatus>>
+      | undefined;
     if (!status?.modified.includes(lockFileName)) {
       return null;
     }

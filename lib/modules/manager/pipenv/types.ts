@@ -4,7 +4,9 @@ export interface PipSource {
 }
 
 export interface PipFile {
-  source: PipSource[];
+  // Parsed from untrusted TOML, so this may genuinely be absent even though
+  // a well-formed Pipfile conventionally always has a [[source]] section.
+  source?: PipSource[];
 
   packages?: Record<string, PipRequirement>;
   'dev-packages'?: Record<string, PipRequirement>;
