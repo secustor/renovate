@@ -708,6 +708,24 @@ describe('modules/datasource/index', () => {
           hostRules.find({ hostType: datasource, url: 'https://reg1.com' }),
         ).toMatchObject({ token: 'admin' });
       });
+
+      it('keeps the credentials of a host rule for the datasource without matchHost', async () => {
+        hostRules.add(
+          { hostType: datasource, token: 'admin' },
+          { trusted: true },
+        );
+
+        await getPkgReleases({
+          datasource,
+          packageName,
+          registryUrls: ['https://user:pass@reg1.com'],
+        });
+
+        expect(hostRules.getAll()).toHaveLength(1);
+        expect(
+          hostRules.find({ hostType: datasource, url: 'https://reg1.com' }),
+        ).toEqual({ token: 'admin' });
+      });
     });
 
     describe('registry caching', () => {

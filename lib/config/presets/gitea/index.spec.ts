@@ -15,7 +15,7 @@ const basePath = '/api/v1/repos/some/repo/contents';
 
 describe('config/presets/gitea/index', () => {
   beforeEach(() => {
-    hostRules.add({ matchHost: 'gitea.com', token: 'abc' });
+    hostRules.add({ token: 'abc' });
     setBaseUrl(giteaApiHost);
   });
 
@@ -106,7 +106,7 @@ describe('config/presets/gitea/index', () => {
         .get(`${basePath}/some-filename.json`)
         .reply(404, {});
 
-      hostRules.add({ matchHost: 'gitea.com', abortOnError: true });
+      hostRules.add({ abortOnError: true });
 
       await expect(
         gitea.fetchJSONFile(

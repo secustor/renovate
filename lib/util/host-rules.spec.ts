@@ -70,22 +70,6 @@ describe('util/host-rules', () => {
   });
 
   describe('add()', () => {
-    it.each`
-      rule
-      ${{ token: 'abc' }}
-      ${{ hostType: 'npm', token: 'abc' }}
-      ${{ matchHost: '', token: 'abc' }}
-    `('throws if matchHost is missing or empty', ({ rule }) => {
-      expect(() => add(rule)).toThrow('hostRules must set `matchHost`');
-      expect(getAll()).toEqual([]);
-    });
-
-    it('names the hostType of a rule without matchHost, but not its credentials', () => {
-      expect(() => add({ hostType: 'npm', token: 'abc123' })).toThrow(
-        'hostRules must set `matchHost` (hostType=npm)',
-      );
-    });
-
     it('throws if both domainName and hostName', () => {
       expect(() =>
         add(
@@ -571,12 +555,9 @@ describe('util/host-rules', () => {
       ${'gitlab-tags'} | ${'gitlab'}
       ${'gitea-tags'}  | ${'gitea'}
     `(
-      'leaves the credentials of a $platform rule for the host in place for $hostType',
+      'leaves the credentials of a $platform rule without matchHost in place for $hostType',
       ({ hostType, platform }) => {
-        add(
-          { hostType: platform, matchHost: 'git.example.com', token: 'admin' },
-          { trusted: true },
-        );
+        add({ hostType: platform, token: 'admin' }, { trusted: true });
 
         expect(
           detachUrlCredentials('https://user:pass@git.example.com/owner/repo', [
@@ -590,11 +571,8 @@ describe('util/host-rules', () => {
       },
     );
 
-    it('registers credentials next to a rule for the host of a platform without fallback', () => {
-      add(
-        { hostType: 'azure', matchHost: 'dev.example.com', token: 'admin' },
-        { trusted: true },
-      );
+    it('registers credentials next to a rule without matchHost for a platform without fallback', () => {
+      add({ hostType: 'azure', token: 'admin' }, { trusted: true });
 
       detachUrlCredentials('https://user:pass@dev.example.com/org', [
         'azure-tags',
@@ -605,7 +583,7 @@ describe('util/host-rules', () => {
       ).toMatchObject({ username: 'user', password: 'pass' });
       expect(
         find({ hostType: 'azure', url: 'https://dev.example.com/org' }),
-      ).toMatchObject({ token: 'admin' });
+      ).toEqual({ token: 'admin' });
     });
 
     it('keeps the port in the host rule', () => {
@@ -927,11 +905,18 @@ describe('util/host-rules', () => {
       ).toBeNull();
     });
 
-    it('leaves the credentials of a rule for one of the host types in place', () => {
-      add(
-        { hostType: 'maven', matchHost: 'reg.example.com', token: 'admin' },
-        { trusted: true },
-      );
+    it('leaves the credentials of a rule scoped by neither hostType nor host in place', () => {
+      add({ token: 'admin' }, { trusted: true });
+
+      detach('https://user:pass@reg.example.com');
+
+      expect(findNpm('https://reg.example.com/pkg')).toEqual({
+        token: 'admin',
+      });
+    });
+
+    it('leaves the credentials of a rule without matchHost for one of the host types in place', () => {
+      add({ hostType: 'maven', token: 'admin' }, { trusted: true });
 
       expect(
         detachUrlCredentials('https://user:pass@reg.example.com/maven', [
@@ -942,17 +927,14 @@ describe('util/host-rules', () => {
 
       expect(
         find({ hostType: 'maven', url: 'https://reg.example.com/maven/pkg' }),
-      ).toMatchObject({ token: 'admin' });
+      ).toEqual({ token: 'admin' });
       expect(
         find({ hostType: 'gradle', url: 'https://reg.example.com/maven/pkg' }),
       ).toMatchObject({ username: 'user', password: 'pass' });
     });
 
-    it('registers credentials next to a rule for other host types', () => {
-      add(
-        { hostType: 'maven', matchHost: 'reg.example.com', token: 'admin' },
-        { trusted: true },
-      );
+    it('registers credentials next to a rule without matchHost for other host types', () => {
+      add({ hostType: 'maven', token: 'admin' }, { trusted: true });
 
       detachUrlCredentials('https://user:pass@reg.example.com/pypi', ['pypi']);
 
@@ -962,10 +944,7 @@ describe('util/host-rules', () => {
     });
 
     it('registers credentials next to rules which supply none for the host', () => {
-      add(
-        { hostType: 'npm', matchHost: 'reg.example.com', token: 'admin' },
-        { trusted: true },
-      );
+      add({ hostType: 'npm', token: 'admin' }, { trusted: true });
       add({ matchHost: 'reg.example.com', timeout: 1000 }, { trusted: true });
       add(
         { matchHost: 'other.example.com', token: 'other' },
@@ -1340,10 +1319,6 @@ describe('util/host-rules', () => {
         ).toBe(expected);
       },
     );
-
-    it('does not match a URL without a hostname', () => {
-      expect(matchesHost('file:///etc/hosts', 'reg.example.com')).toBe(false);
-    });
   });
 
   describe('filterAllowedHeaders()', () => {
@@ -1457,9 +1432,8 @@ describe('util/host-rules', () => {
       ).toEqual({});
     });
 
-    it('matches on rules without credentials', () => {
+    it('matches on empty rules', () => {
       add({
-        matchHost: 'api.github.com',
         enabled: true,
       });
       expect(
@@ -1470,7 +1444,6 @@ describe('util/host-rules', () => {
     it('matches on hostType', () => {
       add({
         hostType: NugetDatasource.id,
-        matchHost: 'nuget.local',
         token: 'abc',
       });
       expect(
@@ -1814,13 +1787,7 @@ describe('util/host-rules', () => {
 
     it('leaves a header name the admin masked from their own tier to the repository', () => {
       // the admin's narrower rule masks their own broader one, so `X-From-Admin` is not among the headers they send to this host - which leaves the repository's value for that name the only one there is
-      add(
-        {
-          matchHost: 'registry.example.com',
-          headers: { 'X-From-Admin': 'yes' },
-        },
-        { trusted: true },
-      );
+      add({ headers: { 'X-From-Admin': 'yes' } }, { trusted: true });
       add(
         {
           matchHost: 'https://registry.example.com',
@@ -1946,6 +1913,15 @@ describe('util/host-rules', () => {
         });
       });
 
+      it('is not implicit for a host-less trusted rule', () => {
+        add({ hostType: 'nuget', token: 'abc' }, { trusted: true });
+
+        expect(
+          find({ hostType: 'nuget', url: 'https://internal.example.com' })
+            .internalHostGrant,
+        ).toBeUndefined();
+      });
+
       it('ignores allowInternal from untrusted config', () => {
         add({ matchHost: 'internal.example.com', allowInternal: true });
 
@@ -1954,6 +1930,18 @@ describe('util/host-rules', () => {
         ).toBeUndefined();
         expect(logger.logger.debug).toHaveBeenCalledWith(
           'Ignoring hostRules allowInternal for internal.example.com from untrusted config',
+        );
+      });
+
+      it('ignores allowInternal from an untrusted host-less rule', () => {
+        add({ hostType: 'nuget', allowInternal: true });
+
+        expect(
+          find({ hostType: 'nuget', url: 'https://internal.example.com' })
+            .internalHostGrant,
+        ).toBeUndefined();
+        expect(logger.logger.debug).toHaveBeenCalledWith(
+          'Ignoring hostRules allowInternal for nuget from untrusted config',
         );
       });
 
@@ -2251,6 +2239,29 @@ describe('util/host-rules', () => {
       });
     });
 
+    it('prefers the longest matchHost even when a host-less rule is added between them', () => {
+      // the sort comparator must stay transitive: a rule with no `matchHost` compares equal to any other, so a naive length sort could leave the two `matchHost` rules unordered relative to each other
+      add({
+        matchHost: 'https://registry.example.com/some/path',
+        headers: { 'X-Custom': 'longest' },
+      });
+      add({
+        hostType: NugetDatasource.id,
+        token: 'unrelated',
+      });
+      add({
+        matchHost: 'https://registry.example.com',
+        headers: { 'X-Custom': 'shortest' },
+      });
+
+      expect(
+        find({ url: 'https://registry.example.com/some/path/resource' }),
+      ).toEqual({
+        headers: { 'X-Custom': 'longest' },
+        trustedHeaderNames: [],
+      });
+    });
+
     it('prefers a `hostType` rule over one with a longer `matchHost`', () => {
       // "most specific" is ranked before it is measured: a rule carrying both a `hostType` and a `matchHost` outranks a `matchHost`-only rule, however much more of the URL the latter matches
       add({
@@ -2313,6 +2324,10 @@ describe('util/host-rules', () => {
 
   describe('hosts()', () => {
     it('returns hosts', () => {
+      add({
+        hostType: NugetDatasource.id,
+        token: 'aaaaaa',
+      });
       add({
         hostType: NugetDatasource.id,
         matchHost: 'https://nuget.local/api',
@@ -2397,6 +2412,10 @@ describe('util/host-rules', () => {
     it('return hostType', () => {
       add({
         hostType: 'github',
+        token: 'aaaaaa',
+      });
+      add({
+        hostType: 'github',
         matchHost: 'github.example.com',
         token: 'abc',
       });
@@ -2413,6 +2432,10 @@ describe('util/host-rules', () => {
     });
 
     it('returns null', () => {
+      add({
+        hostType: 'github',
+        token: 'aaaaaa',
+      });
       add({
         hostType: 'github',
         matchHost: 'github.example.com',

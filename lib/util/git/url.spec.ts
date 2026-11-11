@@ -217,28 +217,28 @@ describe('util/git/url', () => {
     });
 
     it('returns http url with token', () => {
-      hostRules.add({ matchHost: 'foo.bar', token: 'token' });
+      hostRules.add({ token: 'token' });
       expect(getRemoteUrlWithToken('http://foo.bar/')).toBe(
         'http://token@foo.bar/',
       );
     });
 
     it('returns https url with token', () => {
-      hostRules.add({ matchHost: 'foo.bar', token: 'token' });
+      hostRules.add({ token: 'token' });
       expect(getRemoteUrlWithToken('https://foo.bar/')).toBe(
         'https://token@foo.bar/',
       );
     });
 
     it('returns https url with token for non-http protocols', () => {
-      hostRules.add({ matchHost: 'foo.bar', token: 'token' });
+      hostRules.add({ token: 'token' });
       expect(getRemoteUrlWithToken('ssh://foo.bar/')).toBe(
         'https://token@foo.bar/',
       );
     });
 
     it('returns https url with encoded token', () => {
-      hostRules.add({ matchHost: 'foo.bar', token: 't#ken' });
+      hostRules.add({ token: 't#ken' });
       expect(getRemoteUrlWithToken('https://foo.bar/')).toBe(
         'https://t%23ken@foo.bar/',
       );
@@ -246,7 +246,6 @@ describe('util/git/url', () => {
 
     it('returns http url with username and password', () => {
       hostRules.add({
-        matchHost: 'foo.bar',
         username: 'user',
         password: 'pass',
       });
@@ -257,7 +256,6 @@ describe('util/git/url', () => {
 
     it('returns https url with username and password', () => {
       hostRules.add({
-        matchHost: 'foo.bar',
         username: 'user',
         password: 'pass',
       });
@@ -268,7 +266,6 @@ describe('util/git/url', () => {
 
     it('returns https url with username and password for non-http protocols', () => {
       hostRules.add({
-        matchHost: 'foo.bar',
         username: 'user',
         password: 'pass',
       });
@@ -279,7 +276,6 @@ describe('util/git/url', () => {
 
     it('returns https url with encoded username and password', () => {
       hostRules.add({
-        matchHost: 'foo.bar',
         username: 'u$er',
         password: 'p@ss',
       });
@@ -289,21 +285,21 @@ describe('util/git/url', () => {
     });
 
     it('returns https url with encoded gitlab token', () => {
-      hostRules.add({ matchHost: 'gitlab.com', token: 'token' });
+      hostRules.add({ token: 'token' });
       expect(getRemoteUrlWithToken('ssh://gitlab.com/some/repo.git')).toBe(
         'https://gitlab-ci-token:token@gitlab.com/some/repo.git',
       );
     });
 
     it('returns https url with x-oauth-basic password for gitea token', () => {
-      hostRules.add({ matchHost: 'gitea.com', token: 'token' });
+      hostRules.add({ token: 'token' });
       expect(getRemoteUrlWithToken('git@gitea.com:some/repo.git')).toBe(
         'https://token:x-oauth-basic@gitea.com/some/repo.git',
       );
     });
 
     it('returns https url for ssh url with encoded github token', () => {
-      hostRules.add({ matchHost: 'github.com', token: 'token' });
+      hostRules.add({ token: 'token' });
       expect(getRemoteUrlWithToken('ssh://github.com/some/repo.git')).toBe(
         'https://x-access-token:token@github.com/some/repo.git',
       );

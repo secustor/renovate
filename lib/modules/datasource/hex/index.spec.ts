@@ -176,7 +176,6 @@ describe('modules/datasource/hex/index', () => {
         .reply(401);
 
       hostRules.add({
-        matchHost: 'hex.pm',
         authType: 'Token-Only',
         token: 'abc',
       });
@@ -307,7 +306,6 @@ describe('modules/datasource/hex/index', () => {
         .reply(200, privatePackageResponse);
 
       hostRules.add({
-        matchHost: 'hex.pm',
         authType: 'Token-Only',
         token: 'abc',
       });

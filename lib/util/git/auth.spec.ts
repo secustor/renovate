@@ -588,6 +588,18 @@ describe('util/git/auth', () => {
       ).toStrictEqual({});
     });
 
+    it('does not add a configured token without matchHost for the URL of the repository', () => {
+      add({ hostType: 'crate', token: 'token123' });
+
+      expect(
+        getGitEnvironmentVariables(
+          {},
+          ['crate'],
+          'https://git.example.com/index.git',
+        ),
+      ).toStrictEqual({});
+    });
+
     it('adds a configured token with matchHost once for the URL of the repository', () => {
       const url = 'https://git.example.com/index.git';
       add({

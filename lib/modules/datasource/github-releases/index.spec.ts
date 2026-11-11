@@ -6,7 +6,7 @@ import { GithubReleasesDatasource } from './index.ts';
 
 describe('modules/datasource/github-releases/index', () => {
   beforeEach(() => {
-    hostRules.add({ matchHost: 'github.com', token: 'some-token' });
+    hostRules.add({ token: 'some-token' });
   });
 
   describe('getReleases', () => {

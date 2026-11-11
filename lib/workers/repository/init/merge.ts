@@ -749,10 +749,7 @@ export function applyHostRules(
     try {
       hostRules.add(rule, options);
     } catch (err) {
-      logger.warn(
-        { err, hostType: rule.hostType, matchHost: rule.matchHost },
-        'Error setting hostRule from config',
-      );
+      logger.warn({ err, config: rule }, 'Error setting hostRule from config');
     }
   }
   // host rules can change concurrency

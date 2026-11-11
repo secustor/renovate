@@ -59,6 +59,12 @@ describe('modules/datasource/go/common', () => {
         },
       );
 
+      it('treats all modules as private with a go host rule without matchHost', () => {
+        hostRules.add({ hostType: 'go', token: 'some-token' });
+
+        expect(isPublicGoPackage('github.com/foo/bar')).toBe(false);
+      });
+
       it('matches host rules with a URL matchHost', () => {
         hostRules.add({
           hostType: 'go',

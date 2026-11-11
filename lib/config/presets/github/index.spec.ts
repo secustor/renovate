@@ -14,7 +14,7 @@ const basePath = '/repos/some/repo/contents';
 
 describe('config/presets/github/index', () => {
   beforeEach(() => {
-    hostRules.add({ matchHost: 'api.github.com', token: 'abc' });
+    hostRules.add({ token: 'abc' });
   });
 
   describe('fetchJSONFile()', () => {
@@ -60,7 +60,7 @@ describe('config/presets/github/index', () => {
         .get(`${basePath}/some-filename.json`)
         .reply(404, {});
 
-      hostRules.add({ matchHost: 'api.github.com', abortOnError: true });
+      hostRules.add({ abortOnError: true });
 
       await expect(
         github.fetchJSONFile(

@@ -168,19 +168,10 @@ describe('modules/datasource/docker/index', () => {
   beforeEach(() => {
     GlobalConfig.reset();
     ecrMock.reset();
-    for (const matchHost of [
-      'index.docker.io',
-      'registry.company.com',
-      'eu.gcr.io',
-      'europe-docker.pkg.dev',
-      ...amazonHosts.map(({ host }) => host),
-    ]) {
-      hostRules.add({
-        matchHost,
-        username: 'some-username',
-        password: 'some-password',
-      });
-    }
+    hostRules.add({
+      username: 'some-username',
+      password: 'some-password',
+    });
     vi.stubEnv('RENOVATE_X_DOCKER_HUB_TAGS_DISABLE', undefined);
     vi.stubEnv('RENOVATE_X_DOCKER_HUB_DISABLE_LABEL_LOOKUP', undefined);
     vi.stubEnv('RENOVATE_X_DOCKER_PAGINATION_ALLOW_CROSS_ORIGIN', undefined);
@@ -308,7 +299,7 @@ describe('modules/datasource/docker/index', () => {
         .head('/library/some-dep/manifests/latest')
         .reply(200, '', { 'docker-content-digest': 'some-digest' });
       hostRules.clear();
-      hostRules.add({ matchHost: 'index.docker.io', insecureRegistry: true });
+      hostRules.add({ insecureRegistry: true });
       const res = await getDigest({
         datasource: 'docker',
         packageName: 'some-dep',
@@ -438,7 +429,6 @@ describe('modules/datasource/docker/index', () => {
 
         hostRules.clear();
         hostRules.add({
-          matchHost: host,
           username: 'some-username',
           password: 'some-password',
           token: 'some-session-token',
@@ -555,7 +545,6 @@ describe('modules/datasource/docker/index', () => {
 
         hostRules.clear();
         hostRules.add({
-          matchHost: host,
           username: 'AWS',
           password: 'some-password',
         });

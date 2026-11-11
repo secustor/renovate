@@ -59,13 +59,7 @@ describe('util/merge-confidence/index', () => {
     };
 
     beforeEach(() => {
-      for (const matchHost of [
-        'www.baseurl.com',
-        'developer.mend.io',
-        'domain.com',
-      ]) {
-        hostRules.add({ ...hostRule, matchHost });
-      }
+      hostRules.add(hostRule);
       initConfig({ mergeConfidenceEndpoint: apiBaseUrl });
       memCache.reset();
     });

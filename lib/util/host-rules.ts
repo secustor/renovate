@@ -228,12 +228,6 @@ function register(
     // set only from `options`, and assigned unconditionally so that it cannot be carried over from `params`: `HostRule` has no `trustTier` field, but configuration is parsed from JSON, so a repository could otherwise smuggle one in and have its rules treated as the administrator's
     trustTier: trustTierFor(options),
   };
-  if (!isNonEmptyString(rule.matchHost)) {
-    throw new Error(
-      `hostRules must set \`matchHost\`${rule.hostType ? ` (hostType=${rule.hostType})` : ''}`,
-    );
-  }
-
   // as above, for the boolean this tier replaced, and for the header names `find()` computes from it
   delete rule.trusted;
   delete rule.trustedHeaderNames;
@@ -241,7 +235,7 @@ function register(
   // like the trust tier, `allowInternal` may only come from configuration the administrator trusts: a repository or preset rule must not be able to grant itself access to internal hosts
   if (!isUndefined(rule.allowInternal) && rule.trustTier === 'untrusted') {
     logger.debug(
-      `Ignoring hostRules allowInternal for ${rule.matchHost} from untrusted config`,
+      `Ignoring hostRules allowInternal for ${rule.matchHost ?? rule.hostType} from untrusted config`,
     );
     delete rule.allowInternal;
   }
@@ -252,18 +246,21 @@ function register(
     [rule] = filterAllowedHeaders([rule]);
   }
 
-  rule.matchHost = massageHostUrl(rule.matchHost);
-  const parsedUrl = parseUrl(rule.matchHost);
-  rule.resolvedHost = parsedUrl?.hostname ?? rule.matchHost;
-  confidentialFields.forEach((field) => {
-    if (rule[field]) {
-      logger.debug(
-        `Adding ${field} authentication for ${rule.matchHost} (hostType=${
-          rule.hostType
-        }) to hostRules`,
-      );
-    }
-  });
+  if (rule.matchHost) {
+    rule.matchHost = massageHostUrl(rule.matchHost);
+    const parsedUrl = parseUrl(rule.matchHost);
+    rule.resolvedHost = parsedUrl?.hostname ?? rule.matchHost;
+    confidentialFields.forEach((field) => {
+      if (rule[field]) {
+        logger.debug(
+          // TODO: types (#22198)
+          `Adding ${field} authentication for ${rule.matchHost!} (hostType=${
+            rule.hostType
+          }) to hostRules`,
+        );
+      }
+    });
+  }
   hostRules.push(rule);
   return rule;
 }
@@ -367,8 +364,9 @@ function appliesToScope(
     return false;
   }
   return (
-    matchesHost(matchHost, rule.matchHost!) ||
-    matchesHost(rule.matchHost!, matchHost)
+    !rule.matchHost ||
+    matchesHost(matchHost, rule.matchHost) ||
+    matchesHost(rule.matchHost, matchHost)
   );
 }
 
@@ -684,17 +682,33 @@ export function matchesHost(
 }
 
 function fromShorterToLongerMatchHost(a: HostRule, b: HostRule): number {
-  return a.matchHost!.length - b.matchHost!.length;
+  if (!a.matchHost || !b.matchHost) {
+    return 0;
+  }
+  return a.matchHost.length - b.matchHost.length;
 }
 
-function hostRuleRank({ hostType, readOnly }: HostRule): number {
-  return hostType || readOnly ? 3 : 2;
+function hostRuleRank({ hostType, matchHost, readOnly }: HostRule): number {
+  if ((hostType || readOnly) && matchHost) {
+    return 3;
+  }
+
+  if (matchHost) {
+    return 2;
+  }
+
+  if (hostType) {
+    return 1;
+  }
+
+  return 0;
 }
 
 function fromLowerToHigherRank(a: HostRule, b: HostRule): number {
   return hostRuleRank(a) - hostRuleRank(b);
 }
 
+// A single comparator, rather than two consecutive sorts: `fromShorterToLongerMatchHost` returns 0 for rules without a `matchHost`, which makes it non-transitive on its own, so a standalone length sort could leave two `matchHost` rules unordered when a host-less rule sits between them
 function fromLowerRankAndShorterMatchHost(a: HostRule, b: HostRule): number {
   return fromLowerToHigherRank(a, b) || fromShorterToLongerMatchHost(a, b);
 }
@@ -743,6 +757,7 @@ export function find(
   const matchedRules: RegisteredHostRule[] = [];
   for (const rule of sortedRules) {
     let hostTypeMatch = true;
+    let hostMatch = true;
     let readOnlyMatch = true;
 
     if (rule.hostType) {
@@ -753,9 +768,12 @@ export function find(
       }
     }
 
-    const hostMatch = search.url
-      ? matchesHost(search.url, rule.matchHost!)
-      : false;
+    if (rule.matchHost && rule.resolvedHost) {
+      hostMatch = false;
+      if (search.url) {
+        hostMatch = matchesHost(search.url, rule.matchHost);
+      }
+    }
 
     if (!isUndefined(rule.readOnly)) {
       readOnlyMatch = false;
@@ -838,7 +856,11 @@ export function find(
   const internalHostGrant: InternalHostGrant = {
     explicit: trustedExplicit ?? inheritedExplicit,
     scoped: trustedScoped ?? inheritedScoped,
-    implicit: !adminVeto && trustedRules.length + inheritedRules.length > 0,
+    implicit:
+      !adminVeto &&
+      [...trustedRules, ...inheritedRules].some((rule) =>
+        isNonEmptyString(rule.matchHost),
+      ),
   };
   if (
     !isUndefined(internalHostGrant.explicit) ||
@@ -870,7 +892,7 @@ export function hosts({ hostType }: { hostType: string }): string[] {
 export function hostType({ url }: { url: string }): string | null {
   return (
     configuredRules()
-      .filter((rule) => matchesHost(url, rule.matchHost!))
+      .filter((rule) => rule.matchHost && matchesHost(url, rule.matchHost))
       .sort(fromShorterToLongerMatchHost)
       .map((rule) => rule.hostType)
       .filter(isTruthy)

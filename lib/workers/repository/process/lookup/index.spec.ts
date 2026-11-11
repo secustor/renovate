@@ -6925,7 +6925,6 @@ describe('workers/repository/process/lookup/index', () => {
       const getMergeConfidenceSpy = vi.spyOn(McApi, 'getMergeConfidenceLevel');
       const hostRule: HostRule = {
         hostType: 'merge-confidence',
-        matchHost: 'developer.mend.io',
         token: 'some-token',
       };
 

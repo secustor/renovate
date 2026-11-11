@@ -191,7 +191,6 @@ describe('workers/global/index', () => {
       hostRules: [
         {
           hostType: DockerDatasource.id,
-          matchHost: 'docker.io',
           username: 'some-user',
           password: 'some-password',
         },

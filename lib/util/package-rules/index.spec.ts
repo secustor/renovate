@@ -5,7 +5,6 @@ import { MISSING_API_CREDENTIALS } from '../../constants/error-messages.ts';
 import { DockerDatasource } from '../../modules/datasource/docker/index.ts';
 import { OrbDatasource } from '../../modules/datasource/orb/index.ts';
 import type { HostRule } from '../../types/index.ts';
-import { initConfig, resetConfig } from '../merge-confidence/index.ts';
 import type { MergeConfidence } from '../merge-confidence/types.ts';
 import { applyPackageRules } from './index.ts';
 
@@ -940,17 +939,14 @@ describe('util/package-rules/index', () => {
   describe('matchConfidence', () => {
     const hostRule: HostRule = {
       hostType: 'merge-confidence',
-      matchHost: 'developer.mend.io',
       token: 'some-token',
     };
 
     beforeEach(() => {
       hostRules.add(hostRule);
-      initConfig({});
     });
 
     afterEach(() => {
-      resetConfig();
       GlobalConfig.reset();
     });
 

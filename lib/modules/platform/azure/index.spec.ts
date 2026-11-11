@@ -69,7 +69,7 @@ describe('modules/platform/azure/index', () => {
     git = await vi.importMock('../../../util/git/index.ts');
     git.branchExists.mockReturnValue(true);
     git.isBranchBehindBase.mockResolvedValue(false);
-    hostRules.add({ matchHost: 'dev.azure.com', token: 'token' });
+    hostRules.add({ token: 'token' });
     azureHelper.getPolicyEvaluations.mockResolvedValue([]);
     azureApi.getAuthenticatedUserId.mockResolvedValue('renovate-user-id');
     // Default to the hosted (cloud) endpoint used across these tests.

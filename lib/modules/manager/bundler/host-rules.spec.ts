@@ -52,6 +52,12 @@ describe('modules/manager/bundler/host-rules', () => {
       };
     });
 
+    it('returns an empty array if matchHost is missing', () => {
+      delete hostRule.matchHost;
+      add(hostRule);
+      expect(findAllAuthenticatable({ hostType: 'nuget' })).toBeEmptyArray();
+    });
+
     it('returns an empty array if username is missing and password is present', () => {
       delete hostRule.username;
       delete hostRule.token;

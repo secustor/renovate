@@ -297,7 +297,6 @@ describe('modules/manager/pip-compile/common', () => {
 
     it('handles hosts with only a username', async () => {
       hostRules.add({
-        matchHost: 'example.com',
         username: 'user',
       });
       await expect(
@@ -316,7 +315,6 @@ describe('modules/manager/pip-compile/common', () => {
 
     it('handles hosts with only a password', async () => {
       hostRules.add({
-        matchHost: 'example.com',
         password: 'password',
       });
       await expect(

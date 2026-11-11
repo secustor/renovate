@@ -61,7 +61,7 @@ describe('modules/datasource/docker/common', () => {
     });
 
     it('supports insecure registryUrls', () => {
-      hostRules.add({ matchHost: 'my.local.registry', insecureRegistry: true });
+      hostRules.add({ insecureRegistry: true });
       const res = getRegistryRepository(
         'prefix/image',
         'my.local.registry/prefix',
@@ -122,7 +122,6 @@ describe('modules/datasource/docker/common', () => {
   describe('getAuthHeaders', () => {
     beforeEach(() => {
       hostRules.add({
-        matchHost: 'my.local.registry',
         username: 'some-username',
         password: 'some-password',
       });
@@ -218,7 +217,6 @@ describe('modules/datasource/docker/common', () => {
         .reply(401, '', { 'www-authenticate': 'Authenticate you must' });
       hostRules.clear();
       hostRules.add({
-        matchHost: 'my.local.registry',
         authType: 'some-authType',
         token: 'some-token',
       });
@@ -244,7 +242,6 @@ describe('modules/datasource/docker/common', () => {
         .reply(401, '', { 'www-authenticate': 'Authenticate you must' });
       hostRules.clear();
       hostRules.add({
-        matchHost: 'my.local.registry',
         token: 'some-token',
       });
 

@@ -110,11 +110,7 @@ describe('modules/platform/scm-manager/utils', () => {
     const gitSshEndpoint = 'ssh://localhost:2222/scm/repo/default/repo';
 
     beforeEach(() => {
-      hostRules.add({
-        matchHost: 'localhost',
-        token: 'token',
-        username: 'tzerr',
-      });
+      hostRules.add({ token: 'token', username: 'tzerr' });
       invalidatePrCache();
     });
 
@@ -223,7 +219,7 @@ describe('modules/platform/scm-manager/utils', () => {
       'should use fallback username, because username was not provided with option $gitUrl',
       ({ gitUrl }: { gitUrl: string | undefined }) => {
         hostRules.clear();
-        hostRules.add({ matchHost: 'localhost', token: 'token' });
+        hostRules.add({ token: 'token' });
         expect(
           getRepoUrl(
             {
@@ -248,7 +244,7 @@ describe('modules/platform/scm-manager/utils', () => {
       'should omit the password, because token was not provided. With option $gitUrl',
       ({ gitUrl }: { gitUrl: string | undefined }) => {
         hostRules.clear();
-        hostRules.add({ matchHost: 'localhost', username: 'tzerr' });
+        hostRules.add({ username: 'tzerr' });
         expect(
           getRepoUrl(
             {

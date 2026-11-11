@@ -565,7 +565,7 @@ Periods (`.`) in host names must be replaced with a single underscore (`_`).
 
 !!! note
   You can't use these prefixes with the `detectHostRulesFromEnv` config option: `npm_config_`, `npm_lifecycle_`, `npm_package_`.
-  In addition, every host rule needs a host part, so variables without one (for example `DOCKER_USERNAME`) are rejected.
+  In addition, every host rule needs a host part, so variables without one (for example `DOCKER_USERNAME`) stop the run at startup.
 
 ### npmjs registry token example
 

@@ -175,7 +175,7 @@ describe('util/http/index', () => {
 
   it('converts 404 error to ExternalHostError', async () => {
     httpMock.scope(baseUrl).get('/test').reply(404);
-    hostRules.add({ matchHost: 'renovate.com', abortOnError: true });
+    hostRules.add({ abortOnError: true });
     await expect(http.get('http://renovate.com/test')).rejects.toThrow(
       EXTERNAL_HOST_ERROR,
     );
@@ -191,11 +191,7 @@ describe('util/http/index', () => {
 
   it('ignores 404 error and does not throw ExternalHostError', async () => {
     httpMock.scope(baseUrl).get('/test').reply(404);
-    hostRules.add({
-      matchHost: 'renovate.com',
-      abortOnError: true,
-      abortIgnoreStatusCodes: [404],
-    });
+    hostRules.add({ abortOnError: true, abortIgnoreStatusCodes: [404] });
     await expect(http.get('http://renovate.com/test')).rejects.toThrow(
       'Request failed with status code 404 (Not Found): GET http://renovate.com/test',
     );

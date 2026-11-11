@@ -244,7 +244,7 @@ describe('modules/datasource/go/releases-direct', () => {
         registryUrl: 'https://my.custom.domain',
         packageName: 'golang/myrepo',
       });
-      hostRules.add({ matchHost: 'my.custom.domain', token: 'some-token' });
+      hostRules.add({ token: 'some-token' });
       httpMock
         .scope('https://my.custom.domain/')
         .get('/api/v4/projects/golang%2Fmyrepo/repository/tags?per_page=100')

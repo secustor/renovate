@@ -187,6 +187,69 @@ describe('workers/global/config/parse/index', () => {
       expect(parsed.hostRules).toContainEqual({ matchHost: 'example.org' });
     });
 
+    describe('hostRules without matchHost', () => {
+      const processExitSpy = vi.spyOn(process, 'exit');
+
+      beforeEach(() => {
+        processExitSpy.mockImplementation(() => undefined as never);
+      });
+
+      it('exits for a rule from file config', async () => {
+        fileConfigParser.getConfig.mockResolvedValue({
+          hostRules: [{ hostType: 'npm', token: 'abc' }, { token: 'def' }],
+        });
+        await configParser.parseConfigs(defaultEnv, defaultArgv);
+        expect(processExitSpy).toHaveBeenCalledExactlyOnceWith(1);
+        expect(logger.fatal).toHaveBeenCalledExactlyOnceWith(
+          { hostTypes: ['npm', null] },
+          'hostRules must set `matchHost`. Add a `matchHost` to these host rules.',
+        );
+      });
+
+      it('exits for a rule from env', async () => {
+        fileConfigParser.getConfig.mockResolvedValue({});
+        defaultArgv = defaultArgv.concat(['--detect-host-rules-from-env=true']);
+        hostRulesFromEnv.mockReturnValueOnce([
+          { hostType: 'npm', token: 'abc' },
+        ]);
+        await configParser.parseConfigs(defaultEnv, defaultArgv);
+        expect(processExitSpy).toHaveBeenCalledExactlyOnceWith(1);
+      });
+
+      it('exits for a rule in a repositories entry', async () => {
+        fileConfigParser.getConfig.mockResolvedValue({
+          repositories: [
+            'some/repo',
+            { repository: 'some/other', hostRules: [{ hostType: 'docker' }] },
+          ],
+        });
+        await configParser.parseConfigs(defaultEnv, defaultArgv);
+        expect(processExitSpy).toHaveBeenCalledExactlyOnceWith(1);
+      });
+
+      it('exits for a rule in force', async () => {
+        fileConfigParser.getConfig.mockResolvedValue({
+          force: { hostRules: [{ matchHost: '' }] },
+        });
+        await configParser.parseConfigs(defaultEnv, defaultArgv);
+        expect(processExitSpy).toHaveBeenCalledExactlyOnceWith(1);
+      });
+
+      it('continues when all rules set matchHost', async () => {
+        fileConfigParser.getConfig.mockResolvedValue({
+          hostRules: [{ hostType: 'npm', matchHost: 'example.org' }],
+          force: { hostRules: [{ matchHost: 'example.com' }] },
+          repositories: [
+            'some/repo',
+            { repository: 'a/b', hostRules: [{ matchHost: 'example.net' }] },
+            { repository: 'c/d' },
+          ],
+        });
+        await configParser.parseConfigs(defaultEnv, defaultArgv);
+        expect(processExitSpy).not.toHaveBeenCalled();
+      });
+    });
+
     it('env dryRun = true replaced to full', async () => {
       fileConfigParser.getConfig.mockResolvedValue({});
       const env: NodeJS.ProcessEnv = {

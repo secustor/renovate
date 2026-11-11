@@ -7,7 +7,6 @@ import * as hostRules from '../host-rules.ts';
 import { GitlabHttp, setBaseUrl } from './gitlab.ts';
 
 hostRules.add({
-  matchHost: 'gitlab.com',
   hostType: 'gitlab',
   token: '123test',
 });
@@ -24,7 +23,6 @@ describe('util/http/gitlab', () => {
     vi.stubEnv('GITLAB_IGNORE_REPO_URL', undefined);
 
     hostRules.add({
-      matchHost: 'gitlab.com',
       hostType: 'gitlab',
       token: 'abc123',
     });
@@ -119,13 +117,8 @@ describe('util/http/gitlab', () => {
 
   it('supports different datasources', async () => {
     const gitlabApiDatasource = new GitlabHttp(GitlabReleasesDatasource.id);
+    hostRules.add({ hostType: 'gitlab', token: 'abc' });
     hostRules.add({
-      matchHost: 'gitlab.com',
-      hostType: 'gitlab',
-      token: 'abc',
-    });
-    hostRules.add({
-      matchHost: 'gitlab.com',
       hostType: GitlabReleasesDatasource.id,
       token: 'def',
     });

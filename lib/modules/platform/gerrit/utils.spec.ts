@@ -28,7 +28,6 @@ describe('modules/platform/gerrit/utils', () => {
     describe('no gitUrl provided', () => {
       it('create a git url with username/password', () => {
         hostRules.add({
-          matchHost: 'gerrit.example.com',
           username: 'abc',
           password: '123',
         });
@@ -43,7 +42,6 @@ describe('modules/platform/gerrit/utils', () => {
 
       it('preserves slashes for deeply nested repository paths', () => {
         hostRules.add({
-          matchHost: 'gerrit.example.com',
           username: 'abc',
           password: '123',
         });
@@ -73,7 +71,6 @@ describe('modules/platform/gerrit/utils', () => {
     describe('default gitUrl', () => {
       it('create a git url with username/password', () => {
         hostRules.add({
-          matchHost: 'gerrit.example.com',
           username: 'abc',
           password: '123',
         });
@@ -89,7 +86,6 @@ describe('modules/platform/gerrit/utils', () => {
     describe('endpoint gitUrl', () => {
       it('create a git url with username/password', () => {
         hostRules.add({
-          matchHost: 'gerrit.example.com',
           username: 'abc',
           password: '123',
         });
@@ -105,7 +101,6 @@ describe('modules/platform/gerrit/utils', () => {
     describe('ssh gitUrl', () => {
       it('create a simple url', () => {
         hostRules.add({
-          matchHost: 'gerrit.example.com',
           username: 'abc',
           password: '123',
         });
@@ -120,7 +115,6 @@ describe('modules/platform/gerrit/utils', () => {
 
       it('create a url with trailing slash', () => {
         hostRules.add({
-          matchHost: 'gerrit.example.com',
           username: 'abc',
           password: '123',
         });
@@ -135,7 +129,6 @@ describe('modules/platform/gerrit/utils', () => {
 
       it('create a url when base has context', () => {
         hostRules.add({
-          matchHost: 'gerrit.example.com',
           username: 'abc',
           password: '123',
         });

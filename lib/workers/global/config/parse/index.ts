@@ -10,6 +10,7 @@ import { resolveConfigPresets } from '../../../../config/presets/index.ts';
 import { applySecretsAndVariablesToConfig } from '../../../../config/secrets.ts';
 import type { AllConfig } from '../../../../config/types.ts';
 import { mergeChildConfig } from '../../../../config/utils.ts';
+import { getHostRulesWithoutMatchHost } from '../../../../config/validation.ts';
 import { CONFIG_PRESETS_INVALID } from '../../../../constants/error-messages.ts';
 import { logger, setContext } from '../../../../logger/index.ts';
 import type { HostRule } from '../../../../types/host-rules.ts';
@@ -95,6 +96,24 @@ async function resolveGlobalExtendsAsAdmin(
   } finally {
     clearHostRules();
     GlobalConfig.reset();
+  }
+}
+
+function exitOnHostRulesWithoutMatchHost(config: AllConfig): void {
+  const hostRules = [
+    ...coerceArray(config.hostRules),
+    ...coerceArray(config.force?.hostRules),
+    ...coerceArray(config.repositories).flatMap((repo) =>
+      isString(repo) ? [] : coerceArray(repo.hostRules),
+    ),
+  ];
+  const invalid = getHostRulesWithoutMatchHost(hostRules);
+  if (invalid.length) {
+    logger.fatal(
+      { hostTypes: invalid.map((rule) => rule.hostType ?? null) },
+      'hostRules must set `matchHost`. Add a `matchHost` to these host rules.',
+    );
+    process.exit(1);
   }
 }
 
@@ -230,6 +249,8 @@ export async function parseConfigs(
     const hostRules = hostRulesFromEnv(env);
     config.hostRules = [...coerceArray(config.hostRules), ...hostRules];
   }
+
+  exitOnHostRulesWithoutMatchHost(config);
   // Get global config
   logger.trace({ config }, 'Full config');
 

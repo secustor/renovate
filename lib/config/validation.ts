@@ -277,6 +277,15 @@ function allowInternalNotAllowedMessage(configType: ConfigType): string {
   return `hostRules \`allowInternal\` is only allowed in the self-hosted administrator's own configuration.`;
 }
 
+/**
+ * Returns the host rules which do not set a non-empty `matchHost`.
+ */
+export function getHostRulesWithoutMatchHost(hostRules: unknown): HostRule[] {
+  return coerceArray(hostRules as HostRule[] | undefined).filter(
+    (rule) => !isNonEmptyString(rule?.matchHost),
+  );
+}
+
 export async function validateConfig(
   configType: ConfigType,
   config: AllConfig,
@@ -1025,14 +1034,16 @@ export async function validateConfig(
             configType === 'global'
               ? coerceArray(config.allowedHeaders)
               : GlobalConfig.get('allowedHeaders');
-          for (const rule of val as HostRule[]) {
-            if (!Object.hasOwn(rule, 'matchHost')) {
-              errors.push({
+          // invalid values of an existing `matchHost` are reported below
+          errors.push(
+            ...getHostRulesWithoutMatchHost(val)
+              .filter((rule) => !Object.hasOwn(rule, 'matchHost'))
+              .map(() => ({
                 topic: ConfigValidationTopic.Error,
                 message: 'hostRules must set `matchHost`.',
-              });
-            }
-
+              })),
+          );
+          for (const rule of val as HostRule[]) {
             if (isNonEmptyString(rule.matchHost)) {
               if (
                 rule.matchHost.includes('://') &&

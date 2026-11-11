@@ -23,7 +23,7 @@ describe('workers/repository/update/branch/lock-files/index', () => {
       GlobalConfig.set({
         localDir: 'some-tmp-dir',
       });
-      hostRules.add({ matchHost: 'github.com', token: 'abc' });
+      hostRules.add({ token: 'abc' });
     });
 
     it('returns if no updated packageFiles', async () => {
