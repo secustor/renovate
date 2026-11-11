@@ -49,9 +49,10 @@ export class AwsMachineImageDatasource extends Datasource {
 
   private getEC2Client(config: AwsClientConfig): EC2Client {
     const { profile, region } = config;
-    const { password, token, username } = hostRules.find({
-      hostType: AwsMachineImageDatasource.id,
-    });
+    const { password, token, username } = Object.assign(
+      {},
+      ...hostRules.findAll({ hostType: AwsMachineImageDatasource.id }),
+    );
     return new EC2Client({
       region,
       credentials:

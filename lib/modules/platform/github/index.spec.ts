@@ -65,6 +65,7 @@ describe('modules/platform/github/index', () => {
     git.isBranchBehindBase.mockResolvedValue(true);
     git.getBranchCommit.mockReturnValue(branchCommitSha);
     hostRules.add({
+      matchHost: 'api.github.com',
       token: '123test',
     });
 
@@ -977,6 +978,7 @@ describe('modules/platform/github/index', () => {
     it('app token', async () => {
       hostRules.clear();
       hostRules.add({
+        matchHost: 'api.github.com',
         token: 'x-access-token:123test',
       });
       const scope = httpMock.scope(githubApiHost);

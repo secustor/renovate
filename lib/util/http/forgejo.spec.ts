@@ -24,7 +24,11 @@ describe('util/http/forgejo', () => {
   });
 
   it('uses the forgejo host type by default', async () => {
-    hostRules.add({ hostType: 'forgejo', token: 'secret' });
+    hostRules.add({
+      matchHost: 'code.forgejo.org',
+      hostType: 'forgejo',
+      token: 'secret',
+    });
     httpMock
       .scope(baseUrl, { reqheaders: { authorization: 'Bearer secret' } })
       .get('/some/path')

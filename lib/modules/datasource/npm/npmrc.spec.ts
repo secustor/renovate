@@ -1,4 +1,5 @@
 import ini from 'ini';
+import { logger } from '~test/util.ts';
 import { GlobalConfig } from '../../../config/global.ts';
 import * as _sanitize from '../../../util/sanitize.ts';
 import { defaultRegistryUrl } from './common.ts';
@@ -48,20 +49,17 @@ describe('modules/datasource/npm/npmrc', () => {
       expect(res.packageRules).toHaveLength(0);
     });
 
-    it('handles naked auth', () => {
-      expect(convertNpmrcToRules(ini.parse('_auth=abc123\n')))
-        .toMatchInlineSnapshot(`
-        {
-          "hostRules": [
-            {
-              "authType": "Basic",
-              "hostType": "npm",
-              "token": "abc123",
-            },
-          ],
-          "packageRules": [],
-        }
-      `);
+    it('ignores naked auth with a warning', () => {
+      expect(convertNpmrcToRules(ini.parse('_auth=abc123\n'))).toEqual({
+        hostRules: [],
+        packageRules: [],
+      });
+      expect(logger.logger.warn).toHaveBeenCalledWith(
+        'Ignoring npmrc authentication without a host, as host rules require a matchHost',
+      );
+      expect(sanitize.addSecretForSanitizing).toHaveBeenCalledExactlyOnceWith(
+        'abc123',
+      );
     });
 
     it('handles host, path and auth', () => {
@@ -101,19 +99,14 @@ describe('modules/datasource/npm/npmrc', () => {
       `);
     });
 
-    it('handles naked authToken', () => {
-      expect(convertNpmrcToRules(ini.parse('_authToken=abc123\n')))
-        .toMatchInlineSnapshot(`
-        {
-          "hostRules": [
-            {
-              "hostType": "npm",
-              "token": "abc123",
-            },
-          ],
-          "packageRules": [],
-        }
-      `);
+    it('ignores naked authToken with a warning', () => {
+      expect(convertNpmrcToRules(ini.parse('_authToken=abc123\n'))).toEqual({
+        hostRules: [],
+        packageRules: [],
+      });
+      expect(logger.logger.warn).toHaveBeenCalledWith(
+        'Ignoring npmrc authentication without a host, as host rules require a matchHost',
+      );
     });
 
     it('handles host authToken', () => {
@@ -186,9 +179,8 @@ describe('modules/datasource/npm/npmrc', () => {
 
   it('sanitize _authtoken', () => {
     setNpmrc('//registry.test.com:_authToken=test\n_authToken=${NPM_TOKEN}');
-    expect(sanitize.addSecretForSanitizing).toHaveBeenNthCalledWith(1, 'test');
-    expect(sanitize.addSecretForSanitizing).toHaveBeenNthCalledWith(
-      2,
+    expect(sanitize.addSecretForSanitizing).toHaveBeenCalledWith('test');
+    expect(sanitize.addSecretForSanitizing).toHaveBeenCalledWith(
       '${NPM_TOKEN}',
     );
     expect(sanitize.addSecretForSanitizing).toHaveBeenCalledTimes(2);

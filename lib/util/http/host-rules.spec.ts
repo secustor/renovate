@@ -19,6 +19,7 @@ describe('util/http/host-rules', () => {
 
     hostRules.add({
       hostType: 'github',
+      matchHost: 'github.com',
       token: 'token',
     });
     hostRules.add({
@@ -28,11 +29,13 @@ describe('util/http/host-rules', () => {
     });
     hostRules.add({
       hostType: 'gitea',
+      matchHost: 'github.com',
       password: 'password',
     });
 
     hostRules.add({
       hostType: 'npm',
+      matchHost: 'github.com',
       authType: 'Basic',
       token: 'XXX',
       timeout: 5000,
@@ -40,16 +43,19 @@ describe('util/http/host-rules', () => {
 
     hostRules.add({
       hostType: 'gitlab',
+      matchHost: 'github.com',
       token: 'abc',
     });
 
     hostRules.add({
       hostType: 'bitbucket',
+      matchHost: 'github.com',
       token: 'cdef',
     });
 
     hostRules.add({
       hostType: 'bitbucket-server',
+      matchHost: 'github.com',
       token: 'cdef',
     });
   });
@@ -130,7 +136,7 @@ describe('util/http/host-rules', () => {
   });
 
   it('uses http2', () => {
-    hostRules.add({ enableHttp2: true });
+    hostRules.add({ matchHost: 'github.com', enableHttp2: true });
 
     const opts = { ...options, token: 'xxx' };
     const hostRule = findMatchingRule(url, opts);
@@ -146,7 +152,7 @@ describe('util/http/host-rules', () => {
   });
 
   it('uses http keep-alive', () => {
-    hostRules.add({ keepAlive: true });
+    hostRules.add({ matchHost: 'github.com', keepAlive: true });
 
     const opts = { ...options, token: 'xxx' };
     const hostRule = findMatchingRule(url, opts);
@@ -160,7 +166,7 @@ describe('util/http/host-rules', () => {
   it('disables http2', () => {
     vi.stubEnv('HTTP_PROXY', 'http://proxy');
     bootstrap();
-    hostRules.add({ enableHttp2: true });
+    hostRules.add({ matchHost: 'github.com', enableHttp2: true });
 
     const opts = { ...options, token: 'xxx' };
     const hostRule = findMatchingRule(url, opts);
@@ -252,19 +258,23 @@ describe('util/http/host-rules', () => {
   it('no fallback to github', () => {
     hostRules.add({
       hostType: 'github-tags',
+      matchHost: 'github.com',
       username: 'some2',
       password: 'xxx2',
     });
     hostRules.add({
       hostType: 'github-changelog',
+      matchHost: 'github.com',
       token: 'changelogtoken',
     });
     hostRules.add({
       hostType: 'pod',
+      matchHost: 'github.com',
       token: 'pod-token',
     });
     hostRules.add({
       hostType: 'github-releases',
+      matchHost: 'github.com',
       username: 'some',
       password: 'xxx',
     });
@@ -409,10 +419,12 @@ describe('util/http/host-rules', () => {
         hostRules.clear();
         hostRules.add({
           hostType: 'github-changelog',
+          matchHost: 'github.com',
           token: 'changelogtoken',
         });
         hostRules.add({
           hostType: 'github',
+          matchHost: 'github.com',
           token: 'token',
         });
         hostRules.add({
@@ -461,6 +473,7 @@ describe('util/http/host-rules', () => {
     // for instance, if running with GitHub Enterprise Server, this may be set as the default host rule
     hostRules.add({
       hostType: 'github',
+      matchHost: 'github.enterprise',
       token: 'token',
     });
     // and our GitHub.com authentication
@@ -614,14 +627,17 @@ describe('util/http/host-rules', () => {
   it('no fallback to gitlab', () => {
     hostRules.add({
       hostType: 'gitlab-packages',
+      matchHost: 'github.com',
       token: 'package-token',
     });
     hostRules.add({
       hostType: 'gitlab-releases',
+      matchHost: 'github.com',
       token: 'release-token',
     });
     hostRules.add({
       hostType: 'gitlab-tags',
+      matchHost: 'github.com',
       token: 'tags-token',
     });
 
@@ -728,6 +744,7 @@ describe('util/http/host-rules', () => {
   it('no fallback to bitbucket', () => {
     hostRules.add({
       hostType: 'bitbucket-tags',
+      matchHost: 'github.com',
       username: 'some',
       password: 'xxx',
     });
@@ -762,6 +779,7 @@ describe('util/http/host-rules', () => {
   it('no fallback to bitbucket-server', () => {
     hostRules.add({
       hostType: 'bitbucket-server-tags',
+      matchHost: 'github.com',
       username: 'some',
       password: 'xxx',
     });
@@ -796,6 +814,7 @@ describe('util/http/host-rules', () => {
   it('no fallback to gitea', () => {
     hostRules.add({
       hostType: 'gitea-tags',
+      matchHost: 'github.com',
       token: 'abc',
     });
 
@@ -816,6 +835,7 @@ describe('util/http/host-rules', () => {
   it('fallback to forgejo', () => {
     hostRules.add({
       hostType: 'forgejo',
+      matchHost: 'github.com',
       password: 'password',
     });
 
@@ -855,19 +875,6 @@ describe('util/http/host-rules', () => {
     const hostRule = findMatchingRule('https://example.com/foo/@v/list', opts);
     expect(hostRule).toEqual({
       token: 'go-token',
-    });
-  });
-
-  it('hostType=go-proxy gets a fallback to a host-less hostType=go if no hostType=go-proxy credentials', () => {
-    hostRules.add({
-      hostType: 'go',
-      token: 'any-host-go-token',
-    });
-
-    const opts = { ...options, hostType: 'go-proxy' };
-    const hostRule = findMatchingRule('https://example.com/foo/@v/list', opts);
-    expect(hostRule).toEqual({
-      token: 'any-host-go-token',
     });
   });
 
@@ -1028,6 +1035,7 @@ describe('util/http/host-rules', () => {
   it('enabled=false with noAuth', () => {
     hostRules.add({
       hostType: 'docker',
+      matchHost: 'github.com',
       enabled: false,
     });
 

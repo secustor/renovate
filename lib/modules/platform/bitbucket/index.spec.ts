@@ -27,6 +27,7 @@ describe('modules/platform/bitbucket/index', () => {
     git.branchExists.mockReturnValue(true);
     git.isBranchBehindBase.mockResolvedValue(false);
     hostRules.add({
+      matchHost: 'api.bitbucket.org',
       username: 'abc',
       password: '123',
     });
@@ -260,6 +261,7 @@ describe('modules/platform/bitbucket/index', () => {
     it('works with only API token', async () => {
       hostRules.clear();
       hostRules.add({
+        matchHost: 'api.bitbucket.org',
         password: 'ATATIAMACONTAINERTOKEN3407361359',
       });
       httpMock
@@ -284,6 +286,7 @@ describe('modules/platform/bitbucket/index', () => {
     it('works with only access token', async () => {
       hostRules.clear();
       hostRules.add({
+        matchHost: 'api.bitbucket.org',
         token: 'abc',
       });
       httpMock

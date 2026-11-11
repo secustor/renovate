@@ -53,7 +53,7 @@ If such a package is private, then Renovate must be configured with the relevant
 Renovate does not use any package managers for this step and performs all HTTP(S) lookups itself, including insertion of authentication headers.
 
 Configuring Renovate with credentials requires `hostRules`.
-Each host rule consists of a `hostType` value and/or a way to match against hosts using `matchHost`.
+Each host rule requires `matchHost` to match against hosts, and can optionally set a `hostType` value.
 
 `hostType` is not particularly important at this step unless you have different credentials for the same host, but it is sometimes useful in later steps so is good to include if you can.
 It can be either a "platform" name (e.g. `github`, `azure`, etc) or a "datasource" name (e.g. `npm`, `maven`, `github-tags`, etc).
@@ -332,7 +332,7 @@ Renovate will then use the following logic:
 
 1. If no `npmrc` string is present in config then one will be created with the `_authToken` pointing to the default npmjs registry
 1. If an `npmrc` string is present and has a `${NPM_TOKEN}` then that placeholder will be replaced with the decrypted token
-1. If an `npmrc` string is present but doesn't have a `${NPM_TOKEN}` then the file will have `_authToken=<token>` appended to it
+1. If an `npmrc` string is present but doesn't have a `${NPM_TOKEN}` then the file will have `//<registry>/:_authToken=<token>` appended to it, where `<registry>` is the `registry=` of the `npmrc`, or `registry.npmjs.org` if none is set
 
 #### Encrypted entire .npmrc file into config
 

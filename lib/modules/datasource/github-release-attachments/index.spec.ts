@@ -9,7 +9,7 @@ const githubApiHost = 'https://api.github.com';
 
 describe('modules/datasource/github-release-attachments/index', () => {
   beforeEach(() => {
-    hostRules.add({ token: 'some-token' });
+    hostRules.add({ matchHost: 'github.com', token: 'some-token' });
   });
 
   describe('getReleases', () => {

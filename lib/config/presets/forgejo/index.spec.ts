@@ -15,7 +15,7 @@ const basePath = '/api/v1/repos/some/repo/contents';
 
 describe('config/presets/forgejo/index', () => {
   beforeEach(() => {
-    hostRules.add({ token: 'abc' });
+    hostRules.add({ matchHost: 'code.forgejo.org', token: 'abc' });
     setBaseUrl(forgejoApiHost);
   });
 
@@ -106,7 +106,7 @@ describe('config/presets/forgejo/index', () => {
         .get(`${basePath}/some-filename.json`)
         .reply(404, {});
 
-      hostRules.add({ abortOnError: true });
+      hostRules.add({ matchHost: 'code.forgejo.org', abortOnError: true });
 
       await expect(
         forgejo.fetchJSONFile(

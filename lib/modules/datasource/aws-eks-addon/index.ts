@@ -79,9 +79,10 @@ export class AwsEKSAddonDataSource extends Datasource {
   private getClient({ region, profile }: EksAddonsFilter): EKSClient {
     const clientKey = `${region ?? 'default'}#${profile ?? 'default'}`;
     if (!(clientKey in this.clients)) {
-      const { password, token, username } = hostRules.find({
-        hostType: AwsEKSAddonDataSource.id,
-      });
+      const { password, token, username } = Object.assign(
+        {},
+        ...hostRules.findAll({ hostType: AwsEKSAddonDataSource.id }),
+      );
       this.clients[clientKey] = new EKSClient({
         ...(region && { region }),
         credentials:

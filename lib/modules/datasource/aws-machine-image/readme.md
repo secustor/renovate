@@ -7,13 +7,14 @@ This datasource returns the latest [Amazon Machine Image](https://docs.aws.amazo
 See [Calling AWS Services from Renovate](../../../calling-aws-services.md) for how to configure your credentials.
 
 You can also provide credentials specifically for this datasource with a `hostRules` entry.
-Set `hostType` to `aws-machine-image`, `username` to the access key ID, `password` to the secret access key, and optionally `token` to the session token:
+Set `hostType` to `aws-machine-image`, `matchHost` to `amazonaws.com`, `username` to the access key ID, `password` to the secret access key, and optionally `token` to the session token:
 
 ```json
 {
   "hostRules": [
     {
       "hostType": "aws-machine-image",
+      "matchHost": "amazonaws.com",
       "username": "access-key-id",
       "password": "secret-access-key",
       "token": "session-token"

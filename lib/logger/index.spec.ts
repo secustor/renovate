@@ -444,7 +444,7 @@ describe('logger/index', () => {
       path: 'file.log',
       level: 'error',
     });
-    add({ password: 'secret"password' });
+    add({ matchHost: 'example.com', password: 'secret"password' });
 
     class SomeClass {
       public field: string;
@@ -498,7 +498,7 @@ describe('logger/index', () => {
       path: 'file.log',
       level: 'error',
     });
-    add({ password: 'secret"password' });
+    add({ matchHost: 'example.com', password: 'secret"password' });
 
     class SomeClass {
       public field: string;

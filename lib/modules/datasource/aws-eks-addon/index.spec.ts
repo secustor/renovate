@@ -170,6 +170,7 @@ describe('modules/datasource/aws-eks-addon/index', () => {
     it('prefers host rule credentials over the configured profile', async () => {
       hostRules.add({
         hostType: datasource,
+        matchHost: 'amazonaws.com',
         username: 'access-key-id',
         password: 'secret-access-key',
         token: 'session-token',

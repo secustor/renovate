@@ -876,7 +876,7 @@ describe('workers/repository/update/pr/changelog/release-notes', () => {
     });
 
     it('should return release list for self hosted gitlab project', async () => {
-      hostRules.add({ token: 'some-token' });
+      hostRules.add({ matchHost: 'my.custom.domain', token: 'some-token' });
       httpMock
         .scope('https://my.custom.domain/')
         .get(
@@ -2172,7 +2172,7 @@ describe('workers/repository/update/pr/changelog/release-notes', () => {
     });
 
     it('parses self hosted gitlab', async () => {
-      hostRules.add({ token: 'some-token' });
+      hostRules.add({ matchHost: 'my.custom.domain', token: 'some-token' });
       httpMock
         .scope('https://my.custom.domain/')
         .get(

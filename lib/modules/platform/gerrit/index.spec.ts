@@ -43,6 +43,7 @@ describe('modules/platform/gerrit/index', () => {
 
   beforeEach(async () => {
     hostRules.add({
+      matchHost: 'dev.gerrit.com',
       username: 'user',
       password: 'pass',
     });

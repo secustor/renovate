@@ -238,6 +238,7 @@ describe('modules/datasource/packagist/index', () => {
 
     it('supports includes packages', async () => {
       hostRules.add({
+        matchHost: 'composer.renovatebot.com',
         username: 'some-username',
         password: 'some-password',
       });
@@ -300,6 +301,7 @@ describe('modules/datasource/packagist/index', () => {
 
     it('supports older sha1 hashes', async () => {
       hostRules.add({
+        matchHost: 'composer.renovatebot.com',
         username: 'some-username',
         password: 'some-password',
       });

@@ -145,11 +145,6 @@ describe('modules/manager/composer/artifacts', () => {
     });
     hostRules.add({
       hostType: PackagistDatasource.id,
-      username: 'some-other-username',
-      password: 'some-other-password',
-    });
-    hostRules.add({
-      hostType: PackagistDatasource.id,
       matchHost: 'https://packages-bearer.example.com/',
       token: 'abcdef0123456789',
     });
@@ -470,12 +465,6 @@ describe('modules/manager/composer/artifacts', () => {
     });
     hostRules.add({
       hostType: PackagistDatasource.id,
-      username: 'some-other-username',
-      password: 'some-other-password',
-      artifactAuth: [],
-    });
-    hostRules.add({
-      hostType: PackagistDatasource.id,
       matchHost: 'https://packages-bearer.example.com/',
       token: 'abcdef0123456789',
       artifactAuth: [],
@@ -569,12 +558,6 @@ describe('modules/manager/composer/artifacts', () => {
     hostRules.add({
       hostType: PackagistDatasource.id,
       matchHost: 'https://artifactory.yyyyyyy.com/artifactory/api/composer/',
-      username: 'some-other-username',
-      password: 'some-other-password',
-      artifactAuth: ['composer'],
-    });
-    hostRules.add({
-      hostType: PackagistDatasource.id,
       username: 'some-other-username',
       password: 'some-other-password',
       artifactAuth: ['composer'],

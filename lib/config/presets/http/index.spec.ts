@@ -104,7 +104,7 @@ describe('config/presets/http/index', () => {
     it('throws external host error', async () => {
       httpMock.scope(host).get(filePath).reply(404, {});
 
-      hostRules.add({ abortOnError: true });
+      hostRules.add({ matchHost: 'my.server', abortOnError: true });
 
       await expect(http.getPreset({ repo })).rejects.toThrow(ExternalHostError);
     });

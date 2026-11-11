@@ -1026,6 +1026,13 @@ export async function validateConfig(
               ? coerceArray(config.allowedHeaders)
               : GlobalConfig.get('allowedHeaders');
           for (const rule of val as HostRule[]) {
+            if (!Object.hasOwn(rule, 'matchHost')) {
+              errors.push({
+                topic: ConfigValidationTopic.Error,
+                message: 'hostRules must set `matchHost`.',
+              });
+            }
+
             if (isNonEmptyString(rule.matchHost)) {
               if (
                 rule.matchHost.includes('://') &&

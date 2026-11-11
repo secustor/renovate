@@ -7,6 +7,7 @@ import type { HostRule } from '../../../types/index.ts';
 import { getEnv } from '../../../util/env.ts';
 import * as hostRules from '../../../util/host-rules.ts';
 import { regEx } from '../../../util/regex.ts';
+import { addSecretForSanitizing } from '../../../util/sanitize.ts';
 import { fromBase64 } from '../../../util/string.ts';
 import { ensureTrailingSlash, isHttpUrl } from '../../../util/url.ts';
 import { defaultRegistryUrl } from './common.ts';
@@ -78,11 +79,19 @@ export function convertNpmrcToRules(npmrc: Record<string, any>): NpmrcRules {
     hosts[matchHost] = rule;
   }
   for (const [matchHost, rule] of Object.entries(hosts)) {
-    const hostRule = { ...rule, hostType };
-    if (matchHost) {
-      hostRule.matchHost = matchHost;
+    if (!matchHost) {
+      logger.warn(
+        'Ignoring npmrc authentication without a host, as host rules require a matchHost',
+      );
+      // the value is still masked in logs
+      for (const secret of [rule.token, rule.password]) {
+        if (isNonEmptyString(secret)) {
+          addSecretForSanitizing(secret);
+        }
+      }
+      continue;
     }
-    rules.hostRules?.push(hostRule);
+    rules.hostRules?.push({ ...rule, hostType, matchHost });
   }
   // Generate packageRules
   const matchDatasources = ['npm'];

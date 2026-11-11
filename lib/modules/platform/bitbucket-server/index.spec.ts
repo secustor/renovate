@@ -214,6 +214,7 @@ describe('modules/platform/bitbucket-server/index', () => {
       git.isBranchBehindBase.mockResolvedValue(false);
       git.getBranchCommit.mockReturnValue(commitSha);
       hostRules.add({
+        matchHost: 'stash.renovatebot.com',
         username,
         password,
       });
@@ -3602,6 +3603,7 @@ describe('modules/platform/bitbucket-server/index', () => {
       git.isBranchBehindBase.mockResolvedValue(false);
       git.getBranchCommit.mockReturnValue(commitSha);
       hostRules.add({
+        matchHost: 'stash.renovatebot.com',
         username,
         password,
       });

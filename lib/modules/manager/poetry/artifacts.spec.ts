@@ -371,8 +371,12 @@ describe('modules/manager/poetry/artifacts', () => {
       fs.getSiblingFileName.mockReturnValueOnce('pyproject.lock');
       fs.readLocalFile.mockResolvedValueOnce('[metadata]\n');
       fs.readLocalFile.mockResolvedValueOnce('New poetry.lock');
-      hostRules.add({ password: 'unscoped-password' });
-      hostRules.add({ hostType: 'pypi', password: 'scoped-password' });
+      hostRules.add({ matchHost: 'some.url', password: 'unscoped-password' });
+      hostRules.add({
+        hostType: 'pypi',
+        matchHost: 'some.url',
+        password: 'scoped-password',
+      });
       const updatedDeps = [{ depName: 'dep1' }];
       await expect(
         updateArtifacts({

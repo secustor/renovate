@@ -303,7 +303,7 @@ describe('modules/datasource/npm/index', () => {
     const res = await getPkgReleases({
       datasource,
       packageName: '@foobar/core',
-      npmrc: '_auth = 1234',
+      npmrc: '//registry.npmjs.org/:_auth = 1234',
     });
     expect(res).toMatchObject({
       releases: [{ version: '0.0.1' }, { version: '0.0.2' }],

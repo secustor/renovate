@@ -967,7 +967,21 @@ describe('workers/repository/init/merge', () => {
     it('adds npmToken at end of npmrc string if ${NPM_TOKEN} string not found', () => {
       const config = { npmToken: 'token', npmrc: 'something\n' };
       setNpmTokenInNpmrc(config);
-      expect(config).toMatchObject({ npmrc: 'something\n_authToken=token\n' });
+      expect(config).toMatchObject({
+        npmrc: 'something\n//registry.npmjs.org/:_authToken=token\n',
+      });
+    });
+
+    it('scopes the appended npmToken to the registry of the npmrc', () => {
+      const config = {
+        npmToken: 'token',
+        npmrc: 'registry=https://my.custom.registry/npm',
+      };
+      setNpmTokenInNpmrc(config);
+      expect(config).toMatchObject({
+        npmrc:
+          'registry=https://my.custom.registry/npm\n//my.custom.registry/npm/:_authToken=token\n',
+      });
     });
 
     it('replaces ${NPM_TOKEN} with npmToken value', () => {

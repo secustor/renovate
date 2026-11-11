@@ -639,7 +639,7 @@ describe('modules/datasource/go/releases-goproxy', () => {
       'handles pipe fallback when abortOnError is $abortOnError',
       async ({ abortOnError }: { abortOnError: boolean }) => {
         vi.stubEnv('GOPROXY', `https://example.com|${baseUrl}`);
-        hostRules.add({ abortOnError });
+        hostRules.add({ matchHost: 'example.com', abortOnError });
 
         httpMock
           .scope('https://example.com/github.com/google/btree')
@@ -1113,7 +1113,7 @@ describe('modules/datasource/go/releases-goproxy', () => {
       'handles major releases with abortOnError is $abortOnError',
       async ({ abortOnError }: { abortOnError: boolean }) => {
         vi.stubEnv('GOPROXY', baseUrl);
-        hostRules.add({ abortOnError });
+        hostRules.add({ matchHost: baseUrl, abortOnError });
 
         httpMock
           .scope(`${baseUrl}/github.com/google/btree`)

@@ -565,7 +565,7 @@ Periods (`.`) in host names must be replaced with a single underscore (`_`).
 
 !!! note
   You can't use these prefixes with the `detectHostRulesFromEnv` config option: `npm_config_`, `npm_lifecycle_`, `npm_package_`.
-  In addition, platform host rules will only be picked up when `matchHost` is supplied.
+  In addition, every host rule needs a host part, so variables without one (for example `DOCKER_USERNAME`) are rejected.
 
 ### npmjs registry token example
 
@@ -593,24 +593,6 @@ Periods (`.`) in host names must be replaced with a single underscore (`_`).
     {
       "hostType": "gitlab-tags",
       "matchHost": "code-host.company.com",
-      "username": "bot",
-      "password": "botpass123"
-    }
-  ]
-}
-```
-
-### Datasource and credentials only
-
-You can skip the host part, and use only the datasource and credentials.
-
-`DOCKER_USERNAME=bot DOCKER_PASSWORD=botpass123`:
-
-```json {configType=global}
-{
-  "hostRules": [
-    {
-      "hostType": "docker",
       "username": "bot",
       "password": "botpass123"
     }

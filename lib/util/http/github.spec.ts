@@ -67,7 +67,11 @@ describe('util/http/github', () => {
 
   describe('HTTP', () => {
     it('supports app mode', async () => {
-      hostRules.add({ hostType: 'github', token: 'x-access-token:123test' });
+      hostRules.add({
+        matchHost: 'api.github.com',
+        hostType: 'github',
+        token: 'x-access-token:123test',
+      });
       httpMock
         .scope(githubApiHost, {
           reqheaders: {
@@ -85,8 +89,13 @@ describe('util/http/github', () => {
 
     it('supports different datasources', async () => {
       const githubApiDatasource = new GithubHttp(GithubReleasesDatasource.id);
-      hostRules.add({ hostType: 'github', token: 'abc' });
       hostRules.add({
+        matchHost: 'api.github.com',
+        hostType: 'github',
+        token: 'abc',
+      });
+      hostRules.add({
+        matchHost: 'api.github.com',
         hostType: GithubReleasesDatasource.id,
         token: 'def',
       });
@@ -860,7 +869,11 @@ describe('util/http/github', () => {
     });
 
     it('supports app mode', async () => {
-      hostRules.add({ hostType: 'github', token: 'x-access-token:123test' });
+      hostRules.add({
+        matchHost: 'api.github.com',
+        hostType: 'github',
+        token: 'x-access-token:123test',
+      });
       httpMock
         .scope(githubApiHost, {
           reqheaders: { accept: 'application/vnd.github.v3+json' },

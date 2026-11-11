@@ -749,7 +749,10 @@ export function applyHostRules(
     try {
       hostRules.add(rule, options);
     } catch (err) {
-      logger.warn({ err, config: rule }, 'Error setting hostRule from config');
+      logger.warn(
+        { err, hostType: rule.hostType, matchHost: rule.matchHost },
+        'Error setting hostRule from config',
+      );
     }
   }
   // host rules can change concurrency
@@ -778,10 +781,17 @@ export function setNpmTokenInNpmrc(config: RenovateConfig): void {
     logger.debug(`Replacing \${NPM_TOKEN} with npmToken`);
     config.npmrc = config.npmrc.replace(regEx(/\${NPM_TOKEN}/g), token);
   } else {
-    logger.debug('Appending _authToken= to end of existing npmrc');
+    // host rules require a host, so the token is scoped to the registry the npmrc uses
+    const registry =
+      regEx(/^registry\s*=\s*(?<url>\S+)\s*$/m).exec(config.npmrc)?.groups
+        ?.url ?? 'https://registry.npmjs.org/';
+    const scope = registry
+      .replace(regEx(/^https?:/), '')
+      .replace(regEx(/\/?$/), '/');
+    logger.debug(`Appending ${scope}:_authToken= to end of existing npmrc`);
     config.npmrc = config.npmrc.replace(
       regEx(/\n?$/),
-      `\n_authToken=${token}\n`,
+      `\n${scope}:_authToken=${token}\n`,
     );
   }
 

@@ -47,6 +47,7 @@ describe('config/validation', () => {
         hostRules: [
           // oxlint-disable-next-line renovate/prefer-partial-in-specs -- intentionally invalid/removed HostRule property
           {
+            matchHost: 'example.com',
             dnsCache: true,
           } as HostRule,
         ],
@@ -128,6 +129,7 @@ describe('config/validation', () => {
       const config = {
         hostRules: [
           {
+            matchHost: 'example.com',
             username: 'user',
             token: 'token',
             password: 'pass',
@@ -2535,6 +2537,26 @@ describe('config/validation', () => {
       ]);
     });
 
+    it('errors if matchHost is missing in hostRules', async () => {
+      const { errors, warnings } = await configValidation.validateConfig(
+        'repo',
+        {
+          hostRules: [
+            { hostType: 'github', token: 'x' },
+            { readOnly: true, token: 'x' },
+            { token: 'x' },
+            { hostType: 'github', readOnly: true, matchHost: 'github.com' },
+          ],
+        },
+      );
+      const error = {
+        topic: 'Configuration Error',
+        message: 'hostRules must set `matchHost`.',
+      };
+      expect(errors).toStrictEqual([error, error, error]);
+      expect(warnings).toStrictEqual([]);
+    });
+
     it('errors if invalid matchHost values in hostRules', async () => {
       GlobalConfig.set({ allowedHeaders: ['X-*'] });
 
@@ -2576,6 +2598,10 @@ describe('config/validation', () => {
         {
           topic: 'Configuration Error',
           message: 'hostRules matchHost `://` is not a valid URL.',
+        },
+        {
+          topic: 'Configuration Error',
+          message: 'hostRules must set `matchHost`.',
         },
       ]);
       expect(warnings).toBeEmptyArray();
@@ -3212,6 +3238,7 @@ describe('config/validation', () => {
         registryUrls: null,
         hostRules: [
           {
+            matchHost: 'example.com',
             artifactAuth: null,
             concurrentRequestLimit: null,
             httpsCertificate: null,
@@ -4194,6 +4221,7 @@ describe('config/validation', () => {
           postUpdateOptions: ['invalid', 'another'],
           hostRules: [
             {
+              matchHost: 'example.com',
               // this is allowed, as it's the default value
               artifactAuth: null,
             },

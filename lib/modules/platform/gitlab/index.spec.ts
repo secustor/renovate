@@ -74,6 +74,7 @@ describe('modules/platform/gitlab/index', () => {
     git.isBranchBehindBase.mockResolvedValue(true);
     git.getBranchCommit.mockReturnValue(branchSha);
     hostRules.add({
+      matchHost: 'gitlab.com',
       token: '123test',
     });
     vi.stubEnv('GITLAB_IGNORE_REPO_URL', undefined);
@@ -565,6 +566,7 @@ describe('modules/platform/gitlab/index', () => {
     it('should fall back respecting when GITLAB_IGNORE_REPO_URL is set', async () => {
       vi.stubEnv('GITLAB_IGNORE_REPO_URL', 'true');
       const selfHostedUrl = 'http://mycompany.com/gitlab';
+      hostRules.add({ matchHost: 'mycompany.com', token: '123test' });
       httpMock
         .scope(selfHostedUrl)
         .get('/api/v4/user')

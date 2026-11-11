@@ -2121,7 +2121,7 @@ Example: If you have set `branchPrefix: "deps-"` and `hashedBranchLength: 12` it
 The primary purpose of `hostRules` is to configure credentials for host authentication.
 You tell Renovate how to match against the host you need authenticated, and then you also tell it which credentials to use.
 
-The lookup keys for `hostRules` are: `hostType` and `matchHost`, both of which are optional.
+The lookup keys for `hostRules` are: `matchHost`, which is required, and `hostType`, which is optional.
 
 Supported credential fields are `token`, `username`, `password`, `timeout`, `enabled` and `insecureRegistry`.
 
@@ -2141,7 +2141,6 @@ Example for configuring `docker` auth:
 
 If multiple `hostRules` match a request, then they will be applied in the following order/priority:
 
-1. rules with only `hostType` specified
 1. rules with only `matchHost` specified (sorted by `matchHost` length if multiple match)
 1. rules with both `matchHost` and `hostType` specified (sorted by `matchHost` length if multiple match)
 
@@ -2200,6 +2199,7 @@ For example to also skip 404 responses then configure the following:
 {
   "hostRules": [
     {
+      "matchHost": "registry.npmjs.org",
       "abortOnError": true,
       "abortIgnoreStatusCodes": [404]
     }
@@ -2215,25 +2215,27 @@ For example to also skip 404 responses then configure the following:
 Use this field to configure Renovate to abort runs for custom hosts.
 By default, Renovate will only abort for known public hosts, which has the downside that transient errors for other hosts can cause autoclosing of PRs.
 
-To abort Renovate runs for HTTP failures from _any_ host:
+To abort Renovate runs for HTTP failures from a specific host:
 
 ```json
 {
   "hostRules": [
     {
+      "matchHost": "registry.npmjs.org",
       "abortOnError": true
     }
   ]
 }
 ```
 
-To abort Renovate runs for any `docker` datasource failures:
+To abort Renovate runs for `docker` datasource failures from a specific host:
 
 ```json
 {
   "hostRules": [
     {
       "hostType": "docker",
+      "matchHost": "index.docker.io",
       "abortOnError": true
     }
   ]
@@ -2529,12 +2531,13 @@ If more than one token matches for a read-only request then the `readOnly` token
 
 Use this figure to adjust the timeout for queries.
 The default is 60s, which is quite high.
-To adjust it down to 10s for all queries, do this:
+To adjust it down to 10s for all queries to a host, do this:
 
 ```json
 {
   "hostRules": [
     {
+      "matchHost": "registry.npmjs.org",
       "timeout": 10000
     }
   ]
@@ -3867,6 +3870,7 @@ Tokens can be configured via `hostRules` using the `"merge-confidence"` `hostTyp
   "hostRules": [
     {
       "hostType": "merge-confidence",
+      "matchHost": "developer.mend.io",
       "token": "********"
     }
   ]

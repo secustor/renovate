@@ -31,9 +31,6 @@ describe('modules/datasource/npm/get', () => {
       `registry=https://test.org\n//test.org/:_authToken=XXX`,
       `registry=https://test.org/sub\n//test.org/:_authToken=XXX`,
       `registry=https://test.org/sub\n//test.org/sub/:_authToken=XXX`,
-      `registry=https://test.org/sub\n_authToken=XXX`,
-      `registry=https://test.org\n_authToken=XXX`,
-      `registry=https://test.org\n_authToken=XXX`,
       `@myco:registry=https://test.org\n//test.org/:_authToken=XXX`,
     ];
 
@@ -62,11 +59,7 @@ describe('modules/datasource/npm/get', () => {
       `registry=https://test.org\n//test.org/:username=test\n//test.org/:_password=dGVzdA==`,
       `registry=https://test.org/sub\n//test.org/:_auth=dGVzdDp0ZXN0`,
       `registry=https://test.org/sub\n//test.org/sub/:_auth=dGVzdDp0ZXN0`,
-      `registry=https://test.org/sub\n_auth=dGVzdDp0ZXN0`,
-      `registry=https://test.org\n_auth=dGVzdDp0ZXN0`,
-      `registry=https://test.org\n_auth=dGVzdDp0ZXN0`,
       `@myco:registry=https://test.org\n//test.org/:_auth=dGVzdDp0ZXN0`,
-      `@myco:registry=https://test.org\n_auth=dGVzdDp0ZXN0`,
     ];
 
     it.each(configs)('%p', async (npmrc) => {
@@ -183,7 +176,7 @@ describe('modules/datasource/npm/get', () => {
   it('cover all paths', async () => {
     expect.assertions(9);
 
-    setNpmrc('registry=https://test.org\n_authToken=XXX');
+    setNpmrc('registry=https://test.org\n//test.org/:_authToken=XXX');
 
     httpMock
       .scope('https://test.org')
@@ -347,7 +340,7 @@ describe('modules/datasource/npm/get', () => {
   });
 
   it('massages non-compliant repository urls', async () => {
-    setNpmrc('registry=https://test.org\n_authToken=XXX');
+    setNpmrc('registry=https://test.org\n//test.org/:_authToken=XXX');
 
     httpMock
       .scope('https://test.org', {
@@ -373,7 +366,7 @@ describe('modules/datasource/npm/get', () => {
   });
 
   it('handles missing dist-tags latest', async () => {
-    setNpmrc('registry=https://test.org\n_authToken=XXX');
+    setNpmrc('registry=https://test.org\n//test.org/:_authToken=XXX');
 
     httpMock
       .scope('https://test.org')
@@ -396,7 +389,7 @@ describe('modules/datasource/npm/get', () => {
   });
 
   it('handles mixed sourceUrls in releases', async () => {
-    setNpmrc('registry=https://test.org\n_authToken=XXX');
+    setNpmrc('registry=https://test.org\n//test.org/:_authToken=XXX');
 
     httpMock
       .scope('https://test.org')
@@ -437,7 +430,7 @@ describe('modules/datasource/npm/get', () => {
   });
 
   it('handles short sourceUrls in releases', async () => {
-    setNpmrc('registry=https://test.org\n_authToken=XXX');
+    setNpmrc('registry=https://test.org\n//test.org/:_authToken=XXX');
 
     httpMock
       .scope('https://test.org')
@@ -478,7 +471,7 @@ describe('modules/datasource/npm/get', () => {
   });
 
   it('does not override sourceDirectory', async () => {
-    setNpmrc('registry=https://test.org\n_authToken=XXX');
+    setNpmrc('registry=https://test.org\n//test.org/:_authToken=XXX');
 
     httpMock
       .scope('https://test.org')
@@ -529,7 +522,7 @@ describe('modules/datasource/npm/get', () => {
   });
 
   it('does not massage non-github non-compliant repository urls', async () => {
-    setNpmrc('registry=https://test.org\n_authToken=XXX');
+    setNpmrc('registry=https://test.org\n//test.org/:_authToken=XXX');
 
     httpMock
       .scope('https://test.org')
@@ -553,7 +546,7 @@ describe('modules/datasource/npm/get', () => {
   });
 
   it('extracts integrity and tarball', async () => {
-    setNpmrc('registry=https://test.org\n_authToken=XXX');
+    setNpmrc('registry=https://test.org\n//test.org/:_authToken=XXX');
 
     httpMock
       .scope('https://test.org')
